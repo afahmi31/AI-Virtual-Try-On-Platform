@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>{{ $seller->store_name }} - AI Try-On Store</title>
     <style>
         :root {
@@ -228,6 +229,18 @@
             font-size: 13px;
             line-height: 1.45;
         }
+        .status-note {
+            margin-top: 10px;
+            font-size: 13px;
+            color: var(--muted);
+            min-height: 18px;
+        }
+        .status-error { color: #fecaca; }
+        .status-success { color: #78f6dc; }
+        .btn:disabled {
+            opacity: .65;
+            cursor: not-allowed;
+        }
         @media (max-width: 900px) {
             .brand { font-size: 22px; }
             .hero h1 { font-size: 34px; }
@@ -323,25 +336,39 @@
             </div>
 
             <div class="field">
+                <label class="label" for="qualityMode">Quality</label>
+                <select class="select" id="qualityMode">
+                    <option value="standard">Standard</option>
+                    <option value="hd">HD</option>
+                    <option value="ultra">Ultra</option>
+                </select>
+            </div>
+
+            <div class="field">
                 <label class="label">Hasil Try-On</label>
                 <div class="preview-box">
                     <img id="resultPreview" alt="Try-on result">
                     <div id="resultPlaceholder" class="preview-placeholder">Hasil akan tampil di sini setelah proses generate.</div>
                 </div>
-                <div class="result-note">Saat ini panel ini siap untuk integrasi FASHN AI. Sementara, tombol Generate menampilkan simulasi preview.</div>
+                <div class="result-note">Panel ini sudah terhubung ke flow backend try-on. Integrasi provider FASHN AI akan disambungkan pada tahap berikutnya.</div>
             </div>
 
-            <button class="btn" type="button" onclick="simulateTryOn()">Generate Try-On</button>
+            <button id="generateBtn" class="btn" type="button" onclick="submitTryOn()">Generate Try-On</button>
+            <div id="statusNote" class="status-note"></div>
         </aside>
     </section>
 </main>
 <script>
+    let selectedProductId = @json($selectedProduct?->id);
+    let pollTimer = null;
+
     function selectProduct(el) {
         const cards = document.querySelectorAll('#productGrid .card');
         cards.forEach((card) => card.classList.remove('selected'));
         el.classList.add('selected');
 
         const productName = el.getAttribute('data-product-name') || 'Belum dipilih';
+        selectedProductId = Number(el.getAttribute('data-product-id')) || null;
         const productSlug = el.getAttribute('data-product-slug');
         document.getElementById('selectedProductName').textContent = productName;
 
@@ -372,25 +399,132 @@
         reader.readAsDataURL(file);
     });
 
-    function simulateTryOn() {
-        const selectedCard = document.querySelector('#productGrid .card.selected');
+    function setStatus(message, type) {
+        const note = document.getElementById('statusNote');
+        note.textContent = message || '';
+        note.classList.remove('status-error', 'status-success');
+        if (type === 'error') note.classList.add('status-error');
+        if (type === 'success') note.classList.add('status-success');
+    }
+
+    function setLoading(loading) {
+        const btn = document.getElementById('generateBtn');
+        btn.disabled = loading;
+        btn.textContent = loading ? 'Processing...' : 'Generate Try-On';
+    }
+
+    async function submitTryOn() {
         const customerPreview = document.getElementById('customerPreview');
         const resultPreview = document.getElementById('resultPreview');
         const resultPlaceholder = document.getElementById('resultPlaceholder');
+        const customerPhotoInput = document.getElementById('customerPhoto');
+        const qualityMode = document.getElementById('qualityMode').value;
+        const csrf = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
 
-        if (!selectedCard) {
-            alert('Pilih produk terlebih dahulu.');
+        if (!selectedProductId) {
+            setStatus('Pilih produk terlebih dahulu.', 'error');
             return;
         }
 
-        if (!customerPreview.getAttribute('src')) {
-            alert('Upload foto customer terlebih dahulu.');
+        const file = customerPhotoInput.files && customerPhotoInput.files[0] ? customerPhotoInput.files[0] : null;
+        if (!file || !customerPreview.getAttribute('src')) {
+            setStatus('Upload foto customer terlebih dahulu.', 'error');
             return;
         }
 
-        resultPreview.src = customerPreview.getAttribute('src');
-        resultPreview.style.display = 'block';
-        resultPlaceholder.style.display = 'none';
+        setLoading(true);
+        setStatus('Membuat session try-on...', '');
+        resultPreview.removeAttribute('src');
+        resultPreview.style.display = 'none';
+        resultPlaceholder.style.display = 'block';
+
+        try {
+            const formData = new FormData();
+            formData.append('product_id', String(selectedProductId));
+            formData.append('quality_mode', qualityMode);
+            formData.append('customer_photo', file);
+
+            const createResponse = await fetch(@json(route('public.tryon.sessions.store', ['seller_slug' => $seller->slug])), {
+                method: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN': csrf,
+                    'Accept': 'application/json',
+                },
+                body: formData,
+            });
+
+            const createPayload = await createResponse.json();
+            if (!createResponse.ok) {
+                throw new Error(createPayload.message || 'Gagal membuat session try-on.');
+            }
+
+            setStatus('Session dibuat. Menunggu hasil...', '');
+            await pollTryOnStatus(createPayload.id);
+        } catch (error) {
+            setStatus(error.message || 'Terjadi kesalahan saat generate try-on.', 'error');
+            setLoading(false);
+        }
+    }
+
+    async function pollTryOnStatus(sessionId) {
+        const resultPreview = document.getElementById('resultPreview');
+        const resultPlaceholder = document.getElementById('resultPlaceholder');
+        const statusUrlBase = @json(url('/'));
+
+        if (pollTimer) {
+            clearInterval(pollTimer);
+            pollTimer = null;
+        }
+
+        let attempts = 0;
+        const maxAttempts = 30;
+
+        pollTimer = setInterval(async () => {
+            attempts += 1;
+            try {
+                const response = await fetch(`${statusUrlBase}/${@json($seller->slug)}/try-on/sessions/${sessionId}`, {
+                    headers: { 'Accept': 'application/json' },
+                });
+                const payload = await response.json();
+                if (!response.ok) {
+                    throw new Error(payload.message || 'Gagal cek status try-on.');
+                }
+
+                if (payload.status === 'completed') {
+                    clearInterval(pollTimer);
+                    pollTimer = null;
+
+                    if (payload.result_url) {
+                        resultPreview.src = payload.result_url;
+                        resultPreview.style.display = 'block';
+                        resultPlaceholder.style.display = 'none';
+                    }
+                    setStatus('Try-on selesai.', 'success');
+                    setLoading(false);
+                    return;
+                }
+
+                if (payload.status === 'failed') {
+                    clearInterval(pollTimer);
+                    pollTimer = null;
+                    setStatus(payload.error_message || 'Try-on gagal diproses.', 'error');
+                    setLoading(false);
+                    return;
+                }
+
+                if (attempts >= maxAttempts) {
+                    clearInterval(pollTimer);
+                    pollTimer = null;
+                    setStatus('Proses masih berjalan. Silakan coba lagi sebentar.', 'error');
+                    setLoading(false);
+                }
+            } catch (error) {
+                clearInterval(pollTimer);
+                pollTimer = null;
+                setStatus(error.message || 'Gagal polling status try-on.', 'error');
+                setLoading(false);
+            }
+        }, 2000);
     }
 
     (function ensureInitialSelectedProduct() {

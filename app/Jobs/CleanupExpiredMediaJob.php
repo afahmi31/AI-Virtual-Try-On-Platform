@@ -21,13 +21,8 @@ class CleanupExpiredMediaJob implements ShouldQueue
             ->get();
 
         foreach ($expiredSessions as $session) {
-            if ($session->customer_photo_path) {
-                Storage::disk('local')->delete($session->customer_photo_path);
-            }
-
-            if ($session->result_path) {
-                Storage::disk('local')->delete($session->result_path);
-            }
+            $this->deleteMediaPath($session->customer_photo_path);
+            $this->deleteMediaPath($session->result_path);
 
             $session->update([
                 'status' => 'expired',
@@ -35,5 +30,19 @@ class CleanupExpiredMediaJob implements ShouldQueue
                 'customer_photo_path' => '',
             ]);
         }
+    }
+
+    private function deleteMediaPath(?string $path): void
+    {
+        if (! $path) {
+            return;
+        }
+
+        if (str_starts_with($path, 'http://') || str_starts_with($path, 'https://')) {
+            return;
+        }
+
+        Storage::disk('public')->delete($path);
+        Storage::disk('local')->delete($path);
     }
 }
