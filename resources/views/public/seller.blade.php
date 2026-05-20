@@ -359,6 +359,16 @@
             margin-bottom: 12px;
         }
 
+        .quota-box {
+            border-radius: 10px;
+            border: 1px solid rgba(248, 113, 113, 0.45);
+            background: rgba(248, 113, 113, 0.12);
+            padding: 10px;
+            font-size: 13px;
+            margin-bottom: 12px;
+            color: #fecaca;
+        }
+
         .btn {
             width: 100%;
             border: none;
@@ -487,6 +497,10 @@
                     @endif
                 </div>
 
+                <div id="quotaBox" class="quota-box">
+                    Sisa generate hari ini: <strong id="remainingQuotaText">-</strong>
+                </div>
+
                 <input class="input-file" id="customerPhoto" type="file" accept="image/*" style="display:none">
 
                 <div class="field">
@@ -516,6 +530,26 @@
     <script>
         let selectedProductId = @json(optional($selectedProduct)->id);
         let pollTimer = null;
+        const TRYON_DEVICE_KEY = 'tryon_device_id_v1';
+        let remainingDailyQuota = null;
+
+        function resolveTryOnDeviceId() {
+            try {
+                const existing = window.localStorage.getItem(TRYON_DEVICE_KEY);
+                if (existing && typeof existing === 'string') {
+                    return existing;
+                }
+
+                const generated = (window.crypto && window.crypto.randomUUID)
+                    ? window.crypto.randomUUID()
+                    : `dev-${Date.now()}-${Math.random().toString(36).slice(2, 12)}`;
+
+                window.localStorage.setItem(TRYON_DEVICE_KEY, generated);
+                return generated;
+            } catch (error) {
+                return `dev-fallback-${Date.now()}`;
+            }
+        }
 
         function selectProduct(el) {
             const cards = document.querySelectorAll('#productGrid .card');
@@ -584,12 +618,53 @@
         function setLoading(loading) {
             const btn = document.getElementById('generateBtn');
             const resultPlaceholder = document.getElementById('resultPlaceholder');
-            btn.disabled = loading;
+            const mustDisableByQuota = remainingDailyQuota !== null && remainingDailyQuota <= 0;
+            btn.disabled = loading || mustDisableByQuota;
             btn.textContent = loading ? 'Processing...' : 'Try-On';
             if (resultPlaceholder) {
                 resultPlaceholder.innerHTML = loading
                     ? '<div class="loading-dots" aria-label="Loading"><span></span><span></span><span></span></div>'
                     : '';
+            }
+        }
+
+        function updateQuotaUI(quota) {
+            const el = document.getElementById('remainingQuotaText');
+            if (!el || !quota) {
+                return;
+            }
+
+            const limit = Number(quota.daily_limit ?? 3);
+            const remaining = Number(quota.remaining ?? 0);
+            remainingDailyQuota = remaining;
+            el.textContent = `${remaining} / ${limit}`;
+
+            if (remaining <= 0) {
+                setStatus('Batas generate harian sudah habis (0).', 'error');
+            }
+            const btn = document.getElementById('generateBtn');
+            if (btn && !btn.disabled && remaining <= 0) {
+                btn.disabled = true;
+            }
+        }
+
+        async function refreshQuota() {
+            try {
+                const response = await fetch(@json(route('public.tryon.quota.show', ['seller_slug' => $seller->slug])), {
+                    headers: {
+                        'Accept': 'application/json',
+                        'X-Tryon-Device-Id': resolveTryOnDeviceId(),
+                    },
+                });
+
+                const payload = await response.json();
+                if (!response.ok) {
+                    return;
+                }
+
+                updateQuotaUI(payload);
+            } catch (error) {
+                // Keep silent; quota endpoint failure should not break page interaction.
             }
         }
 
@@ -611,6 +686,12 @@
                 return;
             }
 
+            if (remainingDailyQuota !== null && remainingDailyQuota <= 0) {
+                setStatus('Batas generate harian sudah habis (0).', 'error');
+                setLoading(false);
+                return;
+            }
+
             setLoading(true);
             setStatus('', '');
             resultPreview.removeAttribute('src');
@@ -626,6 +707,7 @@
                     method: 'POST',
                     headers: {
                         'X-CSRF-TOKEN': csrf,
+                        'X-Tryon-Device-Id': resolveTryOnDeviceId(),
                         'Accept': 'application/json',
                     },
                     body: formData,
@@ -633,9 +715,15 @@
 
                 const createPayload = await createResponse.json();
                 if (!createResponse.ok) {
+                    if (createPayload.quota) {
+                        updateQuotaUI(createPayload.quota);
+                    }
                     throw new Error(createPayload.message || 'Gagal membuat session try-on.');
                 }
 
+                if (createPayload.quota) {
+                    updateQuotaUI(createPayload.quota);
+                }
                 setStatus('', '');
                 await pollTryOnStatus(createPayload.id);
             } catch (error) {
@@ -712,6 +800,7 @@
             if (current) {
                 selectProduct(current);
             }
+            refreshQuota();
         })();
     </script>
 </body>

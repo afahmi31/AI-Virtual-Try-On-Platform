@@ -13,16 +13,35 @@ use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\Storage;
 
 class TryOnPublicController extends Controller
 {
+    public function quota(Request $request, string $seller_slug): JsonResponse
+    {
+        $seller = Seller::query()
+            ->where('slug', $seller_slug)
+            ->where('status', 'active')
+            ->firstOrFail();
+
+        return response()->json($this->buildQuotaPayload($request, $seller->slug));
+    }
+
     public function store(Request $request, string $seller_slug): JsonResponse
     {
         $seller = Seller::query()
             ->where('slug', $seller_slug)
             ->where('status', 'active')
             ->firstOrFail();
+
+        $quota = $this->buildQuotaPayload($request, $seller->slug);
+        if (($quota['can_generate'] ?? false) !== true) {
+            return response()->json([
+                'message' => 'Batas generate harian habis untuk device/IP ini.',
+                'quota' => $quota,
+            ], 429);
+        }
 
         $payload = $request->validate([
             'product_id' => ['required', 'integer', 'exists:products,id'],
@@ -85,7 +104,13 @@ class TryOnPublicController extends Controller
 
         ProcessTryOnSessionJob::dispatch($session->id);
 
-        return response()->json($this->sessionResponse($session->fresh()), 201);
+        // Count only valid created sessions toward daily public generate limit.
+        $this->consumeGenerateQuota($request, $seller->slug);
+
+        return response()->json([
+            ...$this->sessionResponse($session->fresh()),
+            'quota' => $this->buildQuotaPayload($request, $seller->slug),
+        ], 201);
     }
 
     public function show(string $seller_slug, int $sessionId): JsonResponse
@@ -185,5 +210,63 @@ class TryOnPublicController extends Controller
         }
 
         return Storage::disk('public')->url($path);
+    }
+
+    private function buildQuotaPayload(Request $request, string $sellerSlug): array
+    {
+        $dailyLimit = max((int) config('tryon.public_limits.generate_per_day', 3), 1);
+        $minuteLimit = max((int) config('tryon.public_limits.generate_per_minute_per_ip', 3), 1);
+
+        $ipDailyRemaining = RateLimiter::remaining($this->dailyIpKey($request, $sellerSlug), $dailyLimit);
+        $deviceDailyRemaining = RateLimiter::remaining($this->dailyDeviceKey($request, $sellerSlug), $dailyLimit);
+        $minuteIpRemaining = RateLimiter::remaining($this->minuteIpKey($request, $sellerSlug), $minuteLimit);
+        $remaining = max(min($ipDailyRemaining, $deviceDailyRemaining), 0);
+        $canGenerate = $remaining > 0 && $minuteIpRemaining > 0;
+
+        return [
+            'daily_limit' => $dailyLimit,
+            'remaining' => $remaining,
+            'ip_daily_remaining' => max($ipDailyRemaining, 0),
+            'device_daily_remaining' => max($deviceDailyRemaining, 0),
+            'minute_remaining' => max($minuteIpRemaining, 0),
+            'can_generate' => $canGenerate,
+        ];
+    }
+
+    private function consumeGenerateQuota(Request $request, string $sellerSlug): void
+    {
+        RateLimiter::hit($this->minuteIpKey($request, $sellerSlug), 60);
+        RateLimiter::hit($this->dailyIpKey($request, $sellerSlug), 86400);
+        RateLimiter::hit($this->dailyDeviceKey($request, $sellerSlug), 86400);
+    }
+
+    private function minuteIpKey(Request $request, string $sellerSlug): string
+    {
+        return 'create-minute-ip|'.$sellerSlug.'|'.$request->ip();
+    }
+
+    private function dailyIpKey(Request $request, string $sellerSlug): string
+    {
+        return 'create-day-ip|'.$sellerSlug.'|'.$request->ip();
+    }
+
+    private function dailyDeviceKey(Request $request, string $sellerSlug): string
+    {
+        return 'create-day-device|'.$sellerSlug.'|'.$this->resolveTryOnDeviceId($request);
+    }
+
+    private function resolveTryOnDeviceId(Request $request): string
+    {
+        $rawDeviceId = strtolower(trim((string) $request->header('X-Tryon-Device-Id', '')));
+        if ($rawDeviceId === '') {
+            return 'missing-device-id';
+        }
+
+        $normalized = preg_replace('/[^a-z0-9\-_]/', '', $rawDeviceId);
+        if (! is_string($normalized) || $normalized === '') {
+            return 'invalid-device-id';
+        }
+
+        return substr($normalized, 0, 64);
     }
 }

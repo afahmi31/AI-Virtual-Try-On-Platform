@@ -180,10 +180,10 @@
 
         <section class="split">
             <div class="panel" style="border-color: rgba(53,229,239,.6); box-shadow: inset 0 0 26px rgba(34,211,238,.2), 0 0 28px rgba(34,211,238,.16);">
-                <h2>Recent Try-On Sessions</h2>
+                <h2>Recent Try-On</h2>
                 <table>
                     <thead>
-                        <tr><th>ID</th><th>Status</th><th>Quality</th><th>Created</th></tr>
+                        <tr><th>ID</th><th>Status</th><th>Product</th><th>IP</th><th>Created</th></tr>
                     </thead>
                     <tbody>
                         @forelse($stats['recent_tryon'] as $session)
@@ -194,11 +194,12 @@
                                         {{ ucfirst($session->status) }}
                                     </span>
                                 </td>
-                                <td>{{ strtoupper($session->quality_mode) }}</td>
+                                <td>{{ $session->product?->name ?? '-' }}</td>
+                                <td>{{ \App\Support\IpMasker::mask($session->ip_address) }}</td>
                                 <td>{{ $session->created_at->format('Y-m-d H:i:s') }}</td>
                             </tr>
                         @empty
-                            <tr><td colspan="4">Belum ada session try-on.</td></tr>
+                            <tr><td colspan="5">Belum ada session try-on.</td></tr>
                         @endforelse
                     </tbody>
                 </table>

@@ -24,7 +24,12 @@ class SellerDashboardController extends Controller
             'token_balance' => $tokenBalance,
             'success_count' => (int) ($usage->success_count ?? 0),
             'failed_count' => (int) ($usage->failed_count ?? 0),
-            'recent_tryon' => TryOnSession::query()->where('seller_id', $seller->id)->latest()->limit(10)->get(),
+            'recent_tryon' => TryOnSession::query()
+                ->with('product:id,name')
+                ->where('seller_id', $seller->id)
+                ->latest()
+                ->limit(10)
+                ->get(),
         ];
 
         return view('seller.dashboard', compact('seller', 'stats'));

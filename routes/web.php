@@ -37,8 +37,10 @@ Route::prefix('dashboard')->middleware(['auth', 'role:seller'])->group(function 
 
 Route::prefix('{seller_slug}/try-on')->group(function (): void {
     Route::post('/sessions', [TryOnPublicController::class, 'store'])
-        ->middleware('throttle:tryon-public-create')
         ->name('public.tryon.sessions.store');
+
+    Route::get('/quota', [TryOnPublicController::class, 'quota'])
+        ->name('public.tryon.quota.show');
 
     Route::get('/sessions/{sessionId}', [TryOnPublicController::class, 'show'])
         ->middleware('throttle:tryon-public-polling')
