@@ -481,9 +481,9 @@
 
                 <div id="selectedProductInfo" class="selected-product">
                     @if(!empty($selectedProduct))
-                    Produk terpilih: <strong id="selectedProductName">{{ $selectedProduct->name }}</strong>
+                    Produk: <strong id="selectedProductName">{{ $selectedProduct->name }}</strong>
                     @else
-                    Produk terpilih: <strong id="selectedProductName">Belum dipilih</strong>
+                    Produk: <strong id="selectedProductName">Belum dipilih</strong>
                     @endif
                 </div>
 
@@ -508,7 +508,7 @@
                     </div>
                 </div>
 
-                <button id="generateBtn" class="btn" type="button" onclick="submitTryOn()">Generate Try-On</button>
+                <button id="generateBtn" class="btn" type="button" onclick="submitTryOn()">Try-On</button>
                 <div id="statusNote" class="status-note"></div>
             </aside>
         </section>
@@ -585,7 +585,7 @@
             const btn = document.getElementById('generateBtn');
             const resultPlaceholder = document.getElementById('resultPlaceholder');
             btn.disabled = loading;
-            btn.textContent = loading ? 'Processing...' : 'Generate Try-On';
+            btn.textContent = loading ? 'Processing...' : 'Try-On';
             if (resultPlaceholder) {
                 resultPlaceholder.innerHTML = loading
                     ? '<div class="loading-dots" aria-label="Loading"><span></span><span></span><span></span></div>'
@@ -607,12 +607,12 @@
 
             const file = customerPhotoInput.files && customerPhotoInput.files[0] ? customerPhotoInput.files[0] : null;
             if (!file || !customerPreview.getAttribute('src')) {
-                setStatus('Upload foto customer terlebih dahulu.', 'error');
+                setStatus('upload foto model', 'error');
                 return;
             }
 
             setLoading(true);
-            setStatus('Membuat session try-on...', '');
+            setStatus('', '');
             resultPreview.removeAttribute('src');
             resultPreview.style.display = 'none';
             resultPlaceholder.style.display = 'block';
@@ -636,7 +636,7 @@
                     throw new Error(createPayload.message || 'Gagal membuat session try-on.');
                 }
 
-                setStatus('Session dibuat. Menunggu hasil...', '');
+                setStatus('', '');
                 await pollTryOnStatus(createPayload.id);
             } catch (error) {
                 setStatus(error.message || 'Terjadi kesalahan saat generate try-on.', 'error');
@@ -679,9 +679,9 @@
                             resultPreview.style.display = 'block';
                             resultPlaceholder.style.display = 'none';
                         }
-                        setStatus('Try-on selesai.', 'success');
-                        setLoading(false);
-                        return;
+                    setStatus('', '');
+                    setLoading(false);
+                    return;
                     }
 
                     if (payload.status === 'failed') {
@@ -717,3 +717,5 @@
 </body>
 
 </html>
+
+

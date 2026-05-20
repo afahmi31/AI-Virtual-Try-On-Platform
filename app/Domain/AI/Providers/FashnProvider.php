@@ -12,6 +12,27 @@ class FashnProvider implements TryOnProviderContract
 {
     public function createJob(array $input): array
     {
+        if ($this->isDummyMode()) {
+            return [
+                'provider_name' => 'fashn',
+                'provider_model' => (string) config('ai.providers.fashn.model', 'tryon-max'),
+                'provider_job_id' => 'dummy-'.(string) str()->uuid(),
+                'status' => 'processing',
+                'result_path' => null,
+                'result_url' => null,
+                'error_message' => null,
+                'provider_usage' => [
+                    'credits_used' => 0,
+                    'estimated_cost' => 0,
+                    'currency' => 'credit',
+                ],
+                'http_status' => 200,
+                'provider_endpoint' => 'dummy://fashn/run',
+                'provider_method' => 'POST',
+                'raw' => ['dummy' => true],
+            ];
+        }
+
         $createUrl = $this->resolveCreateUrl();
         $generationMode = $this->resolveGenerationMode((string) ($input['quality_mode'] ?? 'standard'));
         $resolution = $this->resolveResolution((string) ($input['quality_mode'] ?? 'standard'));
@@ -54,6 +75,37 @@ class FashnProvider implements TryOnProviderContract
 
     public function getJobStatus(string $jobId): array
     {
+        if ($this->isDummyMode()) {
+            $dummyResultUrl = trim((string) config('ai.providers.fashn.dummy_result_url'));
+            if ($dummyResultUrl === '') {
+                throw new RuntimeException('FASHN_DUMMY_RESULT_URL is required when FASHN_DUMMY_ENABLED=true.');
+            }
+
+            return [
+                'provider_name' => 'fashn',
+                'provider_model' => (string) config('ai.providers.fashn.model', 'tryon-max'),
+                'provider_job_id' => $jobId,
+                'status' => 'completed',
+                'result_path' => $dummyResultUrl,
+                'result_url' => $dummyResultUrl,
+                'error_message' => null,
+                'provider_usage' => [
+                    'credits_used' => 0,
+                    'estimated_cost' => 0,
+                    'currency' => 'credit',
+                ],
+                'http_status' => 200,
+                'provider_endpoint' => 'dummy://fashn/status/'.$jobId,
+                'provider_method' => 'GET',
+                'raw' => [
+                    'id' => $jobId,
+                    'status' => 'completed',
+                    'output' => [$dummyResultUrl],
+                    'dummy' => true,
+                ],
+            ];
+        }
+
         $statusUrl = $this->resolveStatusUrl($jobId);
 
         $response = $this->httpClient()->get($statusUrl);
@@ -226,5 +278,10 @@ class FashnProvider implements TryOnProviderContract
             'hd' => '2k',
             default => '1k',
         };
+    }
+
+    private function isDummyMode(): bool
+    {
+        return (bool) config('ai.providers.fashn.dummy_enabled', false);
     }
 }
