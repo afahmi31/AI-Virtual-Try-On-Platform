@@ -35,12 +35,17 @@ Route::prefix('dashboard')->middleware(['auth', 'role:seller'])->group(function 
     Route::post('/products/{productId}/images', [SellerProductController::class, 'addImage'])->name('seller.products.images.store');
 });
 
-Route::prefix('{seller_slug}/try-on')->middleware('throttle:tryon-public')->group(function (): void {
-    Route::post('/sessions', [TryOnPublicController::class, 'store'])->name('public.tryon.sessions.store');
-    Route::get('/sessions/{sessionId}', [TryOnPublicController::class, 'show'])->name('public.tryon.sessions.show');
+Route::prefix('{seller_slug}/try-on')->group(function (): void {
+    Route::post('/sessions', [TryOnPublicController::class, 'store'])
+        ->middleware('throttle:tryon-public-create')
+        ->name('public.tryon.sessions.store');
+
+    Route::get('/sessions/{sessionId}', [TryOnPublicController::class, 'show'])
+        ->middleware('throttle:tryon-public-polling')
+        ->name('public.tryon.sessions.show');
 });
 
-Route::get('/{seller_slug}/{product_slug?}', [SellerPublicController::class, 'index'])
+Route::get('/{seller_slug}/{product_ref?}', [SellerPublicController::class, 'index'])
     ->where('seller_slug', '^(?!admin$|dashboard$|api$|login$|logout$)[A-Za-z0-9\-]+$')
-    ->where('product_slug', '[A-Za-z0-9\-]+')
+    ->where('product_ref', '[A-Za-z0-9\-]+')
     ->name('public.seller.page');

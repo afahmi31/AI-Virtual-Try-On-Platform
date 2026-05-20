@@ -136,6 +136,24 @@
         }
         .bar-label { color: #b8c7dc; font-size: 18px; }
         .bar-value { color: var(--primary); font-size: 18px; }
+        .log-table { margin-top: 18px; font-size: 15px; }
+        .log-table th, .log-table td { vertical-align: top; }
+        .mono { font-family: Consolas, "Courier New", monospace; font-size: 13px; line-height: 1.35; color: #d4e6ff; }
+        .meta-text { color: var(--muted); font-size: 13px; }
+        .log-status-ok { color: #22d3ee; }
+        .log-status-failed { color: #fca5a5; }
+        details { margin-top: 6px; }
+        summary { cursor: pointer; color: #9fdcff; }
+        pre {
+            margin: 8px 0 0;
+            padding: 10px;
+            border: 1px solid rgba(130, 170, 230, 0.22);
+            border-radius: 10px;
+            background: rgba(8, 14, 24, 0.8);
+            overflow-x: auto;
+            white-space: pre-wrap;
+            word-break: break-word;
+        }
         @media (max-width: 1400px) {
             .cards { grid-template-columns: repeat(2, minmax(0, 1fr)); }
             .split { grid-template-columns: 1fr; }
@@ -239,6 +257,80 @@
                         @endforeach
                     </div>
                 </div>
+            </section>
+
+            <section class="panel log-table">
+                <h2>Provider Request / Response Logs</h2>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Waktu</th>
+                            <th>Session</th>
+                            <th>Action</th>
+                            <th>Provider</th>
+                            <th>Usage</th>
+                            <th>Request</th>
+                            <th>Response</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @forelse($providerLogs as $log)
+                            @php
+                                $payload = (array) $log->payload_json;
+                                $session = $sessionMap->get($log->entity_id);
+                                $httpStatus = $payload['http_status'] ?? null;
+                                $statusClass = str_contains($log->action, 'failed') ? 'log-status-failed' : 'log-status-ok';
+                                $providerUsage = (array) ($payload['provider_usage'] ?? []);
+                            @endphp
+                            <tr>
+                                <td class="mono">
+                                    {{ optional($log->created_at)->format('Y-m-d H:i:s') }}<br>
+                                    <span class="meta-text">start: {{ $payload['request_started_at'] ?? '-' }}</span><br>
+                                    <span class="meta-text">finish: {{ $payload['request_finished_at'] ?? '-' }}</span>
+                                </td>
+                                <td class="mono">
+                                    #{{ $log->entity_id }}<br>
+                                    <span class="meta-text">{{ $session?->seller?->store_name ?? 'Unknown Seller' }}</span><br>
+                                    <span class="meta-text">{{ $session?->product?->name ?? 'Unknown Product' }}</span>
+                                </td>
+                                <td class="mono {{ $statusClass }}">
+                                    {{ $log->action }}<br>
+                                    <span class="meta-text">duration: {{ $payload['duration_ms'] ?? '-' }} ms</span>
+                                </td>
+                                <td class="mono">
+                                    {{ strtoupper((string) ($payload['provider_method'] ?? '-')) }}
+                                    {{ $payload['provider_endpoint'] ?? '-' }}<br>
+                                    <span class="meta-text">provider: {{ $payload['provider_name'] ?? '-' }}</span><br>
+                                    <span class="meta-text">model: {{ $payload['provider_model'] ?? '-' }}</span><br>
+                                    <span class="meta-text">HTTP: {{ $httpStatus ?? '-' }}</span><br>
+                                    <span class="meta-text">job_id: {{ $payload['provider_job_id'] ?? '-' }}</span>
+                                </td>
+                                <td class="mono">
+                                    <span class="meta-text">billing_unit: {{ $providerUsage['billing_unit'] ?? '-' }}</span><br>
+                                    <span class="meta-text">billing_value: {{ $providerUsage['billing_value'] ?? '-' }}</span><br>
+                                    <span class="meta-text">tokens_used: {{ $providerUsage['tokens_used'] ?? '-' }}</span><br>
+                                    <span class="meta-text">credits_used: {{ $providerUsage['credits_used'] ?? '-' }}</span><br>
+                                    <span class="meta-text">estimated_cost: {{ $providerUsage['estimated_cost'] ?? '-' }}</span><br>
+                                    <span class="meta-text">currency: {{ $providerUsage['currency'] ?? '-' }}</span>
+                                </td>
+                                <td class="mono">
+                                    <details>
+                                        <summary>show request payload</summary>
+                                        <pre>{{ json_encode($payload['request_payload'] ?? [], JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) }}</pre>
+                                    </details>
+                                </td>
+                                <td class="mono">
+                                    <details>
+                                        <summary>show response payload</summary>
+                                        <pre>{{ json_encode($payload['response_payload'] ?? [], JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) }}</pre>
+                                    </details>
+                                </td>
+                            </tr>
+                        @empty
+                            <tr><td colspan="7">Belum ada log provider.</td></tr>
+                        @endforelse
+                    </tbody>
+                </table>
             </section>
         </main>
     </div>

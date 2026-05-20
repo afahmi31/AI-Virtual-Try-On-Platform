@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\AuditLog;
 use App\Models\Seller;
 use App\Models\SellerUsageBalance;
 use App\Models\TryOnSession;
@@ -48,6 +49,23 @@ class AdminDashboardController extends Controller
                 ->count();
         }
 
-        return view('admin.dashboard', compact('stats', 'topSellers', 'trendLabels', 'trendValues'));
+        $providerLogs = AuditLog::query()
+            ->whereIn('action', [
+                'tryon_provider_create_job',
+                'tryon_provider_create_job_failed',
+                'tryon_provider_get_status',
+                'tryon_provider_get_status_failed',
+            ])
+            ->latest()
+            ->limit(40)
+            ->get();
+
+        $sessionMap = TryOnSession::query()
+            ->whereIn('id', $providerLogs->pluck('entity_id')->filter()->unique()->values())
+            ->with(['seller:id,store_name', 'product:id,name'])
+            ->get()
+            ->keyBy('id');
+
+        return view('admin.dashboard', compact('stats', 'topSellers', 'trendLabels', 'trendValues', 'providerLogs', 'sessionMap'));
     }
 }

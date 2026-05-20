@@ -22,11 +22,18 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        RateLimiter::for('tryon-public', function (Request $request): Limit {
+        RateLimiter::for('tryon-public-create', function (Request $request): Limit {
             $sellerSlug = (string) $request->route('seller_slug');
             $ip = (string) $request->ip();
 
-            return Limit::perMinute(20)->by($sellerSlug.'|'.$ip);
+            return Limit::perMinute(10)->by('create|'.$sellerSlug.'|'.$ip);
+        });
+
+        RateLimiter::for('tryon-public-polling', function (Request $request): Limit {
+            $sellerSlug = (string) $request->route('seller_slug');
+            $ip = (string) $request->ip();
+
+            return Limit::perMinute(120)->by('poll|'.$sellerSlug.'|'.$ip);
         });
     }
 }

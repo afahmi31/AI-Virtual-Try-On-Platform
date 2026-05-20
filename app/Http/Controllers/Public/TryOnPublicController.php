@@ -2,10 +2,12 @@
 
 namespace App\Http\Controllers\Public;
 
+use App\Domain\AI\ProviderRouter;
 use App\Http\Controllers\Controller;
 use App\Jobs\ProcessTryOnSessionJob;
 use App\Models\AuditLog;
 use App\Models\Seller;
+use App\Models\SellerUsageBalance;
 use App\Models\TryOnSession;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
@@ -24,9 +26,11 @@ class TryOnPublicController extends Controller
 
         $payload = $request->validate([
             'product_id' => ['required', 'integer', 'exists:products,id'],
-            'quality_mode' => ['required', 'in:standard,hd,ultra'],
             'customer_photo' => ['required', 'file', 'image', 'mimes:jpg,jpeg,png,webp', 'max:10240'],
         ]);
+
+        // Locked to the lowest-cost provider mode (balanced + 1k via "standard").
+        $qualityMode = 'standard';
 
         $product = $seller->products()
             ->where('id', $payload['product_id'])
@@ -48,7 +52,7 @@ class TryOnPublicController extends Controller
             'seller_id' => $seller->id,
             'product_id' => $product->id,
             'customer_photo_path' => $photoPath,
-            'quality_mode' => $payload['quality_mode'],
+            'quality_mode' => $qualityMode,
             'source_channel' => 'seller_subpage',
             'ip_address' => $request->ip(),
             'user_agent' => (string) $request->userAgent(),
@@ -66,7 +70,7 @@ class TryOnPublicController extends Controller
                 'seller_id' => $seller->id,
                 'product_id' => $product->id,
                 'source_channel' => 'seller_subpage',
-                'quality_mode' => $payload['quality_mode'],
+                'quality_mode' => $qualityMode,
                 'ip_address' => $request->ip(),
             ],
         ]);
@@ -75,7 +79,7 @@ class TryOnPublicController extends Controller
             'session_id' => $session->id,
             'seller_id' => $seller->id,
             'product_id' => $product->id,
-            'quality_mode' => $payload['quality_mode'],
+            'quality_mode' => $qualityMode,
             'source_channel' => 'seller_subpage',
         ]);
 
@@ -96,7 +100,63 @@ class TryOnPublicController extends Controller
             ->where('id', $sessionId)
             ->firstOrFail();
 
+        $this->refreshProcessingSession($session);
+
         return response()->json($this->sessionResponse($session));
+    }
+
+    private function refreshProcessingSession(TryOnSession $session): void
+    {
+        if ($session->status !== 'processing' || ! $session->provider_job_id) {
+            return;
+        }
+
+        try {
+            /** @var ProviderRouter $providerRouter */
+            $providerRouter = app(ProviderRouter::class);
+            $provider = $providerRouter->resolve($session->provider_name);
+            $status = $provider->getJobStatus((string) $session->provider_job_id);
+
+            if (($status['status'] ?? null) === 'completed') {
+                $cost = $provider->estimateCost([
+                    'quality_mode' => $session->quality_mode,
+                    'num_images' => 1,
+                ]);
+
+                if ((int) $session->token_cost === 0) {
+                    $usage = SellerUsageBalance::query()->where('seller_id', $session->seller_id)->first();
+                    if ($usage) {
+                        $usage->incrementEach([
+                            'token_used' => $cost,
+                            'token_available' => -$cost,
+                            'success_count' => 1,
+                        ]);
+                    }
+                }
+
+                $session->update([
+                    'status' => 'completed',
+                    'result_path' => $status['result_path'] ?? $status['result_url'] ?? $session->result_path,
+                    'token_cost' => $cost,
+                    'expires_at' => Carbon::now()->addMinutes((int) config('tryon.retention_minutes')),
+                ]);
+            }
+
+            if (($status['status'] ?? null) === 'failed') {
+                $session->update([
+                    'status' => 'failed',
+                    'error_message' => $status['error_message'] ?? 'Provider failure.',
+                ]);
+            }
+        } catch (\Throwable $exception) {
+            Log::warning('Failed to refresh processing try-on session', [
+                'session_id' => $session->id,
+                'provider_job_id' => $session->provider_job_id,
+                'message' => $exception->getMessage(),
+            ]);
+        }
+
+        $session->refresh();
     }
 
     private function sessionResponse(TryOnSession $session): array
@@ -127,4 +187,3 @@ class TryOnPublicController extends Controller
         return Storage::disk('public')->url($path);
     }
 }
-
