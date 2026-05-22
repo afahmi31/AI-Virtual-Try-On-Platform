@@ -39,6 +39,7 @@
         .btn { border:none; border-radius:12px; padding:12px 20px; font-size:var(--fs-control); cursor:pointer; margin-top:14px; background:linear-gradient(180deg, #35e5ef, #1ac6d7); color:#052a31; font-weight:700; }
         .btn-secondary { border:1px solid rgba(54,198,230,.45); border-radius:12px; padding:11px 18px; font-size:var(--fs-control); cursor:pointer; margin-top:14px; margin-left:10px; background:rgba(6,14,26,.65); color:var(--text); }
         .hint { color:var(--muted); font-size:var(--fs-label); margin-top:6px; }
+        .checks-wrap { display:flex; gap:16px; flex-wrap:wrap; margin-top:10px; }
         .toggle-wrap { display:inline-flex; align-items:center; gap:8px; font-size:var(--fs-label); color:#cad7ea; }
         .toggle-wrap input { display:none; }
         .toggle-switch {
@@ -71,6 +72,7 @@
             background: #ddfbff;
         }
         .flash { margin-bottom:14px; padding:12px 14px; border-radius:10px; font-size:var(--fs-control); border:1px solid rgba(45,212,191,.45); color:#78f6dc; background:rgba(45,212,191,.12); }
+        .flash-error { margin-bottom:14px; padding:12px 14px; border-radius:10px; font-size:var(--fs-control); border:1px solid rgba(248,113,113,.45); color:#fecaca; background:rgba(248,113,113,.13); }
         .topnav button { color:var(--text); border:1px solid rgba(130,170,225,.24); padding:8px 14px; border-radius:10px; background:rgba(255,255,255,.04); font-size:var(--fs-control); cursor:pointer; transition:border-color .2s ease, background .2s ease; }
         .topnav button:hover { border-color:rgba(49,217,241,.42); background:rgba(49,217,241,.08); }
         .api-test-overlay { position:absolute; inset:0; display:none; align-items:center; justify-content:center; background:rgba(4,10,20,.42); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); z-index:10; }
@@ -133,6 +135,9 @@
         <h1>Settings</h1>
         @if(session('success'))
             <div class="flash">{{ session('success') }}</div>
+        @endif
+        @if($errors->any())
+            <div class="flash-error">{{ $errors->first() }}</div>
         @endif
         <form method="POST" action="{{ route('seller.settings.update') }}">
             @csrf
@@ -245,6 +250,31 @@
                             <option value="png" {{ $selectedV16OutputFormat === 'png' ? 'selected' : '' }}>PNG</option>
                             <option value="jpeg" {{ $selectedV16OutputFormat === 'jpeg' ? 'selected' : '' }}>JPEG</option>
                         </select>
+                    </div>
+                </section>
+
+                <section class="panel">
+                    <h2>Public Generate Limit</h2>
+                    @php
+                        $publicGeneratePerDay = (int) old('public_generate_per_day', $setting?->public_generate_per_day ?? config('tryon.public_limits.generate_per_day', 3));
+                        $publicLimitPerIpEnabled = (int) old('public_limit_per_ip_enabled', isset($setting) && $setting !== null ? (int) ($setting->public_limit_per_ip_enabled ?? 1) : 1);
+                        $publicLimitPerDeviceEnabled = (int) old('public_limit_per_device_enabled', isset($setting) && $setting !== null ? (int) ($setting->public_limit_per_device_enabled ?? 1) : 1);
+                    @endphp
+                    <div class="row">
+                        <label>Generate Per Day</label>
+                        <input type="text" name="public_generate_per_day" value="{{ $publicGeneratePerDay }}" inputmode="numeric" pattern="[0-9]*">
+                    </div>
+                    <div class="checks-wrap">
+                        <label class="toggle-wrap">
+                            <input type="checkbox" name="public_limit_per_ip_enabled" value="1" {{ $publicLimitPerIpEnabled ? 'checked' : '' }}>
+                            <span class="toggle-switch"></span>
+                            <span>Per IP</span>
+                        </label>
+                        <label class="toggle-wrap">
+                            <input type="checkbox" name="public_limit_per_device_enabled" value="1" {{ $publicLimitPerDeviceEnabled ? 'checked' : '' }}>
+                            <span class="toggle-switch"></span>
+                            <span>Per Device</span>
+                        </label>
                     </div>
                 </section>
 

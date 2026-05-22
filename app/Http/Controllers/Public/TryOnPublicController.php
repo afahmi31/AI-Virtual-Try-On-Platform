@@ -226,30 +226,94 @@ class TryOnPublicController extends Controller
 
     private function buildQuotaPayload(Request $request, string $sellerSlug): array
     {
-        $dailyLimit = max((int) config('tryon.public_limits.generate_per_day', 3), 1);
-        $minuteLimit = max((int) config('tryon.public_limits.generate_per_minute_per_ip', 3), 1);
+        $seller = Seller::query()->where('slug', $sellerSlug)->with('aiSetting')->first();
+        $setting = $seller?->aiSetting;
 
-        $ipDailyRemaining = RateLimiter::remaining($this->dailyIpKey($request, $sellerSlug), $dailyLimit);
-        $deviceDailyRemaining = RateLimiter::remaining($this->dailyDeviceKey($request, $sellerSlug), $dailyLimit);
-        $minuteIpRemaining = RateLimiter::remaining($this->minuteIpKey($request, $sellerSlug), $minuteLimit);
-        $remaining = max(min($ipDailyRemaining, $deviceDailyRemaining), 0);
+        $dailyLimit = $this->resolveDailyLimit($setting);
+        $minuteLimit = max((int) config('tryon.public_limits.generate_per_minute_per_ip', 3), 1);
+        $limitPerIpEnabled = $this->resolvePerIpEnabled($setting);
+        $limitPerDeviceEnabled = $this->resolvePerDeviceEnabled($setting);
+
+        $ipDailyRemaining = $limitPerIpEnabled
+            ? RateLimiter::remaining($this->dailyIpKey($request, $sellerSlug), $dailyLimit)
+            : $dailyLimit;
+        $deviceDailyRemaining = $limitPerDeviceEnabled
+            ? RateLimiter::remaining($this->dailyDeviceKey($request, $sellerSlug), $dailyLimit)
+            : $dailyLimit;
+        $minuteIpRemaining = $limitPerIpEnabled
+            ? RateLimiter::remaining($this->minuteIpKey($request, $sellerSlug), $minuteLimit)
+            : $minuteLimit;
+
+        $dailyCandidates = [];
+        if ($limitPerIpEnabled) {
+            $dailyCandidates[] = $ipDailyRemaining;
+        }
+        if ($limitPerDeviceEnabled) {
+            $dailyCandidates[] = $deviceDailyRemaining;
+        }
+
+        $remaining = count($dailyCandidates) > 0
+            ? max(min($dailyCandidates), 0)
+            : $dailyLimit;
         $canGenerate = $remaining > 0 && $minuteIpRemaining > 0;
 
         return [
             'daily_limit' => $dailyLimit,
+            'minute_limit_per_ip' => $minuteLimit,
             'remaining' => $remaining,
             'ip_daily_remaining' => max($ipDailyRemaining, 0),
             'device_daily_remaining' => max($deviceDailyRemaining, 0),
             'minute_remaining' => max($minuteIpRemaining, 0),
+            'limit_per_ip_enabled' => $limitPerIpEnabled,
+            'limit_per_device_enabled' => $limitPerDeviceEnabled,
             'can_generate' => $canGenerate,
         ];
     }
 
     private function consumeGenerateQuota(Request $request, string $sellerSlug): void
     {
-        RateLimiter::hit($this->minuteIpKey($request, $sellerSlug), 60);
-        RateLimiter::hit($this->dailyIpKey($request, $sellerSlug), 86400);
-        RateLimiter::hit($this->dailyDeviceKey($request, $sellerSlug), 86400);
+        $seller = Seller::query()->where('slug', $sellerSlug)->with('aiSetting')->first();
+        $setting = $seller?->aiSetting;
+        $limitPerIpEnabled = $this->resolvePerIpEnabled($setting);
+        $limitPerDeviceEnabled = $this->resolvePerDeviceEnabled($setting);
+
+        if ($limitPerIpEnabled) {
+            RateLimiter::hit($this->minuteIpKey($request, $sellerSlug), 60);
+            RateLimiter::hit($this->dailyIpKey($request, $sellerSlug), 86400);
+        }
+
+        if ($limitPerDeviceEnabled) {
+            RateLimiter::hit($this->dailyDeviceKey($request, $sellerSlug), 86400);
+        }
+    }
+
+    private function resolveDailyLimit($setting): int
+    {
+        $configured = (int) ($setting?->public_generate_per_day ?? 0);
+
+        if ($configured > 0) {
+            return $configured;
+        }
+
+        return max((int) config('tryon.public_limits.generate_per_day', 3), 1);
+    }
+
+    private function resolvePerIpEnabled($setting): bool
+    {
+        if ($setting === null) {
+            return true;
+        }
+
+        return (bool) ($setting->public_limit_per_ip_enabled ?? true);
+    }
+
+    private function resolvePerDeviceEnabled($setting): bool
+    {
+        if ($setting === null) {
+            return true;
+        }
+
+        return (bool) ($setting->public_limit_per_device_enabled ?? true);
     }
 
     private function minuteIpKey(Request $request, string $sellerSlug): string

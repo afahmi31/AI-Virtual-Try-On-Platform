@@ -10,6 +10,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Carbon;
+use Illuminate\Validation\ValidationException;
 
 class SellerSettingsController extends Controller
 {
@@ -41,7 +42,19 @@ class SellerSettingsController extends Controller
             'fashn_dummy_enabled' => ['nullable', 'boolean'],
             'fashn_dummy_result_url' => ['nullable', 'url', 'max:2048'],
             'fashn_dummy_model_image_url' => ['nullable', 'url', 'max:2048'],
+            'public_generate_per_day' => ['nullable', 'integer', 'min:1', 'max:100000'],
+            'public_limit_per_ip_enabled' => ['nullable', 'boolean'],
+            'public_limit_per_device_enabled' => ['nullable', 'boolean'],
         ]);
+
+        $limitPerIpEnabled = (bool) ($payload['public_limit_per_ip_enabled'] ?? false);
+        $limitPerDeviceEnabled = (bool) ($payload['public_limit_per_device_enabled'] ?? false);
+
+        if (! $limitPerIpEnabled && ! $limitPerDeviceEnabled) {
+            throw ValidationException::withMessages([
+                'public_limit_per_ip_enabled' => 'Minimal salah satu limit harus aktif: Per IP atau Per Device.',
+            ]);
+        }
 
         $setting = SellerAiSetting::query()->firstOrNew(['seller_id' => $seller->id]);
         $setting->provider_name = 'fashn';
@@ -61,6 +74,11 @@ class SellerSettingsController extends Controller
         $setting->fashn_dummy_enabled = (bool) ($payload['fashn_dummy_enabled'] ?? false);
         $setting->fashn_dummy_result_url = $payload['fashn_dummy_result_url'] ?? null;
         $setting->fashn_dummy_model_image_url = $payload['fashn_dummy_model_image_url'] ?? null;
+        $setting->public_generate_per_day = isset($payload['public_generate_per_day'])
+            ? (int) $payload['public_generate_per_day']
+            : null;
+        $setting->public_limit_per_ip_enabled = $limitPerIpEnabled;
+        $setting->public_limit_per_device_enabled = $limitPerDeviceEnabled;
         $setting->save();
 
         return redirect()->route('seller.settings.index')->with('success', 'FASHN setting berhasil disimpan.');

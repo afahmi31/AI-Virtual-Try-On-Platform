@@ -15,7 +15,7 @@ return [
         // Hard cap for customer/public generate requests to protect provider credits.
         'generate_per_day' => (int) env('TRYON_PUBLIC_GENERATE_PER_DAY', 3),
         // Burst protection for repeated clicks/spam.
-        'generate_per_minute_per_ip' => (int) env('TRYON_PUBLIC_GENERATE_PER_MINUTE_PER_IP', 3),
+        'generate_per_minute_per_ip' => 3,
         // Polling limit stays higher because frontend polls processing status.
         'polling_per_minute' => (int) env('TRYON_PUBLIC_POLLING_PER_MINUTE', 120),
     ],
