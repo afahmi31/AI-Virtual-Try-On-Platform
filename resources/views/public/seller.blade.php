@@ -201,13 +201,13 @@
 
         .modal {
             width: min(980px, 100%);
-            max-height: 95vh;
+            max-height: 92vh;
             overflow: auto;
             background: linear-gradient(180deg, #ffffff, #fff6e9);
             border-radius: var(--radius-xl);
             border: 1px solid #ebd4ba;
             box-shadow: 0 22px 60px rgba(80, 49, 22, 0.26);
-            padding: 20px;
+            padding: 16px;
             transform: translateY(14px) scale(.98);
             opacity: 0;
             transition: transform .24s ease, opacity .24s ease;
@@ -243,23 +243,31 @@
             cursor: pointer;
         }
 
-        .selected-product {
-            border-radius: 12px;
-            border: 1px solid #f1c9a9;
-            background: #fff3e6;
-            padding: 10px 12px;
+        .modal-info-grid {
+            display: grid;
+            grid-template-columns: minmax(0, 1.6fr) minmax(220px, 0.8fr);
+            gap: 12px;
             margin-bottom: 12px;
+        }
+
+        .selected-product {
+            padding: 2px 0;
             font-size: 14px;
+            margin: 0;
         }
 
         .quota-box {
-            border-radius: 12px;
-            border: 1px solid #f4bf94;
-            background: #fff0df;
+            border: none;
+            background: transparent;
             color: #8c4c22;
-            padding: 10px 12px;
-            margin-bottom: 12px;
-            font-size: 14px;
+            padding: 2px 0;
+            font-size: 13px;
+            margin: 0;
+            text-align: right;
+            white-space: nowrap;
+            justify-self: end;
+            width: auto;
+            max-width: none;
         }
 
         .field {
@@ -318,7 +326,7 @@
         .preview-box {
             position: relative;
             width: 100%;
-            aspect-ratio: 3 / 4;
+            aspect-ratio: 4 / 5;
             border-radius: var(--radius-md);
             border: 1px solid #e8d3bc;
             background: #fff;
@@ -437,6 +445,10 @@
             .modal-preview-grid {
                 grid-template-columns: 1fr;
             }
+
+            .modal-info-grid {
+                grid-template-columns: 1fr;
+            }
         }
     </style>
 </head>
@@ -495,35 +507,36 @@
                 <button type="button" class="modal-close" onclick="closeTryOnModal()" aria-label="Tutup">&times;</button>
             </div>
 
-            <div id="selectedProductInfo" class="selected-product">
-                Produk: <strong id="selectedProductName">Belum dipilih</strong>
-            </div>
+            <div class="modal-info-grid">
+                <div id="selectedProductInfo" class="selected-product">
+                    Produk: <strong id="selectedProductName">Belum dipilih</strong>
+                </div>
 
-            <div id="quotaBox" class="quota-box">
-                Sisa generate hari ini: <strong id="remainingQuotaText">-</strong>
+                <div id="quotaBox" class="quota-box">
+                    Sisa generate hari ini: <strong id="remainingQuotaText">-</strong>
+                </div>
             </div>
 
             <input class="input-file" id="customerPhoto" type="file" accept="image/*">
 
             <div class="modal-preview-grid">
                 <div class="field">
-                    <label class="label">Foto Model</label>
+                    <label class="label">Foto</label>
                     <div class="preview-box">
                         <img id="customerPreview" alt="Customer preview">
                         <button id="removePhotoBtn" class="preview-remove" type="button" aria-label="Hapus foto">&times;</button>
                         <div id="customerPlaceholder" class="preview-placeholder">
-                            <p>Foto model yang diupload akan tampil di sini.</p>
+                            <p>Upload foto</p>
                             <button type="button" class="upload-trigger" onclick="document.getElementById('customerPhoto').click()">Pilih File</button>
                         </div>
                     </div>
-                    <div id="statusNote" class="status-note"></div>
                 </div>
 
                 <div class="field">
-                    <label class="label">Hasil Generated Fashn AI</label>
+                    <label class="label">Try-On Generated</label>
                     <div class="preview-box">
                         <img id="resultPreview" alt="Try-on result">
-                        <div id="resultPlaceholder" class="preview-placeholder">Hasil generate akan muncul di samping foto model setelah proses selesai.</div>
+                        <div id="resultPlaceholder" class="preview-placeholder"></div>
                     </div>
                 </div>
             </div>
@@ -642,6 +655,9 @@
 
         function setStatus(message, type) {
             const note = document.getElementById('statusNote');
+            if (!note) {
+                return;
+            }
             note.textContent = message || '';
             note.classList.remove('status-error', 'status-success');
             if (type === 'error') note.classList.add('status-error');
@@ -659,7 +675,7 @@
             if (resultPlaceholder) {
                 resultPlaceholder.innerHTML = loading
                     ? '<div class="loading-dots" aria-label="Loading"><span></span><span></span><span></span></div>'
-                    : 'Hasil generate akan muncul di samping foto model setelah proses selesai.';
+                    : '';
             }
         }
 
