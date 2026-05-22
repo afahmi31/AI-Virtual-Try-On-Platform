@@ -42,7 +42,8 @@ class TryOnSessionController extends Controller
         }
 
         $apiKey = trim((string) ($seller->aiSetting?->fashn_api_key ?? ''));
-        if ($apiKey === '') {
+        $dummyEnabled = (bool) ($seller->aiSetting?->fashn_dummy_enabled ?? false);
+        if ($apiKey === '' && ! $dummyEnabled) {
             return response()->json([
                 'message' => 'FASHN API key belum dikonfigurasi di Settings.',
             ], 422);

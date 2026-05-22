@@ -36,11 +36,14 @@ class FashnProvider implements TryOnProviderContract
         }
 
         $createUrl = $this->resolveCreateUrl($providerConfig);
-        $generationMode = $this->resolveGenerationMode((string) ($input['quality_mode'] ?? 'standard'));
-        $resolution = $this->resolveResolution((string) ($input['quality_mode'] ?? 'standard'));
+        $qualityMode = (string) ($input['quality_mode'] ?? 'standard');
+        $generationMode = $this->resolveGenerationMode($qualityMode, $providerConfig);
+        $resolution = $this->resolveResolution($qualityMode, $providerConfig);
+        $outputFormat = $this->resolveOutputFormat($providerConfig);
+        $modelName = (string) ($providerConfig['model'] ?? config('ai.providers.fashn.model', 'tryon-max'));
 
-        $response = $this->httpClient($providerConfig)->post($createUrl, [
-            'model_name' => (string) ($providerConfig['model'] ?? config('ai.providers.fashn.model', 'tryon-max')),
+        $requestBody = [
+            'model_name' => $modelName,
             'inputs' => [
                 'product_image' => $input['product_image_url'] ?? null,
                 'model_image' => $input['model_image_url'] ?? null,
@@ -48,9 +51,25 @@ class FashnProvider implements TryOnProviderContract
             'generation_mode' => $generationMode,
             'resolution' => $resolution,
             'num_images' => 1,
-            'output_format' => 'png',
+            'output_format' => $outputFormat,
             'return_base64' => false,
-        ]);
+        ];
+
+        if ($modelName === 'tryon-v1.6') {
+            $requestBody = [
+                'model_name' => $modelName,
+                'inputs' => [
+                    'model_image' => $input['model_image_url'] ?? null,
+                    'garment_image' => $input['product_image_url'] ?? null,
+                ],
+                'mode' => $this->resolveV16Mode($providerConfig),
+                'num_samples' => $this->resolveV16NumSamples($providerConfig),
+                'output_format' => $this->resolveV16OutputFormat($providerConfig),
+                'return_base64' => false,
+            ];
+        }
+
+        $response = $this->httpClient($providerConfig)->post($createUrl, $requestBody);
 
         $body = $response->json();
         $providerJobId = $body['id'] ?? $body['job_id'] ?? null;
@@ -135,8 +154,18 @@ class FashnProvider implements TryOnProviderContract
     public function estimateCost(array $input): int
     {
         $qualityMode = (string) ($input['quality_mode'] ?? 'standard');
-        $generationMode = $this->resolveGenerationMode($qualityMode);
-        $resolution = $this->resolveResolution($qualityMode);
+        $providerConfig = [];
+        if (isset($input['provider_config']) && is_array($input['provider_config'])) {
+            $providerConfig = $input['provider_config'];
+        }
+        $modelName = (string) ($providerConfig['model'] ?? config('ai.providers.fashn.model', 'tryon-max'));
+
+        if ($modelName === 'tryon-v1.6') {
+            return $this->resolveV16NumSamples($providerConfig);
+        }
+
+        $generationMode = $this->resolveGenerationMode($qualityMode, $providerConfig);
+        $resolution = $this->resolveResolution($qualityMode, $providerConfig);
         $numImages = max(1, (int) ($input['num_images'] ?? 1));
 
         $baseCost = match ($generationMode.'|'.$resolution) {
@@ -266,21 +295,69 @@ class FashnProvider implements TryOnProviderContract
         ], static fn ($value) => $value !== null && $value !== '');
     }
 
-    private function resolveGenerationMode(string $qualityMode): string
+    private function resolveGenerationMode(string $qualityMode, array $providerConfig = []): string
     {
+        $configured = strtolower(trim((string) ($providerConfig['generation_mode'] ?? '')));
+        if (in_array($configured, ['balanced', 'quality'], true)) {
+            return $configured;
+        }
+
         return match ($qualityMode) {
             'ultra' => 'quality',
             default => 'balanced',
         };
     }
 
-    private function resolveResolution(string $qualityMode): string
+    private function resolveResolution(string $qualityMode, array $providerConfig = []): string
     {
+        $configured = strtolower(trim((string) ($providerConfig['resolution'] ?? '')));
+        if (in_array($configured, ['1k', '2k', '4k'], true)) {
+            return $configured;
+        }
+
         return match ($qualityMode) {
             'ultra' => '4k',
             'hd' => '2k',
             default => '1k',
         };
+    }
+
+    private function resolveOutputFormat(array $providerConfig = []): string
+    {
+        $configured = strtolower(trim((string) ($providerConfig['output_format'] ?? '')));
+
+        if (in_array($configured, ['png', 'jpeg'], true)) {
+            return $configured;
+        }
+
+        return 'png';
+    }
+
+    private function resolveV16Mode(array $providerConfig = []): string
+    {
+        $configured = strtolower(trim((string) ($providerConfig['v16_mode'] ?? '')));
+        if (in_array($configured, ['performance', 'balanced', 'quality'], true)) {
+            return $configured;
+        }
+
+        return 'balanced';
+    }
+
+    private function resolveV16NumSamples(array $providerConfig = []): int
+    {
+        $configured = (int) ($providerConfig['v16_num_samples'] ?? 1);
+
+        return max(1, min(4, $configured));
+    }
+
+    private function resolveV16OutputFormat(array $providerConfig = []): string
+    {
+        $configured = strtolower(trim((string) ($providerConfig['v16_output_format'] ?? '')));
+        if (in_array($configured, ['png', 'jpeg'], true)) {
+            return $configured;
+        }
+
+        return 'png';
     }
 
     private function isDummyMode(array $providerConfig = []): bool
@@ -300,7 +377,7 @@ class FashnProvider implements TryOnProviderContract
 
         if (isset($input['provider_config']) && is_array($input['provider_config'])) {
             $override = $input['provider_config'];
-            foreach (['api_key', 'model', 'dummy_enabled', 'dummy_result_url'] as $field) {
+            foreach (['api_key', 'model', 'generation_mode', 'resolution', 'output_format', 'v16_mode', 'v16_num_samples', 'v16_output_format', 'dummy_enabled', 'dummy_result_url'] as $field) {
                 if (array_key_exists($field, $override) && $override[$field] !== null && $override[$field] !== '') {
                     $config[$field] = $override[$field];
                 }

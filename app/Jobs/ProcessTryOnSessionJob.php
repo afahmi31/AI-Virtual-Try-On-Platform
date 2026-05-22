@@ -46,9 +46,9 @@ class ProcessTryOnSessionJob implements ShouldQueue
 
         $provider = $providerRouter->resolve($session->provider_name);
         $session->loadMissing('product.images', 'seller.aiSetting');
-        $productImageUrl = $this->resolveProductImageUrl($session);
-        $modelImageUrl = $this->resolveModelImageUrl($session->customer_photo_path);
         $providerConfig = $this->resolveProviderConfig($session);
+        $productImageUrl = $this->resolveProductImageUrl($session);
+        $modelImageUrl = $this->resolveModelImageUrl($session->customer_photo_path, $providerConfig);
 
         if ($productImageUrl === null || $modelImageUrl === null) {
             $this->failSession($session, null, 'Gambar produk atau foto customer tidak valid untuk dikirim ke provider.');
@@ -126,6 +126,7 @@ class ProcessTryOnSessionJob implements ShouldQueue
         $cost = $provider->estimateCost([
             'quality_mode' => $session->quality_mode,
             'num_images' => 1,
+            'provider_config' => $providerConfig,
         ]);
 
         try {
@@ -393,8 +394,15 @@ class ProcessTryOnSessionJob implements ShouldQueue
         ];
     }
 
-    private function resolveModelImageUrl(?string $customerPhotoPath): ?string
+    private function resolveModelImageUrl(?string $customerPhotoPath, array $providerConfig = []): ?string
     {
+        if (($providerConfig['dummy_enabled'] ?? false) === true) {
+            $sellerDummyUrl = trim((string) ($providerConfig['dummy_model_image_url'] ?? ''));
+            if ($sellerDummyUrl !== '') {
+                return $sellerDummyUrl;
+            }
+        }
+
         $dummyUrl = trim((string) config('tryon.dummy_model_image_url'));
         if ($dummyUrl !== '') {
             return $dummyUrl;
@@ -488,10 +496,40 @@ class ProcessTryOnSessionJob implements ShouldQueue
             $config['model'] = $aiSetting->fashn_model;
         }
 
+        if (($config['model'] ?? null) === 'tryon-v1.6') {
+            if (is_string($aiSetting->fashn_tryon_v16_mode) && trim($aiSetting->fashn_tryon_v16_mode) !== '') {
+                $config['v16_mode'] = $aiSetting->fashn_tryon_v16_mode;
+            }
+
+            if ((int) ($aiSetting->fashn_tryon_v16_num_samples ?? 0) > 0) {
+                $config['v16_num_samples'] = (int) $aiSetting->fashn_tryon_v16_num_samples;
+            }
+
+            if (is_string($aiSetting->fashn_tryon_v16_output_format) && trim($aiSetting->fashn_tryon_v16_output_format) !== '') {
+                $config['v16_output_format'] = $aiSetting->fashn_tryon_v16_output_format;
+            }
+        } else {
+            if (is_string($aiSetting->fashn_tryon_max_generation_mode) && trim($aiSetting->fashn_tryon_max_generation_mode) !== '') {
+                $config['generation_mode'] = $aiSetting->fashn_tryon_max_generation_mode;
+            }
+
+            if (is_string($aiSetting->fashn_tryon_max_resolution) && trim($aiSetting->fashn_tryon_max_resolution) !== '') {
+                $config['resolution'] = $aiSetting->fashn_tryon_max_resolution;
+            }
+
+            if (is_string($aiSetting->fashn_tryon_max_output_format) && trim($aiSetting->fashn_tryon_max_output_format) !== '') {
+                $config['output_format'] = $aiSetting->fashn_tryon_max_output_format;
+            }
+        }
+
         $config['dummy_enabled'] = (bool) $aiSetting->fashn_dummy_enabled;
 
         if (is_string($aiSetting->fashn_dummy_result_url) && trim($aiSetting->fashn_dummy_result_url) !== '') {
             $config['dummy_result_url'] = $aiSetting->fashn_dummy_result_url;
+        }
+
+        if (is_string($aiSetting->fashn_dummy_model_image_url) && trim($aiSetting->fashn_dummy_model_image_url) !== '') {
+            $config['dummy_model_image_url'] = $aiSetting->fashn_dummy_model_image_url;
         }
 
         return $config;

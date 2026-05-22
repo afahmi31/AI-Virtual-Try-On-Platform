@@ -15,6 +15,14 @@
             --muted: #9db0c8;
             --primary: #22d3ee;
             --accent: #3b82f6;
+            --fs-caption: 12px;
+            --fs-label: 13px;
+            --fs-control: 14px;
+            --fs-body: 15px;
+            --fs-body-strong: 16px;
+            --fs-nav: 16px;
+            --fs-section-title: 26px;
+            --fs-page-title: 38px;
         }
 
         * {
@@ -24,6 +32,7 @@
         body {
             margin: 0;
             font-family: "Segoe UI", Arial, sans-serif;
+            font-size: var(--fs-body);
             color: var(--text);
             background:
                 radial-gradient(circle at 20% 20%, rgba(34, 211, 238, 0.2), transparent 30%),
@@ -43,7 +52,7 @@
         }
 
         .brand {
-            font-size: 32px;
+            font-size: 20px;
             font-weight: 700;
             display: flex;
             gap: 12px;
@@ -68,7 +77,7 @@
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            font-size: 16px;
+            font-size: var(--fs-caption);
             font-weight: 700;
             color: #052a31;
             background: linear-gradient(160deg, #3b82f6, #22d3ee);
@@ -92,13 +101,14 @@
 
         .hero h1 {
             margin: 0 0 8px;
-            font-size: 44px;
+            font-size: var(--fs-page-title);
+            line-height: 1.08;
         }
 
         .hero p {
             margin: 0;
             color: var(--muted);
-            font-size: 20px;
+            font-size: var(--fs-body-strong, 16px);
         }
 
         .selected {
@@ -107,11 +117,11 @@
             background: rgba(34, 211, 238, .09);
             border-radius: 10px;
             padding: 10px 12px;
-            font-size: 18px;
+            font-size: var(--fs-control);
         }
 
         .section-title {
-            font-size: 30px;
+            font-size: var(--fs-section-title);
             margin: 0 0 14px;
         }
 
@@ -202,7 +212,7 @@
             align-items: center;
             justify-content: center;
             color: #8fb2d9;
-            font-size: 32px;
+            font-size: 24px;
         }
 
         .card-body {
@@ -215,14 +225,14 @@
 
         .product-name {
             margin: 0 0 6px;
-            font-size: 22px;
+            font-size: 18px;
             line-height: 1.3;
         }
 
         .meta {
             margin: 0;
             color: var(--muted);
-            font-size: 16px;
+            font-size: var(--fs-control);
         }
 
         .empty {
@@ -231,7 +241,7 @@
             border-radius: 14px;
             padding: 28px;
             color: var(--muted);
-            font-size: 20px;
+            font-size: var(--fs-body);
             text-align: center;
         }
 
@@ -247,7 +257,7 @@
 
         .tryon-title {
             margin: 0 0 10px;
-            font-size: 28px;
+            font-size: 24px;
         }
 
         .field {
@@ -258,7 +268,7 @@
             display: block;
             margin-bottom: 6px;
             color: #cad7ea;
-            font-size: 16px;
+            font-size: var(--fs-label);
         }
 
         .input-file,
@@ -294,7 +304,7 @@
 
         .preview-placeholder {
             color: var(--muted);
-            font-size: 14px;
+            font-size: var(--fs-control);
             text-align: center;
             padding: 10px;
         }
@@ -328,7 +338,7 @@
             border: 1px solid rgba(54, 198, 230, .45);
             background: rgba(6, 14, 26, .65);
             color: var(--text);
-            font-size: 13px;
+            font-size: var(--fs-label);
             cursor: pointer;
         }
         .preview-remove {
@@ -355,7 +365,7 @@
             border: 1px solid rgba(34, 211, 238, .35);
             background: rgba(34, 211, 238, .09);
             padding: 10px;
-            font-size: 14px;
+            font-size: var(--fs-control);
             margin-bottom: 12px;
         }
 
@@ -364,7 +374,7 @@
             border: 1px solid rgba(248, 113, 113, 0.45);
             background: rgba(248, 113, 113, 0.12);
             padding: 10px;
-            font-size: 13px;
+            font-size: var(--fs-label);
             margin-bottom: 12px;
             color: #fecaca;
         }
@@ -374,7 +384,7 @@
             border: none;
             border-radius: 12px;
             padding: 12px;
-            font-size: 16px;
+            font-size: var(--fs-control);
             font-weight: 700;
             cursor: pointer;
             color: #052a31;
@@ -385,13 +395,13 @@
         .result-note {
             margin-top: 8px;
             color: var(--muted);
-            font-size: 13px;
+            font-size: var(--fs-label);
             line-height: 1.45;
         }
 
         .status-note {
             margin-top: 10px;
-            font-size: 13px;
+            font-size: var(--fs-label);
             color: var(--muted);
             min-height: 18px;
         }
@@ -411,11 +421,11 @@
 
         @media (max-width: 900px) {
             .brand {
-                font-size: 22px;
+                font-size: 18px;
             }
 
             .hero h1 {
-                font-size: 34px;
+                font-size: 30px;
             }
 
             .page-grid {

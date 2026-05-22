@@ -14,6 +14,15 @@
             --primary: #22d3ee;
             --success: #2dd4bf;
             --danger: #f87171;
+            --fs-caption: 12px;
+            --fs-label: 13px;
+            --fs-control: 14px;
+            --fs-body: 15px;
+            --fs-body-strong: 16px;
+            --fs-nav: 16px;
+            --fs-section-title: 32px;
+            --fs-page-title: 40px;
+            --fs-metric: 42px;
         }
         * { box-sizing: border-box; }
         body {
@@ -96,7 +105,7 @@
             padding: 11px 14px;
             border-radius: 10px;
             margin-bottom: 8px;
-            font-size: 16px;
+            font-size: var(--fs-nav);
             border: 1px solid transparent;
             transition: color 0.2s ease, border-color 0.2s ease, background 0.2s ease;
         }
@@ -104,9 +113,9 @@
         .menu-item.active { color: #3be0f5; background: rgba(52, 219, 242, 0.12); border-color: rgba(52, 219, 242, 0.3); }
 
         .content { padding: 26px; }
-        h1 { font-size: 44px; margin: 0 0 20px; }
+        h1 { font-size: var(--fs-page-title); margin: 0 0 20px; line-height: 1.08; }
 
-        .cards { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 16px; }
+        .cards { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
         .card {
             background: var(--panel);
             border: 1px solid var(--panel-border);
@@ -115,49 +124,49 @@
             min-height: 130px;
             box-shadow: inset 0 0 32px rgba(56, 189, 248, 0.08), 0 8px 28px rgba(0, 0, 0, 0.35);
         }
-        .card-label { font-size: 22px; color: var(--muted); margin-top: 12px; }
-        .card-value { margin-top: 10px; font-size: 48px; font-weight: 700; }
+        .card-label { font-size: 18px; color: var(--muted); margin-top: 12px; }
+        .card-value { margin-top: 10px; font-size: var(--fs-metric); font-weight: 700; line-height: 1.05; }
         .credit-breakdown { margin-top: 10px; border-top: 1px solid rgba(130, 170, 230, 0.2); padding-top: 10px; }
-        .credit-item { display: flex; justify-content: space-between; align-items: center; font-size: 16px; color: #c6d3e6; margin: 4px 0; }
-        .credit-item strong { color: #e6edf7; font-size: 18px; }
+        .credit-item { display: flex; justify-content: space-between; align-items: center; font-size: var(--fs-body); color: #c6d3e6; margin: 4px 0; }
+        .credit-item strong { color: #e6edf7; font-size: var(--fs-body-strong); }
 
         .split { display: grid; grid-template-columns: 1fr; gap: 18px; margin-top: 18px; }
         .panel { background: var(--panel); border: 1px solid var(--panel-border); border-radius: 14px; padding: 18px; }
-        .panel h2 { font-size: 34px; margin: 0 0 16px; }
+        .panel h2 { font-size: var(--fs-section-title); margin: 0 0 16px; line-height: 1.1; }
 
-        table { width: 100%; border-collapse: collapse; font-size: 22px; }
+        table { width: 100%; border-collapse: collapse; font-size: var(--fs-body); }
         th, td { padding: 12px 10px; border-bottom: 1px solid rgba(130, 170, 230, 0.18); text-align: left; }
-        th { color: #b9c7da; font-weight: 600; font-size: 20px; background: rgba(255,255,255,0.03); }
-        .badge { display: inline-block; padding: 4px 10px; border-radius: 999px; font-size: 18px; border: 1px solid rgba(45, 212, 191, .45); color: var(--success); background: rgba(45, 212, 191, .12); }
+        th { color: #b9c7da; font-weight: 600; font-size: var(--fs-label); background: rgba(255,255,255,0.03); }
+        .badge { display: inline-block; padding: 4px 10px; border-radius: 999px; font-size: var(--fs-caption); border: 1px solid rgba(45, 212, 191, .45); color: var(--success); background: rgba(45, 212, 191, .12); }
         .badge-failed { border-color: rgba(248, 113, 113, .45); color: var(--danger); background: rgba(248, 113, 113, .12); }
         .badge-processing { border-color: rgba(56, 189, 248, .45); color: #7dd3fc; background: rgba(56, 189, 248, .12); }
         .preview-thumb { width: 42px; height: 42px; border-radius: 8px; object-fit: cover; border: 1px solid rgba(130, 170, 230, 0.35); }
-        .details-btn { border:1px solid rgba(80,180,255,.45); background:rgba(6,14,26,.65); color:#dbeafe; border-radius:10px; padding:6px 10px; font-size:14px; cursor:pointer; }
-        .req-id { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 15px; color:#dbeafe; }
-        .req-model { font-size: 14px; color:#d4e4f7; background: rgba(255,255,255,.05); border:1px solid rgba(130,170,230,.25); border-radius:8px; padding: 4px 8px; display:inline-block; }
+        .details-btn { border:1px solid rgba(80,180,255,.45); background:rgba(6,14,26,.65); color:#dbeafe; border-radius:10px; padding:6px 10px; font-size:var(--fs-control); cursor:pointer; }
+        .req-id { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: var(--fs-control); color:#dbeafe; }
+        .req-model { font-size: var(--fs-label); color:#d4e4f7; background: rgba(255,255,255,.05); border:1px solid rgba(130,170,230,.25); border-radius:8px; padding: 4px 8px; display:inline-block; }
 
         .modal-backdrop { position: fixed; inset: 0; display: none; align-items: center; justify-content: center; background: rgba(4,10,20,.62); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); z-index: 50; padding: 20px; }
         .modal-backdrop.open { display: flex; }
         .modal-card { width: min(980px, 100%); max-height: 90vh; overflow: auto; background: #0e1728; border: 1px solid rgba(130,170,230,.35); border-radius: 14px; padding: 18px; box-shadow: 0 18px 60px rgba(0,0,0,.45); }
         .modal-header { display:flex; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 12px; }
-        .modal-title { font-size: 32px; margin: 0; }
-        .modal-close { border:1px solid rgba(130,170,230,.35); background:rgba(6,14,26,.65); color:#e6edf7; border-radius:10px; width:38px; height:38px; font-size:20px; cursor:pointer; }
+        .modal-title { font-size: 28px; margin: 0; }
+        .modal-close { border:1px solid rgba(130,170,230,.35); background:rgba(6,14,26,.65); color:#e6edf7; border-radius:10px; width:38px; height:38px; font-size:16px; cursor:pointer; }
         .modal-grid { display:grid; grid-template-columns: repeat(4, minmax(0,1fr)); gap: 12px; margin-bottom: 12px; }
         .modal-kv { background: rgba(255,255,255,.03); border:1px solid rgba(130,170,230,.2); border-radius:10px; padding:10px; }
-        .modal-kv .k { font-size: 12px; color:#9db0c8; text-transform: uppercase; letter-spacing: .03em; margin-bottom: 5px; }
-        .modal-kv .v { font-size: 15px; color:#e6edf7; word-break: break-all; }
+        .modal-kv .k { font-size: var(--fs-caption); color:#9db0c8; text-transform: uppercase; letter-spacing: .03em; margin-bottom: 5px; }
+        .modal-kv .v { font-size: var(--fs-control); color:#e6edf7; word-break: break-all; }
         .modal-tabs { display:flex; gap: 8px; margin: 6px 0 12px; }
-        .tab-btn { border:1px solid rgba(130,170,230,.35); background:rgba(6,14,26,.65); color:#c8d7eb; border-radius:10px; padding:8px 12px; cursor:pointer; font-size:14px; }
+        .tab-btn { border:1px solid rgba(130,170,230,.35); background:rgba(6,14,26,.65); color:#c8d7eb; border-radius:10px; padding:8px 12px; cursor:pointer; font-size:var(--fs-label); }
         .tab-btn.active { border-color: rgba(34,211,238,.6); color: #22d3ee; background: rgba(34,211,238,.12); }
         .tab-content { display:none; }
         .tab-content.active { display:block; }
         .image-grid { display:grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 12px; margin-bottom: 12px; }
         .image-block { background: rgba(255,255,255,.03); border:1px solid rgba(130,170,230,.2); border-radius:10px; padding: 8px; }
-        .image-block h4 { margin: 0 0 8px; font-size: 14px; color:#b9c7da; }
+        .image-block h4 { margin: 0 0 8px; font-size: var(--fs-label); color:#b9c7da; }
         .image-block img { width:100%; height:210px; object-fit: cover; border-radius: 8px; border: 1px solid rgba(130,170,230,.3); }
-        .image-empty { height:210px; border-radius: 8px; border: 1px dashed rgba(130,170,230,.35); display:flex; align-items:center; justify-content:center; color:#8fa4bf; font-size:13px; }
+        .image-empty { height:210px; border-radius: 8px; border: 1px dashed rgba(130,170,230,.35); display:flex; align-items:center; justify-content:center; color:#8fa4bf; font-size:var(--fs-label); }
         .json-box { background:#0a0f1a; border:1px solid rgba(130,170,230,.28); border-radius:10px; padding:12px; overflow:auto; max-height: 280px; }
-        .json-box pre { margin:0; color:#d7e7fb; font-size: 13px; line-height: 1.5; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; white-space: pre-wrap; word-break: break-word; }
+        .json-box pre { margin:0; color:#d7e7fb; font-size: var(--fs-caption); line-height: 1.5; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; white-space: pre-wrap; word-break: break-word; }
 
 
         @media (max-width: 1100px) {
@@ -175,6 +184,9 @@
             .sidebar { display: flex; gap: 8px; border-right: none; border-bottom: 1px solid rgba(115, 170, 240, 0.18); }
             .menu-item { margin-bottom: 0; }
             .topbar { flex-wrap: wrap; height: auto; padding: 12px; gap: 10px; }
+            h1 { font-size: 32px; }
+            .panel h2 { font-size: 26px; }
+            .card-value { font-size: 36px; }
         }
     </style>
 </head>
@@ -235,17 +247,38 @@
                     </div>
                 </div>
             </article>
-            <article class="card" style="border-color: rgba(53,229,239,.65); box-shadow: inset 0 0 30px rgba(34,211,238,.25), 0 0 34px rgba(34,211,238,.25);">
-                <div class="card-label">Success Generate</div>
-                <div class="card-value">{{ number_format($stats['success_count']) }}</div>
-            </article>
             <article class="card">
-                <div class="card-label">Failed Generate</div>
-                <div class="card-value">{{ number_format($stats['failed_count']) }}</div>
-            </article>
-            <article class="card">
-                <div class="card-label">Token Used</div>
-                <div class="card-value">{{ number_format($stats['token_used']) }}</div>
+                <div class="card-label">Model</div>
+                <div class="card-value-text">{{ $stats['fashn_model_label'] }}</div>
+                <div class="credit-breakdown">
+                    @if($stats['fashn_model'] === 'tryon-v1.6')
+                        <div class="credit-item">
+                            <span>Mode</span>
+                            <strong>{{ ucfirst($stats['fashn_model_config']['mode'] ?? 'balanced') }}</strong>
+                        </div>
+                        <div class="credit-item">
+                            <span>Samples</span>
+                            <strong>{{ (int) ($stats['fashn_model_config']['samples'] ?? 1) }}</strong>
+                        </div>
+                        <div class="credit-item">
+                            <span>Format</span>
+                            <strong>{{ strtoupper((string) ($stats['fashn_model_config']['format'] ?? 'png')) }}</strong>
+                        </div>
+                    @else
+                        <div class="credit-item">
+                            <span>Mode</span>
+                            <strong>{{ ucfirst($stats['fashn_model_config']['generation_mode'] ?? 'balanced') }}</strong>
+                        </div>
+                        <div class="credit-item">
+                            <span>Resolution</span>
+                            <strong>{{ strtoupper((string) ($stats['fashn_model_config']['resolution'] ?? '1k')) }}</strong>
+                        </div>
+                        <div class="credit-item">
+                            <span>Format</span>
+                            <strong>{{ strtoupper((string) ($stats['fashn_model_config']['format'] ?? 'png')) }}</strong>
+                        </div>
+                    @endif
+                </div>
             </article>
         </section>
 

@@ -157,6 +157,7 @@ class TryOnPublicController extends Controller
                 $cost = $provider->estimateCost([
                     'quality_mode' => $session->quality_mode,
                     'num_images' => 1,
+                    'provider_config' => $this->resolveProviderConfig($session->seller),
                 ]);
 
                 if ((int) $session->token_cost === 0) {
@@ -304,8 +305,38 @@ class TryOnPublicController extends Controller
             $config['model'] = $setting->fashn_model;
         }
 
+        if (($config['model'] ?? null) === 'tryon-v1.6') {
+            if (is_string($setting->fashn_tryon_v16_mode) && trim($setting->fashn_tryon_v16_mode) !== '') {
+                $config['v16_mode'] = $setting->fashn_tryon_v16_mode;
+            }
+
+            if ((int) ($setting->fashn_tryon_v16_num_samples ?? 0) > 0) {
+                $config['v16_num_samples'] = (int) $setting->fashn_tryon_v16_num_samples;
+            }
+
+            if (is_string($setting->fashn_tryon_v16_output_format) && trim($setting->fashn_tryon_v16_output_format) !== '') {
+                $config['v16_output_format'] = $setting->fashn_tryon_v16_output_format;
+            }
+        } else {
+            if (is_string($setting->fashn_tryon_max_generation_mode) && trim($setting->fashn_tryon_max_generation_mode) !== '') {
+                $config['generation_mode'] = $setting->fashn_tryon_max_generation_mode;
+            }
+
+            if (is_string($setting->fashn_tryon_max_resolution) && trim($setting->fashn_tryon_max_resolution) !== '') {
+                $config['resolution'] = $setting->fashn_tryon_max_resolution;
+            }
+
+            if (is_string($setting->fashn_tryon_max_output_format) && trim($setting->fashn_tryon_max_output_format) !== '') {
+                $config['output_format'] = $setting->fashn_tryon_max_output_format;
+            }
+        }
+
         if (is_string($setting->fashn_dummy_result_url) && trim($setting->fashn_dummy_result_url) !== '') {
             $config['dummy_result_url'] = $setting->fashn_dummy_result_url;
+        }
+
+        if (is_string($setting->fashn_dummy_model_image_url) && trim($setting->fashn_dummy_model_image_url) !== '') {
+            $config['dummy_model_image_url'] = $setting->fashn_dummy_model_image_url;
         }
 
         return $config;
@@ -313,6 +344,10 @@ class TryOnPublicController extends Controller
 
     private function canUseProvider(array $providerConfig): bool
     {
+        if (($providerConfig['dummy_enabled'] ?? false) === true) {
+            return true;
+        }
+
         return isset($providerConfig['api_key']) && trim((string) $providerConfig['api_key']) !== '';
     }
 }

@@ -18,6 +18,14 @@
             --danger: #ff8a8a;
             --success: #31d8be;
             --overlay: rgba(1, 5, 12, 0.76);
+            --fs-caption: 12px;
+            --fs-label: 13px;
+            --fs-control: 14px;
+            --fs-body: 15px;
+            --fs-nav: 16px;
+            --fs-section-title: 30px;
+            --fs-page-title: 40px;
+            --fs-modal-title: 34px;
         }
 
         * { box-sizing: border-box; }
@@ -124,7 +132,7 @@
             padding: 11px 14px;
             border-radius: 10px;
             margin-bottom: 8px;
-            font-size: 16px;
+            font-size: var(--fs-nav);
             border: 1px solid transparent;
             transition: color 0.2s ease, border-color 0.2s ease, background 0.2s ease;
         }
@@ -146,7 +154,7 @@
 
         h1 {
             margin: 0 0 18px;
-            font-size: 44px;
+            font-size: var(--fs-page-title);
             line-height: 1.06;
             color: #e9f3ff;
         }
@@ -170,13 +178,13 @@
 
         .panel h2 {
             margin: 0;
-            font-size: 31px;
+            font-size: var(--fs-section-title);
         }
 
         table {
             width: 100%;
             border-collapse: collapse;
-            font-size: 15px;
+            font-size: var(--fs-body);
             border: 1px solid rgba(127, 166, 218, 0.2);
             border-radius: 12px;
             overflow: hidden;
@@ -193,7 +201,7 @@
         th {
             color: #b9cdea;
             font-weight: 600;
-            font-size: 13px;
+            font-size: var(--fs-label);
             letter-spacing: 0.3px;
             background: rgba(255, 255, 255, 0.035);
         }
@@ -206,7 +214,7 @@
             display: inline-block;
             padding: 4px 10px;
             border-radius: 999px;
-            font-size: 12px;
+            font-size: var(--fs-caption);
             border: 1px solid rgba(49, 216, 190, 0.45);
             color: var(--success);
             background: rgba(49, 216, 190, 0.12);
@@ -237,7 +245,7 @@
             align-items: center;
             justify-content: center;
             color: #8fb2d9;
-            font-size: 12px;
+            font-size: var(--fs-caption);
             font-weight: 600;
         }
 
@@ -251,7 +259,7 @@
             border: none;
             border-radius: 10px;
             padding: 10px 14px;
-            font-size: 13px;
+            font-size: var(--fs-control);
             cursor: pointer;
             line-height: 1;
             transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
@@ -278,7 +286,7 @@
             margin-bottom: 12px;
             padding: 10px 12px;
             border-radius: 10px;
-            font-size: 14px;
+            font-size: var(--fs-control);
         }
 
         .flash-success {
@@ -310,7 +318,7 @@
         }
 
         .modal-card {
-            width: min(760px, 100%);
+            width: min(1040px, 100%);
             background:
                 linear-gradient(145deg, rgba(11, 23, 43, 0.96), rgba(8, 18, 36, 0.98));
             border: 1px solid rgba(62, 177, 255, 0.35);
@@ -325,10 +333,15 @@
             align-items: center;
             margin-bottom: 14px;
         }
+        .modal-head-right {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
 
         .modal-title {
             margin: 0;
-            font-size: 42px;
+            font-size: var(--fs-modal-title);
             line-height: 1.08;
             letter-spacing: 0.3px;
             color: #f0f6ff;
@@ -340,7 +353,7 @@
             border: 1px solid rgba(157, 176, 200, 0.3);
             border-radius: 10px;
             padding: 7px 12px;
-            font-size: 12px;
+            font-size: var(--fs-caption);
             cursor: pointer;
         }
 
@@ -348,11 +361,68 @@
             color: #e5efff;
             border-color: rgba(49, 217, 241, 0.38);
         }
+        .status-toggle {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            font-size: var(--fs-label);
+            color: #d4e3f8;
+        }
+        .status-toggle-switch {
+            position: relative;
+            width: 46px;
+            height: 26px;
+            border-radius: 999px;
+            background: rgba(157, 176, 200, 0.28);
+            border: 1px solid rgba(157, 176, 200, 0.35);
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .status-toggle-switch::after {
+            content: '';
+            position: absolute;
+            top: 2px;
+            left: 2px;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #ffffff;
+            transition: transform 0.2s ease;
+        }
+        .status-toggle input {
+            display: none;
+        }
+        .status-toggle input:checked + .status-toggle-switch {
+            background: rgba(49, 217, 241, 0.42);
+            border-color: rgba(49, 217, 241, 0.55);
+        }
+        .status-toggle input:checked + .status-toggle-switch::after {
+            transform: translateX(20px);
+            background: #ddfbff;
+        }
+        .status-toggle-label {
+            min-width: 54px;
+            text-transform: capitalize;
+        }
 
         .form-grid {
             display: grid;
             grid-template-columns: repeat(2, minmax(0, 1fr));
             gap: 14px 14px;
+        }
+
+        .product-form-grid {
+            display: grid;
+            grid-template-columns: 340px minmax(0, 1fr);
+            gap: 14px;
+        }
+
+        .product-left-col,
+        .product-right-col {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            min-width: 0;
         }
 
         .field {
@@ -368,7 +438,7 @@
 
         label {
             margin-bottom: 6px;
-            font-size: 13px;
+            font-size: var(--fs-label);
             color: #d4e3f8;
             letter-spacing: 0.15px;
         }
@@ -382,7 +452,7 @@
             background: rgba(6, 15, 29, 0.66);
             color: var(--text);
             padding: 0 11px;
-            font-size: 13px;
+            font-size: var(--fs-control);
             outline: none;
             transition: border-color 0.2s ease, box-shadow 0.2s ease;
         }
@@ -396,7 +466,7 @@
         .preview-wrap {
             border: 1px solid rgba(72, 175, 252, 0.34);
             border-radius: 10px;
-            min-height: 148px;
+            min-height: 470px;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -416,15 +486,56 @@
 
         .preview-placeholder {
             color: #90a7c6;
-            font-size: 14px;
+            font-size: var(--fs-control);
             text-align: center;
             padding: 10px;
+        }
+
+        .preview-change-overlay {
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 2;
+            border: 1px solid rgba(49, 217, 241, 0.55);
+            border-radius: 10px;
+            background: linear-gradient(180deg, #42e6f4, #22cfe1);
+            color: #032631;
+            font-size: var(--fs-control);
+            font-weight: 700;
+            padding: 9px 14px;
+            cursor: pointer;
+            box-shadow: 0 0 18px rgba(49, 217, 241, 0.3);
+        }
+
+        .url-label {
+            text-align: center;
+            color: #63d9ef;
+            font-size: var(--fs-label);
+            line-height: 1;
+            margin-top: 2px;
+        }
+
+        .modal-bottom-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            margin-top: 2px;
+        }
+
+        .status-inline {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            color: #d4e3f8;
+            font-size: var(--fs-control);
         }
 
         .preview-hint {
             margin-top: 6px;
             color: var(--muted);
-            font-size: 12px;
+            font-size: var(--fs-caption);
         }
 
         .modal-actions {
@@ -454,7 +565,7 @@
         }
 
         .pagination-wrap nav > div:first-child {
-            font-size: 12px;
+            font-size: var(--fs-caption);
             color: #9cb1cc;
         }
 
@@ -475,7 +586,7 @@
             border: 1px solid rgba(112, 162, 230, 0.28);
             background: rgba(10, 19, 35, 0.82);
             color: #d6e7fd;
-            font-size: 12px;
+            font-size: var(--fs-caption);
             line-height: 1;
             text-decoration: none;
             transition: border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
@@ -540,11 +651,11 @@
             }
 
             h1 {
-                font-size: 30px;
+                font-size: 32px;
             }
 
             .panel h2 {
-                font-size: 24px;
+                font-size: 25px;
             }
 
             .panel-head {
@@ -553,10 +664,14 @@
             }
 
             .modal-title {
-                font-size: 30px;
+                font-size: 28px;
             }
 
             .form-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .product-form-grid {
                 grid-template-columns: 1fr;
             }
 
@@ -566,7 +681,7 @@
             }
 
             .preview-wrap {
-                min-height: 170px;
+                min-height: 320px;
             }
 
             .pagination-wrap nav {
@@ -681,29 +796,40 @@
     <div class="modal-card">
         <div class="modal-head">
             <h3 class="modal-title">Create New Product</h3>
-            <button class="close-btn" type="button" onclick="closeModal('createModal')">Close</button>
+            <div class="modal-head-right">
+                <label class="status-toggle">
+                    <span>Status</span>
+                    <input id="createStatusToggle" type="checkbox" checked>
+                    <span class="status-toggle-switch"></span>
+                    <span id="createStatusLabel" class="status-toggle-label">active</span>
+                </label>
+                <button class="close-btn" type="button" onclick="closeModal('createModal')">Close</button>
+            </div>
         </div>
         <form method="POST" action="{{ route('seller.products.store') }}" enctype="multipart/form-data">
             @csrf
-            <div class="form-grid">
-                <div class="field"><label>Product Name</label><input name="name" required></div>
-                <div class="field"><label>Status</label><select name="status"><option value="active">active</option><option value="inactive">inactive</option></select></div>
-                <div class="field"><label>SKU</label><input name="sku"></div>
-                <div class="field"><label>Media</label><input id="createImageFile" type="file" name="image" accept="image/*"></div>
-                <div class="field"><label>Category</label><input name="category" placeholder="Select Category..."></div>
-                <div class="field"><label>Or Public URL</label><input id="createImageUrl" type="url" name="image_url" placeholder="https://..."></div>
-                <div class="field preview-field">
-                    <label>Image Preview</label>
+            <input id="createStatus" type="hidden" name="status" value="active">
+            <div class="product-form-grid">
+                <div class="product-left-col">
                     <div class="preview-wrap">
                         <img id="createImagePreview" class="preview-img" alt="Create preview">
-                        <span class="preview-placeholder">Image will appear here</span>
+                        <button class="preview-change-overlay" type="button" onclick="document.getElementById('createImageFile').click()">Change Image</button>
                     </div>
-                    <div class="preview-hint">Pilih file atau isi URL untuk melihat preview.</div>
+                    <input id="createImageFile" type="file" name="image" accept="image/*" style="display:none;">
+                    <div class="url-label">Or Replace with Public URL</div>
+                    <input id="createImageUrl" type="url" name="image_url" placeholder="https://...">
+                </div>
+                <div class="product-right-col">
+                    <div class="field"><label>Product Name</label><input name="name" required></div>
+                    <div class="field"><label>SKU</label><input name="sku"></div>
+                    <div class="field"><label>Category</label><input name="category" placeholder="Select Category..."></div>
                 </div>
             </div>
-            <div class="modal-actions">
-                <button class="btn btn-cancel" type="button" onclick="closeModal('createModal')">Cancel</button>
-                <button class="btn btn-primary" type="submit">Create Product</button>
+            <div class="modal-bottom-row">
+                <div class="modal-actions" style="margin-top:0; margin-left:auto;">
+                    <button class="btn btn-cancel" type="button" onclick="closeModal('createModal')">Cancel</button>
+                    <button class="btn btn-primary" type="submit">Create Product</button>
+                </div>
             </div>
         </form>
     </div>
@@ -713,31 +839,42 @@
     <div class="modal-card">
         <div class="modal-head">
             <h3 class="modal-title">Edit Product</h3>
-            <button class="close-btn" type="button" onclick="closeModal('editModal')">Close</button>
+            <div class="modal-head-right">
+                <label class="status-toggle">
+                    <span>Status</span>
+                    <input id="editStatusToggle" type="checkbox" checked>
+                    <span class="status-toggle-switch"></span>
+                    <span id="editStatusLabel" class="status-toggle-label">active</span>
+                </label>
+                <button class="close-btn" type="button" onclick="closeModal('editModal')">Close</button>
+            </div>
         </div>
         <form id="editForm" method="POST" action="" enctype="multipart/form-data">
             @csrf
             @method('PATCH')
             <input id="editProductId" type="hidden" name="edit_product_id" value="">
-            <div class="form-grid">
-                <div class="field"><label>Product Name</label><input id="editName" name="name" required></div>
-                <div class="field"><label>Status</label><select id="editStatus" name="status"><option value="active">active</option><option value="inactive">inactive</option></select></div>
-                <div class="field"><label>SKU</label><input id="editSku" name="sku"></div>
-                <div class="field"><label>Replace Image File</label><input id="editImageFile" type="file" name="image" accept="image/*"></div>
-                <div class="field"><label>Category</label><input id="editCategory" name="category"></div>
-                <div class="field"><label>Or Replace with Public URL</label><input id="editImageUrl" type="url" name="image_url" placeholder="https://..."></div>
-                <div class="field preview-field">
-                    <label>Image Preview</label>
+            <input id="editStatus" type="hidden" name="status" value="active">
+            <div class="product-form-grid">
+                <div class="product-left-col">
                     <div class="preview-wrap">
                         <img id="editImagePreview" class="preview-img" alt="Edit preview">
-                        <span class="preview-placeholder">Image will appear here</span>
+                        <button class="preview-change-overlay" type="button" onclick="document.getElementById('editImageFile').click()">Change Image</button>
                     </div>
-                    <div class="preview-hint">Pilih file baru atau isi URL baru untuk preview.</div>
+                    <input id="editImageFile" type="file" name="image" accept="image/*" style="display:none;">
+                    <div class="url-label">Or Replace with Public URL</div>
+                    <input id="editImageUrl" type="url" name="image_url" placeholder="https://...">
+                </div>
+                <div class="product-right-col">
+                    <div class="field"><label>Product Name</label><input id="editName" name="name" required></div>
+                    <div class="field"><label>SKU</label><input id="editSku" name="sku"></div>
+                    <div class="field"><label>Category</label><input id="editCategory" name="category"></div>
                 </div>
             </div>
-            <div class="modal-actions">
-                <button class="btn btn-cancel" type="button" onclick="closeModal('editModal')">Cancel</button>
-                <button class="btn btn-primary" type="submit">Save</button>
+            <div class="modal-bottom-row">
+                <div class="modal-actions" style="margin-top:0; margin-left:auto;">
+                    <button class="btn btn-cancel" type="button" onclick="closeModal('editModal')">Cancel</button>
+                    <button class="btn btn-primary" type="submit">Save</button>
+                </div>
             </div>
         </form>
     </div>
@@ -749,6 +886,7 @@
     function closeOnBackdrop(event, id) { if (event.target.id === id) closeModal(id); }
     function openCreateModal() {
         resetPreview('createImageFile', 'createImageUrl', 'createImagePreview');
+        setCreateStatus('active');
         openModal('createModal');
     }
 
@@ -759,10 +897,39 @@
         document.getElementById('editName').value = name;
         document.getElementById('editSku').value = sku;
         document.getElementById('editCategory').value = category;
-        document.getElementById('editStatus').value = status;
+        setEditStatus(status || 'active');
         resetPreview('editImageFile', 'editImageUrl', 'editImagePreview');
+        document.getElementById('editImageUrl').value = imageUrl || '';
         setPreviewFromUrl('editImagePreview', imageUrl);
         openModal('editModal');
+    }
+
+    function setEditStatus(status) {
+        const normalizedStatus = String(status || 'active').toLowerCase() === 'inactive' ? 'inactive' : 'active';
+        const statusInput = document.getElementById('editStatus');
+        const statusToggle = document.getElementById('editStatusToggle');
+        const statusLabel = document.getElementById('editStatusLabel');
+        if (!statusInput) {
+            return;
+        }
+
+        statusInput.value = normalizedStatus;
+        if (statusToggle) statusToggle.checked = normalizedStatus === 'active';
+        if (statusLabel) statusLabel.textContent = normalizedStatus;
+    }
+
+    function setCreateStatus(status) {
+        const normalizedStatus = String(status || 'active').toLowerCase() === 'inactive' ? 'inactive' : 'active';
+        const statusInput = document.getElementById('createStatus');
+        const statusToggle = document.getElementById('createStatusToggle');
+        const statusLabel = document.getElementById('createStatusLabel');
+        if (!statusInput) {
+            return;
+        }
+
+        statusInput.value = normalizedStatus;
+        if (statusToggle) statusToggle.checked = normalizedStatus === 'active';
+        if (statusLabel) statusLabel.textContent = normalizedStatus;
     }
 
     function resetPreview(fileInputId, urlInputId, previewId) {
@@ -828,6 +995,19 @@
 
     bindImagePreview('createImageFile', 'createImageUrl', 'createImagePreview');
     bindImagePreview('editImageFile', 'editImageUrl', 'editImagePreview');
+
+    const editStatusToggle = document.getElementById('editStatusToggle');
+    if (editStatusToggle) {
+        editStatusToggle.addEventListener('change', function () {
+            setEditStatus(this.checked ? 'active' : 'inactive');
+        });
+    }
+    const createStatusToggle = document.getElementById('createStatusToggle');
+    if (createStatusToggle) {
+        createStatusToggle.addEventListener('change', function () {
+            setCreateStatus(this.checked ? 'active' : 'inactive');
+        });
+    }
 
     @if($errors->any() && old('edit_product_id'))
         openEditModal(
