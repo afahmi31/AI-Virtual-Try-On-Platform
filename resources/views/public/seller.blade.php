@@ -285,6 +285,74 @@
             color: #7f5739;
         }
 
+        .label-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            margin-bottom: 8px;
+        }
+
+        .label-row .label {
+            margin-bottom: 0;
+        }
+
+        .dummy-toggle {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 12px;
+            color: #7f5739;
+            user-select: none;
+            cursor: pointer;
+        }
+
+        .dummy-toggle input {
+            position: absolute;
+            opacity: 0;
+            width: 0;
+            height: 0;
+            pointer-events: none;
+        }
+
+        .dummy-toggle-switch {
+            position: relative;
+            width: 40px;
+            height: 22px;
+            border-radius: 999px;
+            background: #e5d6c2;
+            border: 1px solid #d8c3a9;
+            transition: background .2s ease, border-color .2s ease;
+            flex: 0 0 auto;
+        }
+
+        .dummy-toggle-switch::after {
+            content: '';
+            position: absolute;
+            top: 2px;
+            left: 2px;
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: #ffffff;
+            box-shadow: 0 1px 3px rgba(43, 23, 9, 0.24);
+            transition: transform .2s ease;
+        }
+
+        .dummy-toggle input:checked + .dummy-toggle-switch {
+            background: #f29a63;
+            border-color: #ea8344;
+        }
+
+        .dummy-toggle input:checked + .dummy-toggle-switch::after {
+            transform: translateX(18px);
+        }
+
+        .dummy-toggle-text {
+            font-weight: 700;
+            line-height: 1;
+        }
+
         .input-file {
             display: none;
         }
@@ -521,7 +589,14 @@
 
             <div class="modal-preview-grid">
                 <div class="field">
-                    <label class="label">Foto</label>
+                    <div class="label-row">
+                        <label class="label">Foto</label>
+                        <label class="dummy-toggle" id="dummyModelToggleWrap" style="display:none;">
+                            <input type="checkbox" id="useDummyModelToggle">
+                            <span class="dummy-toggle-switch" aria-hidden="true"></span>
+                            <span class="dummy-toggle-text">Use Dummy Model</span>
+                        </label>
+                    </div>
                     <div class="preview-box">
                         <img id="customerPreview" alt="Customer preview">
                         <button id="removePhotoBtn" class="preview-remove" type="button" aria-label="Hapus foto">&times;</button>
@@ -551,6 +626,7 @@
         const TRYON_DEVICE_KEY = 'tryon_device_id_v1';
         const TRYON_DUMMY = @json($tryOnDummy ?? ['enabled' => false, 'model_image_url' => '', 'result_url' => '']);
         let remainingDailyQuota = null;
+        let useDummyModelForRealGenerate = Boolean(TRYON_DUMMY.model_image_url);
 
         function resolveTryOnDeviceId() {
             try {
@@ -716,28 +792,46 @@
             }
         }
 
-        function applyDummyModeUI() {
-            if (!TRYON_DUMMY.enabled) {
-                return;
-            }
-
+        function applyDummyModelSelectionUI() {
             const customerPhotoInput = document.getElementById('customerPhoto');
             const customerPreview = document.getElementById('customerPreview');
             const customerPlaceholder = document.getElementById('customerPlaceholder');
             const removePhotoBtn = document.getElementById('removePhotoBtn');
+            const toggleWrap = document.getElementById('dummyModelToggleWrap');
+            const toggle = document.getElementById('useDummyModelToggle');
+            const hasDummyModelUrl = Boolean(TRYON_DUMMY.model_image_url);
 
-            customerPhotoInput.value = '';
-            customerPhotoInput.disabled = true;
-            removePhotoBtn.style.display = 'none';
+            if (!toggleWrap || !toggle) {
+                return;
+            }
 
-            if (TRYON_DUMMY.model_image_url) {
+            if (!hasDummyModelUrl || TRYON_DUMMY.enabled) {
+                toggleWrap.style.display = 'none';
+                useDummyModelForRealGenerate = false;
+                toggle.checked = false;
+                customerPhotoInput.disabled = false;
+                return;
+            }
+
+            toggleWrap.style.display = 'inline-flex';
+            useDummyModelForRealGenerate = toggle.checked;
+
+            if (useDummyModelForRealGenerate) {
+                customerPhotoInput.value = '';
+                customerPhotoInput.disabled = true;
+                removePhotoBtn.style.display = 'none';
                 customerPreview.src = TRYON_DUMMY.model_image_url;
                 customerPreview.style.display = 'block';
                 customerPlaceholder.style.display = 'none';
-            } else {
+                return;
+            }
+
+            customerPhotoInput.disabled = false;
+            if (!customerPhotoInput.files || !customerPhotoInput.files[0]) {
                 customerPreview.removeAttribute('src');
                 customerPreview.style.display = 'none';
                 customerPlaceholder.style.display = 'block';
+                removePhotoBtn.style.display = 'none';
             }
         }
 
@@ -807,8 +901,9 @@
                 return;
             }
 
+            const useDummyModelImage = Boolean(TRYON_DUMMY.model_image_url) && useDummyModelForRealGenerate;
             const file = customerPhotoInput.files && customerPhotoInput.files[0] ? customerPhotoInput.files[0] : null;
-            if (!file || !customerPreview.getAttribute('src')) {
+            if (!useDummyModelImage && (!file || !customerPreview.getAttribute('src'))) {
                 setStatus('Upload foto model terlebih dahulu.', 'error');
                 return;
             }
@@ -828,7 +923,10 @@
             try {
                 const formData = new FormData();
                 formData.append('product_id', String(selectedProductId));
-                formData.append('customer_photo', file);
+                formData.append('use_dummy_model', useDummyModelImage ? '1' : '0');
+                if (!useDummyModelImage && file) {
+                    formData.append('customer_photo', file);
+                }
 
                 const createResponse = await fetch(@json(route('public.tryon.sessions.store', ['seller_slug' => $seller->slug])), {
                     method: 'POST',
@@ -929,7 +1027,15 @@
             if (current) {
                 selectProduct(current);
             }
-            applyDummyModeUI();
+            const toggle = document.getElementById('useDummyModelToggle');
+            if (toggle) {
+                toggle.checked = Boolean(TRYON_DUMMY.model_image_url);
+                toggle.addEventListener('change', function() {
+                    useDummyModelForRealGenerate = this.checked;
+                    applyDummyModelSelectionUI();
+                });
+            }
+            applyDummyModelSelectionUI();
             refreshQuota();
         })();
     </script>

@@ -41,6 +41,7 @@ class TryOnPublicController extends Controller
         $seller = Seller::query()
             ->where('slug', $seller_slug)
             ->where('status', 'active')
+            ->with('aiSetting')
             ->firstOrFail();
 
         $quota = $this->buildQuotaPayload($request, $seller->slug);
@@ -53,8 +54,21 @@ class TryOnPublicController extends Controller
 
         $payload = $request->validate([
             'product_id' => ['required', 'integer', 'exists:products,id'],
-            'customer_photo' => ['required', 'file', 'image', 'mimes:jpg,jpeg,png,webp', 'max:10240'],
+            'use_dummy_model' => ['nullable', 'boolean'],
+            'customer_photo' => ['nullable', 'file', 'image', 'mimes:jpg,jpeg,png,webp', 'max:10240'],
         ]);
+
+        $dummyModelImageUrl = is_string($seller->aiSetting?->fashn_dummy_model_image_url)
+            ? trim($seller->aiSetting->fashn_dummy_model_image_url)
+            : '';
+        $hasDummyModelImageUrl = $dummyModelImageUrl !== '';
+        $useDummyModel = $hasDummyModelImageUrl && $request->boolean('use_dummy_model');
+
+        if (! $request->hasFile('customer_photo') && ! $useDummyModel) {
+            return response()->json([
+                'message' => 'Upload foto model terlebih dahulu atau isi Dummy Model Image URL di settings.',
+            ], 422);
+        }
 
         // Locked to the lowest-cost provider mode (balanced + 1k via "standard").
         $qualityMode = 'standard';
@@ -73,7 +87,9 @@ class TryOnPublicController extends Controller
             return response()->json(['message' => 'Token seller tidak tersedia.'], 422);
         }
 
-        $photoPath = $payload['customer_photo']->store('tryon/customers/'.$seller->id, 'public');
+        $photoPath = $useDummyModel
+            ? $dummyModelImageUrl
+            : $payload['customer_photo']->store('tryon/customers/'.$seller->id, 'public');
 
         $session = TryOnSession::query()->create([
             'seller_id' => $seller->id,

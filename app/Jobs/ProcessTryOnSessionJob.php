@@ -396,11 +396,9 @@ class ProcessTryOnSessionJob implements ShouldQueue
 
     private function resolveModelImageUrl(?string $customerPhotoPath, array $providerConfig = []): ?string
     {
-        if (($providerConfig['dummy_enabled'] ?? false) === true) {
-            $sellerDummyUrl = trim((string) ($providerConfig['dummy_model_image_url'] ?? ''));
-            if ($sellerDummyUrl !== '') {
-                return $sellerDummyUrl;
-            }
+        $sellerDummyUrl = trim((string) ($providerConfig['dummy_model_image_url'] ?? ''));
+        if ($sellerDummyUrl !== '') {
+            return $sellerDummyUrl;
         }
 
         $dummyUrl = trim((string) config('tryon.dummy_model_image_url'));

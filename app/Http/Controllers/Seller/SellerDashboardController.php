@@ -52,7 +52,7 @@ class SellerDashboardController extends Controller
             'success_count' => (int) ($usage->success_count ?? 0),
             'failed_count' => (int) ($usage->failed_count ?? 0),
             'recent_tryon' => TryOnSession::query()
-                ->with(['product:id,name', 'product.images:id,product_id,image_url,is_primary'])
+                ->with(['product:id,name', 'product.images:id,product_id,path,source_type,is_primary'])
                 ->where('seller_id', $seller->id)
                 ->latest()
                 ->limit(10)
