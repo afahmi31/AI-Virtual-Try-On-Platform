@@ -536,6 +536,7 @@
         let selectedProductId = @json(optional($selectedProduct)->id);
         let pollTimer = null;
         const TRYON_DEVICE_KEY = 'tryon_device_id_v1';
+        const TRYON_DUMMY = @json($tryOnDummy ?? ['enabled' => false, 'model_image_url' => '', 'result_url' => '']);
         let remainingDailyQuota = null;
 
         function resolveTryOnDeviceId() {
@@ -683,6 +684,47 @@
             }
         }
 
+        function consumeDummyQuotaUI() {
+            if (remainingDailyQuota === null) {
+                return;
+            }
+
+            remainingDailyQuota = Math.max(remainingDailyQuota - 1, 0);
+            const quotaEl = document.getElementById('remainingQuotaText');
+            if (quotaEl) {
+                const parts = quotaEl.textContent.split('/');
+                const limit = Number((parts[1] || '').trim());
+                if (!Number.isNaN(limit) && limit > 0) {
+                    quotaEl.textContent = `${remainingDailyQuota} / ${limit}`;
+                }
+            }
+        }
+
+        function applyDummyModeUI() {
+            if (!TRYON_DUMMY.enabled) {
+                return;
+            }
+
+            const customerPhotoInput = document.getElementById('customerPhoto');
+            const customerPreview = document.getElementById('customerPreview');
+            const customerPlaceholder = document.getElementById('customerPlaceholder');
+            const removePhotoBtn = document.getElementById('removePhotoBtn');
+
+            customerPhotoInput.value = '';
+            customerPhotoInput.disabled = true;
+            removePhotoBtn.style.display = 'none';
+
+            if (TRYON_DUMMY.model_image_url) {
+                customerPreview.src = TRYON_DUMMY.model_image_url;
+                customerPreview.style.display = 'block';
+                customerPlaceholder.style.display = 'none';
+            } else {
+                customerPreview.removeAttribute('src');
+                customerPreview.style.display = 'none';
+                customerPlaceholder.style.display = 'block';
+            }
+        }
+
         async function refreshQuota() {
             try {
                 const response = await fetch(@json(route('public.tryon.quota.show', ['seller_slug' => $seller->slug])), {
@@ -712,6 +754,40 @@
 
             if (!selectedProductId) {
                 setStatus('Pilih produk terlebih dahulu.', 'error');
+                return;
+            }
+
+            if (TRYON_DUMMY.enabled) {
+                if (!TRYON_DUMMY.model_image_url) {
+                    setStatus('Dummy aktif, tetapi Dummy Model Image URL belum diisi.', 'error');
+                    return;
+                }
+
+                if (!TRYON_DUMMY.result_url) {
+                    setStatus('Dummy aktif, tetapi Dummy Result URL belum diisi.', 'error');
+                    return;
+                }
+
+                if (remainingDailyQuota !== null && remainingDailyQuota <= 0) {
+                    setStatus('Batas generate harian sudah habis (0).', 'error');
+                    setLoading(false);
+                    return;
+                }
+
+                setLoading(true);
+                setStatus('', '');
+                resultPreview.removeAttribute('src');
+                resultPreview.style.display = 'none';
+                resultPlaceholder.style.display = 'block';
+
+                await new Promise((resolve) => window.setTimeout(resolve, 1800));
+
+                resultPreview.src = TRYON_DUMMY.result_url;
+                resultPreview.style.display = 'block';
+                resultPlaceholder.style.display = 'none';
+                consumeDummyQuotaUI();
+                setStatus('Generate selesai (dummy mode).', 'success');
+                setLoading(false);
                 return;
             }
 
@@ -837,6 +913,7 @@
             if (current) {
                 selectProduct(current);
             }
+            applyDummyModeUI();
             refreshQuota();
         })();
     </script>

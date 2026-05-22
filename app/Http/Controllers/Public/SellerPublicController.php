@@ -12,6 +12,7 @@ class SellerPublicController extends Controller
         $seller = Seller::query()
             ->where('slug', $seller_slug)
             ->where('status', 'active')
+            ->with('aiSetting')
             ->firstOrFail();
 
         $products = $seller->products()
@@ -34,6 +35,20 @@ class SellerPublicController extends Controller
             }
         }
 
-        return view('public.seller', compact('seller', 'products', 'selectedProduct'));
+        $dummyEnabled = (bool) ($seller->aiSetting?->fashn_dummy_enabled ?? false);
+        $dummyModelImageUrl = is_string($seller->aiSetting?->fashn_dummy_model_image_url)
+            ? trim($seller->aiSetting->fashn_dummy_model_image_url)
+            : '';
+        $dummyResultUrl = is_string($seller->aiSetting?->fashn_dummy_result_url)
+            ? trim($seller->aiSetting->fashn_dummy_result_url)
+            : '';
+
+        $tryOnDummy = [
+            'enabled' => $dummyEnabled,
+            'model_image_url' => $dummyModelImageUrl,
+            'result_url' => $dummyResultUrl,
+        ];
+
+        return view('public.seller', compact('seller', 'products', 'selectedProduct', 'tryOnDummy'));
     }
 }
