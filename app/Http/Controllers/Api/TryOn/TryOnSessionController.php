@@ -63,6 +63,10 @@ class TryOnSessionController extends Controller
             'ultra_quality' => 'ultra',
             default => $payload['quality_mode'],
         };
+        $providerModel = trim((string) ($seller->aiSetting?->fashn_model ?? ''));
+        if ($providerModel === '') {
+            $providerModel = (string) config('ai.providers.fashn.model', 'tryon-max');
+        }
 
         $session = TryOnSession::query()->create([
             'seller_id' => $seller->id,
@@ -73,6 +77,7 @@ class TryOnSessionController extends Controller
             'ip_address' => $request->ip(),
             'user_agent' => (string) $request->userAgent(),
             'provider_name' => 'fashn',
+            'provider_model' => $providerModel,
             'status' => 'pending',
             'expires_at' => Carbon::now()->addMinutes((int) config('tryon.retention_minutes')),
         ]);

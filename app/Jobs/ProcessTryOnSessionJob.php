@@ -123,6 +123,11 @@ class ProcessTryOnSessionJob implements ShouldQueue
             'quality_mode' => $session->quality_mode,
         ]);
 
+        if (isset($payload['provider_model']) && is_string($payload['provider_model']) && trim($payload['provider_model']) !== '') {
+            $session->provider_model = trim($payload['provider_model']);
+            $session->save();
+        }
+
         $cost = $provider->estimateCost([
             'quality_mode' => $session->quality_mode,
             'num_images' => 1,

@@ -87,6 +87,9 @@ class TryOnPublicController extends Controller
             return response()->json(['message' => 'Token seller tidak tersedia.'], 422);
         }
 
+        $providerConfig = $this->resolveProviderConfig($seller);
+        $providerModel = (string) ($providerConfig['model'] ?? config('ai.providers.fashn.model', 'tryon-max'));
+
         $photoPath = $useDummyModel
             ? $dummyModelImageUrl
             : $payload['customer_photo']->store('tryon/customers/'.$seller->id, 'public');
@@ -100,6 +103,7 @@ class TryOnPublicController extends Controller
             'ip_address' => $request->ip(),
             'user_agent' => (string) $request->userAgent(),
             'provider_name' => 'fashn',
+            'provider_model' => $providerModel,
             'status' => 'pending',
             'expires_at' => Carbon::now()->addMinutes((int) config('tryon.retention_minutes')),
         ]);

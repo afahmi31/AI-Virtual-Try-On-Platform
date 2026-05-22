@@ -304,9 +304,12 @@
                                 $productImage = optional($session->product?->images?->firstWhere('is_primary', true) ?? $session->product?->images?->first())->image_url;
                                 $modelImage = $resolvePublicPath($session->customer_photo_path);
                                 $resultImage = $resolvePublicPath($session->result_path);
+                                $sessionModel = is_string($session->provider_model) && trim($session->provider_model) !== ''
+                                    ? trim($session->provider_model)
+                                    : $stats['fashn_model'];
                                 $statusClass = $session->status === 'failed' ? 'badge-failed' : (($session->status === 'processing' || $session->status === 'pending') ? 'badge-processing' : '');
                                 $requestPayload = [
-                                    'model' => $stats['fashn_model'],
+                                    'model' => $sessionModel,
                                     'product' => $session->product?->name,
                                     'source_channel' => $session->source_channel,
                                     'ip' => $session->ip_address,
@@ -325,7 +328,7 @@
                             @endphp
                             <tr>
                                 <td class="req-id">{{ $session->provider_job_id ?: ('local-'.$session->id) }}</td>
-                                <td><span class="req-model">{{ $stats['fashn_model'] }}</span></td>
+                                <td><span class="req-model">{{ $sessionModel }}</span></td>
                                 <td>{{ $session->created_at->format('Y-m-d H:i:s') }}</td>
                                 <td>
                                     <span class="badge {{ $statusClass }}">
@@ -346,7 +349,7 @@
                                         type="button"
                                         class="details-btn js-open-request-modal"
                                         data-request-id="{{ $session->provider_job_id ?: ('local-'.$session->id) }}"
-                                        data-model="{{ $stats['fashn_model'] }}"
+                                        data-model="{{ $sessionModel }}"
                                         data-created="{{ $session->created_at->format('Y-m-d H:i:s') }}"
                                         data-status="{{ $session->status }}"
                                         data-credits="{{ (int) ($session->token_cost ?? 0) }}"

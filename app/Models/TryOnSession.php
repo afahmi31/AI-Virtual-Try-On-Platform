@@ -19,6 +19,7 @@ class TryOnSession extends Model
         'ip_address',
         'user_agent',
         'provider_name',
+        'provider_model',
         'provider_job_id',
         'result_path',
         'error_message',
