@@ -6,98 +6,580 @@
     <title>Manage Products - AI Try-On Core App</title>
     <style>
         :root {
-            --bg: #060b14;
-            --panel: rgba(16, 25, 40, 0.92);
-            --panel-border: rgba(80, 180, 255, 0.25);
-            --text: #e6edf7;
-            --muted: #9db0c8;
-            --primary: #22d3ee;
-            --success: #2dd4bf;
-            --danger: #f87171;
-            --overlay: rgba(2, 7, 14, 0.72);
+            --bg: #050b17;
+            --bg-soft: #071329;
+            --panel: rgba(10, 20, 38, 0.92);
+            --panel-strong: rgba(8, 18, 34, 0.98);
+            --panel-border: rgba(61, 177, 255, 0.26);
+            --text: #e8f1ff;
+            --muted: #9ab0cd;
+            --primary: #31d9f1;
+            --primary-strong: #11bfd8;
+            --danger: #ff8a8a;
+            --success: #31d8be;
+            --overlay: rgba(1, 5, 12, 0.76);
         }
+
         * { box-sizing: border-box; }
+
         body {
             margin: 0;
-            font-family: "Segoe UI", Arial, sans-serif;
+            min-height: 100vh;
+            font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
             color: var(--text);
             background:
-                radial-gradient(circle at 20% 20%, rgba(34, 211, 238, 0.2), transparent 30%),
-                radial-gradient(circle at 80% 70%, rgba(59, 130, 246, 0.2), transparent 25%),
-                var(--bg);
+                radial-gradient(circle at 18% 22%, rgba(38, 222, 255, 0.16), transparent 32%),
+                radial-gradient(circle at 84% 72%, rgba(45, 130, 255, 0.18), transparent 30%),
+                linear-gradient(140deg, #040914 0%, #051127 38%, #041029 100%);
         }
-        .topbar { height: 74px; padding: 0 24px; border-bottom: 1px solid rgba(120,170,255,.25); background: linear-gradient(90deg,#0b162f,#0a1b3d); display:flex; align-items:center; justify-content:space-between; }
-        .brand { font-size: 32px; font-weight: 700; display:flex; gap:12px; align-items:center; }
-        .brand-dot { width:36px; height:36px; border-radius:10px; background:rgba(34,211,238,.15); display:inline-flex; align-items:center; justify-content:center; color:var(--primary); }
-        .topnav { display:flex; gap:16px; align-items:center; }
+
+        .topbar {
+            height: 72px;
+            padding: 0 22px;
+            border-bottom: 1px solid rgba(115, 170, 240, 0.22);
+            background: linear-gradient(90deg, #0b1630 0%, #091c3f 100%);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .brand {
+            font-size: 18px;
+            font-weight: 700;
+            letter-spacing: 0.2px;
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            color: #deebff;
+        }
+
+        .brand-dot {
+            width: 30px;
+            height: 30px;
+            border-radius: 9px;
+            background: rgba(49, 217, 241, 0.14);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--primary);
+            font-weight: 800;
+            font-size: 13px;
+            border: 1px solid rgba(49, 217, 241, 0.28);
+        }
+
+        .topnav {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+
         .store-logo-link {
-            width: 38px;
-            height: 38px;
+            width: 34px;
+            height: 34px;
             border-radius: 50%;
             display: inline-flex;
             align-items: center;
             justify-content: center;
             text-decoration: none;
-            font-size: 16px;
+            font-size: 12px;
             font-weight: 700;
-            color: #052a31;
-            background: linear-gradient(160deg, #3b82f6, #22d3ee);
-            box-shadow: 0 0 16px rgba(34,211,238,.28);
+            color: #032a33;
+            background: linear-gradient(160deg, #3b82f6, #32ddf2);
+            box-shadow: 0 0 16px rgba(50, 221, 242, 0.35);
         }
-        .topnav button { color: var(--text); border:1px solid transparent; padding:10px 14px; border-radius:10px; background:rgba(255,255,255,.04); font-size:24px; cursor:pointer; }
 
-        .layout { display:grid; grid-template-columns: 280px 1fr; min-height: calc(100vh - 74px); }
-        .sidebar { border-right:1px solid rgba(120,170,255,.2); background:linear-gradient(180deg, rgba(11,18,32,.9), rgba(8,14,24,.95)); padding:18px; }
-        .menu-item { display:flex; align-items:center; color:var(--muted); text-decoration:none; padding:14px 16px; border-radius:10px; margin-bottom:10px; font-size:28px; }
-        .menu-item.active { color:var(--primary); background:rgba(34,211,238,.12); border:1px solid rgba(34,211,238,.3); }
+        .topnav button {
+            color: var(--text);
+            border: 1px solid rgba(130, 170, 225, 0.24);
+            padding: 8px 14px;
+            border-radius: 10px;
+            background: rgba(255, 255, 255, 0.04);
+            font-size: 14px;
+            cursor: pointer;
+            transition: border-color 0.2s ease, background 0.2s ease;
+        }
 
-        .content { padding: 26px; }
-        h1 { font-size: 44px; margin: 0 0 20px; }
+        .topnav button:hover {
+            border-color: rgba(49, 217, 241, 0.42);
+            background: rgba(49, 217, 241, 0.08);
+        }
 
-        .panel { background: var(--panel); border:1px solid var(--panel-border); border-radius:14px; padding:18px; margin-bottom:18px; box-shadow: inset 0 0 32px rgba(56,189,248,.08), 0 8px 28px rgba(0,0,0,.35); }
-        .panel h2 { font-size: 36px; margin: 0; }
-        .panel-head { display:flex; align-items:center; justify-content:space-between; margin-bottom: 14px; }
+        .layout {
+            display: grid;
+            grid-template-columns: 220px minmax(0, 1fr);
+            min-height: calc(100vh - 72px);
+        }
 
-        .form-grid { display:grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 14px 18px; }
-        .field { display:flex; flex-direction:column; }
-        label { font-size:22px; color:#cad7ea; margin-bottom:6px; }
-        input, select { width:100%; height:52px; border-radius:10px; border:1px solid rgba(54,198,230,.45); background:rgba(6,14,26,.65); color:var(--text); padding:0 12px; font-size:24px; }
-        .form-actions { margin-top:16px; }
+        .sidebar {
+            border-right: 1px solid rgba(115, 170, 240, 0.18);
+            background: linear-gradient(180deg, rgba(8, 16, 30, 0.95), rgba(6, 13, 24, 0.96));
+            padding: 18px 14px;
+        }
 
-        .btn { border:none; border-radius:12px; padding:12px 20px; font-size:22px; cursor:pointer; }
-        .btn-primary { background:linear-gradient(180deg,#35e5ef,#1ac6d7); color:#052a31; font-weight:700; box-shadow:0 0 24px rgba(34,211,238,.4); }
-        .btn-ghost { background:rgba(34,211,238,.14); color:var(--primary); border:1px solid rgba(34,211,238,.35); }
+        .menu-item {
+            display: flex;
+            align-items: center;
+            color: var(--muted);
+            text-decoration: none;
+            padding: 11px 14px;
+            border-radius: 10px;
+            margin-bottom: 8px;
+            font-size: 16px;
+            border: 1px solid transparent;
+            transition: color 0.2s ease, border-color 0.2s ease, background 0.2s ease;
+        }
 
-        table { width:100%; border-collapse: collapse; font-size:22px; }
-        th, td { padding:12px 10px; border-bottom:1px solid rgba(130,170,230,.18); text-align:left; vertical-align:middle; }
-        th { color:#b9c7da; font-weight:600; font-size:20px; background:rgba(255,255,255,.03); }
-        .status-badge { display:inline-block; padding:4px 10px; border-radius:999px; font-size:18px; border:1px solid rgba(45,212,191,.45); color:var(--success); background:rgba(45,212,191,.12); }
-        .status-inactive { color:#f9c74f; border-color:rgba(249,199,79,.45); background:rgba(249,199,79,.15); }
-        .actions { display:flex; gap:8px; flex-wrap:wrap; }
-        .thumb { width:56px; height:56px; border-radius:8px; object-fit:cover; border:1px solid rgba(130,170,230,.3); background:rgba(255,255,255,.05); }
-        .thumb-fallback { width:56px; height:56px; border-radius:8px; border:1px solid rgba(130,170,230,.3); background:rgba(255,255,255,.04); display:flex; align-items:center; justify-content:center; color:#8fb2d9; font-size:28px; }
+        .menu-item:hover {
+            color: #d8e6fb;
+            border-color: rgba(120, 160, 220, 0.2);
+        }
 
-        .flash { margin-bottom:14px; padding:12px 14px; border-radius:10px; font-size:22px; }
-        .flash-success { border:1px solid rgba(45,212,191,.45); color:#78f6dc; background:rgba(45,212,191,.12); }
-        .flash-error { border:1px solid rgba(248,113,113,.45); color:#fecaca; background:rgba(248,113,113,.13); }
+        .menu-item.active {
+            color: #3be0f5;
+            background: rgba(52, 219, 242, 0.12);
+            border-color: rgba(52, 219, 242, 0.3);
+        }
 
-        .modal { position:fixed; inset:0; background:var(--overlay); display:none; align-items:center; justify-content:center; z-index:1000; padding:16px; }
-        .modal.active { display:flex; }
-        .modal-card { width:min(980px,100%); background:var(--panel); border:1px solid var(--panel-border); border-radius:14px; box-shadow:0 10px 28px rgba(0,0,0,.45); padding:18px; }
-        .modal-head { display:flex; justify-content:space-between; align-items:center; margin-bottom:14px; }
-        .modal-title { font-size:32px; margin:0; }
-        .close-btn { background:transparent; color:var(--muted); border:1px solid rgba(157,176,200,.3); border-radius:10px; padding:8px 12px; font-size:18px; cursor:pointer; }
-        .modal-actions { margin-top:16px; display:flex; gap:10px; justify-content:flex-end; }
-        .preview-wrap { margin-top: 8px; }
-        .preview-img { width: 96px; height: 96px; border-radius: 10px; border: 1px solid rgba(130,170,230,.35); object-fit: cover; background: rgba(255,255,255,.04); display: none; }
-        .preview-hint { margin-top: 6px; color: var(--muted); font-size: 16px; }
+        .content {
+            padding: 26px;
+        }
 
-        @media (max-width: 1400px) {
-            .layout { grid-template-columns: 96px 1fr; }
-            .menu-item span { display:none; }
-            .form-grid { grid-template-columns: 1fr; }
-            .brand { font-size:22px; }
-            .topnav a, .topnav button { font-size:16px; }
+        h1 {
+            margin: 0 0 18px;
+            font-size: 44px;
+            line-height: 1.06;
+            color: #e9f3ff;
+        }
+
+        .panel {
+            background: var(--panel);
+            border: 1px solid var(--panel-border);
+            border-radius: 14px;
+            padding: 18px;
+            margin-bottom: 16px;
+            box-shadow: inset 0 0 44px rgba(56, 189, 248, 0.06), 0 8px 30px rgba(0, 0, 0, 0.32);
+        }
+
+        .panel-head {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            margin-bottom: 14px;
+        }
+
+        .panel h2 {
+            margin: 0;
+            font-size: 31px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 15px;
+            border: 1px solid rgba(127, 166, 218, 0.2);
+            border-radius: 12px;
+            overflow: hidden;
+        }
+
+        th,
+        td {
+            padding: 12px 10px;
+            border-bottom: 1px solid rgba(127, 166, 218, 0.15);
+            text-align: left;
+            vertical-align: middle;
+        }
+
+        th {
+            color: #b9cdea;
+            font-weight: 600;
+            font-size: 13px;
+            letter-spacing: 0.3px;
+            background: rgba(255, 255, 255, 0.035);
+        }
+
+        tr:last-child td {
+            border-bottom: none;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 999px;
+            font-size: 12px;
+            border: 1px solid rgba(49, 216, 190, 0.45);
+            color: var(--success);
+            background: rgba(49, 216, 190, 0.12);
+            font-weight: 600;
+        }
+
+        .status-inactive {
+            color: #ffd99a;
+            border-color: rgba(255, 198, 104, 0.45);
+            background: rgba(255, 198, 104, 0.13);
+        }
+
+        .thumb,
+        .thumb-fallback {
+            width: 54px;
+            height: 54px;
+            border-radius: 10px;
+            border: 1px solid rgba(130, 170, 230, 0.3);
+            background: rgba(255, 255, 255, 0.04);
+        }
+
+        .thumb {
+            object-fit: cover;
+        }
+
+        .thumb-fallback {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #8fb2d9;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .actions {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            border: none;
+            border-radius: 10px;
+            padding: 10px 14px;
+            font-size: 13px;
+            cursor: pointer;
+            line-height: 1;
+            transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+        }
+
+        .btn:hover {
+            transform: translateY(-1px);
+        }
+
+        .btn-primary {
+            background: linear-gradient(180deg, #3ce2f3, #18c8db);
+            color: #062932;
+            font-weight: 700;
+            box-shadow: 0 0 20px rgba(45, 216, 239, 0.32);
+        }
+
+        .btn-ghost {
+            background: rgba(49, 217, 241, 0.11);
+            color: #6be5f8;
+            border: 1px solid rgba(49, 217, 241, 0.34);
+        }
+
+        .flash {
+            margin-bottom: 12px;
+            padding: 10px 12px;
+            border-radius: 10px;
+            font-size: 14px;
+        }
+
+        .flash-success {
+            border: 1px solid rgba(49, 216, 190, 0.45);
+            color: #83ffe5;
+            background: rgba(49, 216, 190, 0.12);
+        }
+
+        .flash-error {
+            border: 1px solid rgba(248, 113, 113, 0.45);
+            color: #ffd2d2;
+            background: rgba(248, 113, 113, 0.13);
+        }
+
+        .modal {
+            position: fixed;
+            inset: 0;
+            background: var(--overlay);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            padding: 16px;
+            backdrop-filter: blur(2px);
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-card {
+            width: min(760px, 100%);
+            background:
+                linear-gradient(145deg, rgba(11, 23, 43, 0.96), rgba(8, 18, 36, 0.98));
+            border: 1px solid rgba(62, 177, 255, 0.35);
+            border-radius: 14px;
+            box-shadow: 0 20px 42px rgba(0, 0, 0, 0.5), inset 0 0 24px rgba(45, 154, 255, 0.12);
+            padding: 18px 18px 16px;
+        }
+
+        .modal-head {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 14px;
+        }
+
+        .modal-title {
+            margin: 0;
+            font-size: 42px;
+            line-height: 1.08;
+            letter-spacing: 0.3px;
+            color: #f0f6ff;
+        }
+
+        .close-btn {
+            background: rgba(255, 255, 255, 0.03);
+            color: var(--muted);
+            border: 1px solid rgba(157, 176, 200, 0.3);
+            border-radius: 10px;
+            padding: 7px 12px;
+            font-size: 12px;
+            cursor: pointer;
+        }
+
+        .close-btn:hover {
+            color: #e5efff;
+            border-color: rgba(49, 217, 241, 0.38);
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 14px 14px;
+        }
+
+        .field {
+            display: flex;
+            flex-direction: column;
+            min-width: 0;
+        }
+
+        .field.preview-field {
+            grid-column: 2;
+            grid-row: 4 / span 2;
+        }
+
+        label {
+            margin-bottom: 6px;
+            font-size: 13px;
+            color: #d4e3f8;
+            letter-spacing: 0.15px;
+        }
+
+        input,
+        select {
+            width: 100%;
+            height: 40px;
+            border-radius: 9px;
+            border: 1px solid rgba(54, 198, 230, 0.5);
+            background: rgba(6, 15, 29, 0.66);
+            color: var(--text);
+            padding: 0 11px;
+            font-size: 13px;
+            outline: none;
+            transition: border-color 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        input:focus,
+        select:focus {
+            border-color: rgba(80, 215, 242, 0.9);
+            box-shadow: 0 0 0 3px rgba(42, 197, 223, 0.16);
+        }
+
+        .preview-wrap {
+            border: 1px solid rgba(72, 175, 252, 0.34);
+            border-radius: 10px;
+            min-height: 148px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(5, 12, 24, 0.72);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .preview-img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: none;
+            position: absolute;
+            inset: 0;
+        }
+
+        .preview-placeholder {
+            color: #90a7c6;
+            font-size: 14px;
+            text-align: center;
+            padding: 10px;
+        }
+
+        .preview-hint {
+            margin-top: 6px;
+            color: var(--muted);
+            font-size: 12px;
+        }
+
+        .modal-actions {
+            margin-top: 14px;
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+        }
+
+        .btn-cancel {
+            background: transparent;
+            color: #6ee5f8;
+            border: 1px solid rgba(49, 217, 241, 0.45);
+        }
+
+        .pagination-wrap {
+            margin-top: 12px;
+        }
+
+        .pagination-wrap nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+            color: var(--muted);
+        }
+
+        .pagination-wrap nav > div:first-child {
+            font-size: 12px;
+            color: #9cb1cc;
+        }
+
+        .pagination-wrap nav > div:last-child > span,
+        .pagination-wrap nav > div:last-child > a {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .pagination-wrap a,
+        .pagination-wrap span[aria-current="page"] span,
+        .pagination-wrap span[aria-disabled="true"] span {
+            min-width: 34px;
+            height: 34px;
+            padding: 0 10px;
+            border-radius: 9px;
+            border: 1px solid rgba(112, 162, 230, 0.28);
+            background: rgba(10, 19, 35, 0.82);
+            color: #d6e7fd;
+            font-size: 12px;
+            line-height: 1;
+            text-decoration: none;
+            transition: border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+        }
+
+        .pagination-wrap a:hover {
+            border-color: rgba(57, 213, 240, 0.55);
+            background: rgba(49, 217, 241, 0.12);
+            box-shadow: 0 0 14px rgba(57, 213, 240, 0.18);
+        }
+
+        .pagination-wrap span[aria-current="page"] span {
+            border-color: rgba(57, 213, 240, 0.65);
+            background: linear-gradient(180deg, rgba(57, 213, 240, 0.3), rgba(22, 137, 211, 0.3));
+            color: #ecf8ff;
+            box-shadow: 0 0 16px rgba(57, 213, 240, 0.2);
+            font-weight: 600;
+        }
+
+        .pagination-wrap span[aria-disabled="true"] span {
+            opacity: 0.55;
+            cursor: not-allowed;
+        }
+
+        .pagination-wrap svg {
+            width: 14px;
+            height: 14px;
+        }
+
+        @media (max-width: 1100px) {
+            .layout {
+                grid-template-columns: 84px minmax(0, 1fr);
+            }
+
+            .menu-item span {
+                display: none;
+            }
+
+            .brand {
+                font-size: 15px;
+            }
+
+            .content {
+                padding: 18px;
+            }
+        }
+
+        @media (max-width: 820px) {
+            .layout {
+                grid-template-columns: 1fr;
+            }
+
+            .sidebar {
+                display: flex;
+                gap: 8px;
+                border-right: none;
+                border-bottom: 1px solid rgba(115, 170, 240, 0.18);
+            }
+
+            .menu-item {
+                margin-bottom: 0;
+            }
+
+            h1 {
+                font-size: 30px;
+            }
+
+            .panel h2 {
+                font-size: 24px;
+            }
+
+            .panel-head {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .modal-title {
+                font-size: 30px;
+            }
+
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .field.preview-field {
+                grid-column: auto;
+                grid-row: auto;
+            }
+
+            .preview-wrap {
+                min-height: 170px;
+            }
+
+            .pagination-wrap nav {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .topbar {
+                flex-wrap: wrap;
+                height: auto;
+                padding: 12px;
+                gap: 10px;
+            }
         }
     </style>
 </head>
@@ -190,7 +672,7 @@
                     @endforelse
                 </tbody>
             </table>
-            <div style="margin-top:12px;">{{ $products->links() }}</div>
+            <div class="pagination-wrap">{{ $products->links() }}</div>
         </section>
     </main>
 </div>
@@ -205,27 +687,22 @@
             @csrf
             <div class="form-grid">
                 <div class="field"><label>Product Name</label><input name="name" required></div>
-                <div class="field"><label>SKU</label><input name="sku"></div>
                 <div class="field"><label>Status</label><select name="status"><option value="active">active</option><option value="inactive">inactive</option></select></div>
-                <div class="field"><label>Category</label><input name="category"></div>
-                <div class="field">
-                    <label>Upload File</label>
-                    <input id="createImageFile" type="file" name="image" accept="image/*">
-                </div>
-                <div class="field">
-                    <label>Or Public URL</label>
-                    <input id="createImageUrl" type="url" name="image_url" placeholder="https://...">
-                </div>
-                <div class="field">
+                <div class="field"><label>SKU</label><input name="sku"></div>
+                <div class="field"><label>Media</label><input id="createImageFile" type="file" name="image" accept="image/*"></div>
+                <div class="field"><label>Category</label><input name="category" placeholder="Select Category..."></div>
+                <div class="field"><label>Or Public URL</label><input id="createImageUrl" type="url" name="image_url" placeholder="https://..."></div>
+                <div class="field preview-field">
                     <label>Image Preview</label>
                     <div class="preview-wrap">
                         <img id="createImagePreview" class="preview-img" alt="Create preview">
+                        <span class="preview-placeholder">Image will appear here</span>
                     </div>
                     <div class="preview-hint">Pilih file atau isi URL untuk melihat preview.</div>
                 </div>
             </div>
             <div class="modal-actions">
-                <button class="btn btn-ghost" type="button" onclick="closeModal('createModal')">Cancel</button>
+                <button class="btn btn-cancel" type="button" onclick="closeModal('createModal')">Cancel</button>
                 <button class="btn btn-primary" type="submit">Create Product</button>
             </div>
         </form>
@@ -244,27 +721,22 @@
             <input id="editProductId" type="hidden" name="edit_product_id" value="">
             <div class="form-grid">
                 <div class="field"><label>Product Name</label><input id="editName" name="name" required></div>
-                <div class="field"><label>SKU</label><input id="editSku" name="sku"></div>
                 <div class="field"><label>Status</label><select id="editStatus" name="status"><option value="active">active</option><option value="inactive">inactive</option></select></div>
+                <div class="field"><label>SKU</label><input id="editSku" name="sku"></div>
+                <div class="field"><label>Replace Image File</label><input id="editImageFile" type="file" name="image" accept="image/*"></div>
                 <div class="field"><label>Category</label><input id="editCategory" name="category"></div>
-                <div class="field">
-                    <label>Replace Image File (Optional)</label>
-                    <input id="editImageFile" type="file" name="image" accept="image/*">
-                </div>
-                <div class="field">
-                    <label>Or Replace with Public URL (Optional)</label>
-                    <input id="editImageUrl" type="url" name="image_url" placeholder="https://...">
-                </div>
-                <div class="field">
+                <div class="field"><label>Or Replace with Public URL</label><input id="editImageUrl" type="url" name="image_url" placeholder="https://..."></div>
+                <div class="field preview-field">
                     <label>Image Preview</label>
                     <div class="preview-wrap">
                         <img id="editImagePreview" class="preview-img" alt="Edit preview">
+                        <span class="preview-placeholder">Image will appear here</span>
                     </div>
                     <div class="preview-hint">Pilih file baru atau isi URL baru untuk preview.</div>
                 </div>
             </div>
             <div class="modal-actions">
-                <button class="btn btn-ghost" type="button" onclick="closeModal('editModal')">Cancel</button>
+                <button class="btn btn-cancel" type="button" onclick="closeModal('editModal')">Cancel</button>
                 <button class="btn btn-primary" type="submit">Save</button>
             </div>
         </form>
@@ -367,7 +839,6 @@
             @json(old('image_url', ''))
         );
     @endif
-
 </script>
 </body>
 </html>
