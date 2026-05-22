@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Product;
 use App\Models\ProductImage;
 use App\Models\Seller;
+use App\Support\CurrentSellerResolver;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -14,9 +15,13 @@ use Illuminate\Support\Str;
 
 class SellerProductController extends Controller
 {
+    public function __construct(private readonly CurrentSellerResolver $currentSellerResolver)
+    {
+    }
+
     private function seller(): Seller
     {
-        return Seller::query()->where('owner_user_id', auth()->id())->firstOrFail();
+        return $this->currentSellerResolver->resolveForUser(auth()->user());
     }
 
     public function index()

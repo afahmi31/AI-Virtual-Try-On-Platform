@@ -5,7 +5,7 @@ namespace App\Http\Controllers\Api\Seller;
 use App\Http\Controllers\Controller;
 use App\Models\Product;
 use App\Models\ProductImage;
-use App\Models\Seller;
+use App\Support\CurrentSellerResolver;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -14,22 +14,22 @@ use Illuminate\Support\Str;
 
 class SellerController extends Controller
 {
+    public function __construct(private readonly CurrentSellerResolver $currentSellerResolver)
+    {
+    }
+
     public function profile(Request $request): JsonResponse
     {
-        $seller = Seller::query()
-            ->with('owner:id,name,email')
-            ->where('owner_user_id', $request->user()->id)
-            ->firstOrFail();
+        $seller = $this->currentSellerResolver->resolveForUser($request->user())
+            ->load('owner:id,name,email');
 
         return response()->json($seller);
     }
 
     public function updateProfile(Request $request): JsonResponse
     {
-        $seller = Seller::query()
-            ->with('owner')
-            ->where('owner_user_id', $request->user()->id)
-            ->firstOrFail();
+        $seller = $this->currentSellerResolver->resolveForUser($request->user())
+            ->load('owner');
 
         $payload = $request->validate([
             'store_name' => ['sometimes', 'string', 'max:255'],
@@ -55,14 +55,14 @@ class SellerController extends Controller
 
     public function usage(Request $request): JsonResponse
     {
-        $seller = Seller::query()->where('owner_user_id', $request->user()->id)->firstOrFail();
+        $seller = $this->currentSellerResolver->resolveForUser($request->user());
 
         return response()->json($seller->usageBalance);
     }
 
     public function products(Request $request): JsonResponse
     {
-        $seller = Seller::query()->where('owner_user_id', $request->user()->id)->firstOrFail();
+        $seller = $this->currentSellerResolver->resolveForUser($request->user());
 
         return response()->json(
             Product::query()
@@ -75,7 +75,7 @@ class SellerController extends Controller
 
     public function storeProduct(Request $request): JsonResponse
     {
-        $seller = Seller::query()->where('owner_user_id', $request->user()->id)->firstOrFail();
+        $seller = $this->currentSellerResolver->resolveForUser($request->user());
 
         $payload = $request->validate([
             'name' => ['required', 'string', 'max:255'],
@@ -94,7 +94,7 @@ class SellerController extends Controller
 
     public function updateProduct(Request $request, int $id): JsonResponse
     {
-        $seller = Seller::query()->where('owner_user_id', $request->user()->id)->firstOrFail();
+        $seller = $this->currentSellerResolver->resolveForUser($request->user());
 
         $product = Product::query()
             ->where('seller_id', $seller->id)
@@ -119,7 +119,7 @@ class SellerController extends Controller
 
     public function showProduct(Request $request, int $id): JsonResponse
     {
-        $seller = Seller::query()->where('owner_user_id', $request->user()->id)->firstOrFail();
+        $seller = $this->currentSellerResolver->resolveForUser($request->user());
 
         $product = Product::query()
             ->with('images')
@@ -132,7 +132,7 @@ class SellerController extends Controller
 
     public function destroyProduct(Request $request, int $id): JsonResponse
     {
-        $seller = Seller::query()->where('owner_user_id', $request->user()->id)->firstOrFail();
+        $seller = $this->currentSellerResolver->resolveForUser($request->user());
 
         $product = Product::query()
             ->with('images')
@@ -153,7 +153,7 @@ class SellerController extends Controller
 
     public function uploadProductImage(Request $request, int $id): JsonResponse
     {
-        $seller = Seller::query()->where('owner_user_id', $request->user()->id)->firstOrFail();
+        $seller = $this->currentSellerResolver->resolveForUser($request->user());
 
         $product = Product::query()
             ->where('seller_id', $seller->id)

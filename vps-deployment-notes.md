@@ -22,10 +22,10 @@ Jika `TRYON_DUMMY_MODEL_IMAGE_URL` tetap aktif di VPS, input model image akan se
 3. Nonaktifkan dummy model image:
    - `TRYON_DUMMY_MODEL_IMAGE_URL=`
 4. Pastikan env real provider terisi:
-   - `FASHN_API_KEY=...`
    - `FASHN_BASE_URL=https://api.fashn.ai/v1/run`
    - `FASHN_STATUS_URL_TEMPLATE=https://api.fashn.ai/v1/status/{job_id}`
    - `FASHN_MODEL=tryon-max`
+5. Isi API key melalui menu `Settings` di dashboard seller (bukan dari `.env`).
 
 Setelah ubah env, jalankan:
 

@@ -6,7 +6,7 @@ interface TryOnProviderContract
 {
     public function createJob(array $input): array;
 
-    public function getJobStatus(string $jobId): array;
+    public function getJobStatus(string $jobId, array $context = []): array;
 
     public function estimateCost(array $input): int;
 }

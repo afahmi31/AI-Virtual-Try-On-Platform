@@ -45,9 +45,10 @@ class ProcessTryOnSessionJob implements ShouldQueue
         }
 
         $provider = $providerRouter->resolve($session->provider_name);
-        $session->loadMissing('product.images');
+        $session->loadMissing('product.images', 'seller.aiSetting');
         $productImageUrl = $this->resolveProductImageUrl($session);
         $modelImageUrl = $this->resolveModelImageUrl($session->customer_photo_path);
+        $providerConfig = $this->resolveProviderConfig($session);
 
         if ($productImageUrl === null || $modelImageUrl === null) {
             $this->failSession($session, null, 'Gambar produk atau foto customer tidak valid untuk dikirim ke provider.');
@@ -68,6 +69,7 @@ class ProcessTryOnSessionJob implements ShouldQueue
                 'product_image_url' => $productImageUrl,
                 'model_image_url' => $modelImageUrl,
                 'num_images' => 1,
+                'provider_config' => $providerConfig,
             ]);
             $createRequestFinishedAt = now();
 
@@ -129,7 +131,9 @@ class ProcessTryOnSessionJob implements ShouldQueue
         try {
             $statusRequestStartedAt = now();
             $statusRequestStartedMicro = microtime(true);
-            $status = $provider->getJobStatus((string) $payload['provider_job_id']);
+            $status = $provider->getJobStatus((string) $payload['provider_job_id'], [
+                'provider_config' => $providerConfig,
+            ]);
             $statusRequestFinishedAt = now();
 
             $this->logProviderAudit(
@@ -176,7 +180,8 @@ class ProcessTryOnSessionJob implements ShouldQueue
                     provider: $provider,
                     providerJobId: (string) ($payload['provider_job_id'] ?? ''),
                     maxAttempts: (int) config('tryon.polling.max_attempts', 30),
-                    intervalSeconds: (int) config('tryon.polling.release_seconds', 2)
+                    intervalSeconds: (int) config('tryon.polling.release_seconds', 2),
+                    providerConfig: $providerConfig,
                 );
 
                 if (($status['status'] ?? null) === 'processing') {
@@ -431,7 +436,8 @@ class ProcessTryOnSessionJob implements ShouldQueue
         object $provider,
         string $providerJobId,
         int $maxAttempts,
-        int $intervalSeconds
+        int $intervalSeconds,
+        array $providerConfig
     ): array {
         $attempts = 1;
         $latestStatus = ['status' => 'processing'];
@@ -441,7 +447,9 @@ class ProcessTryOnSessionJob implements ShouldQueue
 
             $requestStartedAt = now();
             $startedMicro = microtime(true);
-            $latestStatus = $provider->getJobStatus($providerJobId);
+            $latestStatus = $provider->getJobStatus($providerJobId, [
+                'provider_config' => $providerConfig,
+            ]);
             $requestFinishedAt = now();
 
             $this->logProviderAudit(
@@ -462,5 +470,30 @@ class ProcessTryOnSessionJob implements ShouldQueue
         }
 
         return $latestStatus;
+    }
+
+    private function resolveProviderConfig(TryOnSession $session): array
+    {
+        $config = [];
+        $aiSetting = $session->seller?->aiSetting;
+        if (! $aiSetting) {
+            return $config;
+        }
+
+        if (is_string($aiSetting->fashn_api_key) && trim($aiSetting->fashn_api_key) !== '') {
+            $config['api_key'] = $aiSetting->fashn_api_key;
+        }
+
+        if (is_string($aiSetting->fashn_model) && trim($aiSetting->fashn_model) !== '') {
+            $config['model'] = $aiSetting->fashn_model;
+        }
+
+        $config['dummy_enabled'] = (bool) $aiSetting->fashn_dummy_enabled;
+
+        if (is_string($aiSetting->fashn_dummy_result_url) && trim($aiSetting->fashn_dummy_result_url) !== '') {
+            $config['dummy_result_url'] = $aiSetting->fashn_dummy_result_url;
+        }
+
+        return $config;
     }
 }

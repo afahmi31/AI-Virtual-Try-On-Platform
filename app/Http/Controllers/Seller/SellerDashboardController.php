@@ -3,29 +3,39 @@
 namespace App\Http\Controllers\Seller;
 
 use App\Http\Controllers\Controller;
-use App\Models\Seller;
 use App\Models\TryOnSession;
+use App\Support\CurrentSellerResolver;
+use Illuminate\Support\Facades\Http;
 
 class SellerDashboardController extends Controller
 {
+    public function __construct(private readonly CurrentSellerResolver $currentSellerResolver)
+    {
+    }
+
     public function index()
     {
-        $seller = Seller::query()->where('owner_user_id', auth()->id())->firstOrFail();
+        $seller = $this->currentSellerResolver->resolveForUser(auth()->user());
         $usage = $seller->usageBalance;
+        $seller->loadMissing('aiSetting');
 
         $tokenUsed = (int) ($usage->token_used ?? 0);
         $tokenAvailable = (int) ($usage->token_available ?? 0);
         $tokenBalance = (int) ($usage->token_balance ?? 0);
+        [$fashnCredits, $fashnCreditsSource] = $this->resolveFashnCredits($seller->aiSetting?->fashn_api_key, $tokenAvailable);
 
         $stats = [
             'total_products' => $seller->products()->count(),
             'token_available' => $tokenAvailable,
+            'fashn_credits' => $fashnCredits,
+            'fashn_credits_source' => $fashnCreditsSource,
+            'fashn_model' => (string) ($seller->aiSetting?->fashn_model ?: 'tryon-max'),
             'token_used' => $tokenUsed,
             'token_balance' => $tokenBalance,
             'success_count' => (int) ($usage->success_count ?? 0),
             'failed_count' => (int) ($usage->failed_count ?? 0),
             'recent_tryon' => TryOnSession::query()
-                ->with('product:id,name')
+                ->with(['product:id,name', 'product.images:id,product_id,image_url,is_primary'])
                 ->where('seller_id', $seller->id)
                 ->latest()
                 ->limit(10)
@@ -33,5 +43,80 @@ class SellerDashboardController extends Controller
         ];
 
         return view('seller.dashboard', compact('seller', 'stats'));
+    }
+
+    private function resolveFashnCredits(?string $apiKey, int $fallback): array
+    {
+        $fallbackCredits = [
+            'total' => $fallback,
+            'subscription' => 0,
+            'on_demand' => $fallback,
+        ];
+
+        $key = trim((string) $apiKey);
+        if ($key === '') {
+            return [$fallbackCredits, 'local'];
+        }
+
+        try {
+            $response = Http::acceptJson()
+                ->withToken($key)
+                ->timeout(max((int) config('ai.providers.fashn.timeout_seconds', 60), 5))
+                ->get('https://api.fashn.ai/v1/credits');
+
+            if (! $response->successful()) {
+                return [$fallbackCredits, 'local'];
+            }
+
+            $payload = (array) $response->json();
+            $credits = $this->extractCreditsBreakdown($payload);
+            if ($credits === null) {
+                return [$fallbackCredits, 'local'];
+            }
+
+            return [$credits, 'fashn'];
+        } catch (\Throwable) {
+            return [$fallbackCredits, 'local'];
+        }
+    }
+
+    private function extractCreditsBreakdown(array $payload): ?array
+    {
+        $credits = isset($payload['credits']) && is_array($payload['credits']) ? $payload['credits'] : [];
+        $total = $this->toIntOrNull($credits['total'] ?? null);
+        $subscription = $this->toIntOrNull($credits['subscription'] ?? null);
+        $onDemand = $this->toIntOrNull($credits['on_demand'] ?? null);
+
+        if ($total !== null || $subscription !== null || $onDemand !== null) {
+            $normalizedSubscription = $subscription ?? 0;
+            $normalizedOnDemand = $onDemand ?? 0;
+            $normalizedTotal = $total ?? ($normalizedSubscription + $normalizedOnDemand);
+
+            return [
+                'total' => max(0, $normalizedTotal),
+                'subscription' => max(0, $normalizedSubscription),
+                'on_demand' => max(0, $normalizedOnDemand),
+            ];
+        }
+
+        $flatTotal = $this->toIntOrNull($payload['available_credits'] ?? $payload['remaining_credits'] ?? $payload['credits_remaining'] ?? null);
+        if ($flatTotal !== null) {
+            return [
+                'total' => max(0, $flatTotal),
+                'subscription' => 0,
+                'on_demand' => max(0, $flatTotal),
+            ];
+        }
+
+        return null;
+    }
+
+    private function toIntOrNull(mixed $value): ?int
+    {
+        if (! is_numeric($value)) {
+            return null;
+        }
+
+        return (int) round((float) $value);
     }
 }

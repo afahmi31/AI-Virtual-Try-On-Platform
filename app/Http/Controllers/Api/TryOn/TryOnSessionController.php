@@ -4,17 +4,22 @@ namespace App\Http\Controllers\Api\TryOn;
 
 use App\Http\Controllers\Controller;
 use App\Jobs\ProcessTryOnSessionJob;
-use App\Models\Seller;
 use App\Models\TryOnSession;
+use App\Support\CurrentSellerResolver;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 class TryOnSessionController extends Controller
 {
+    public function __construct(private readonly CurrentSellerResolver $currentSellerResolver)
+    {
+    }
+
     public function store(Request $request): JsonResponse
     {
-        $seller = Seller::query()->where('owner_user_id', $request->user()->id)->firstOrFail();
+        $seller = $this->currentSellerResolver->resolveForUser($request->user())
+            ->load('aiSetting');
 
         $payload = $request->validate([
             'product_id' => ['required', 'integer', 'exists:products,id'],
@@ -34,6 +39,13 @@ class TryOnSessionController extends Controller
 
         if (! $usage || $usage->token_available < 1) {
             return response()->json(['message' => 'Token not available.'], 422);
+        }
+
+        $apiKey = trim((string) ($seller->aiSetting?->fashn_api_key ?? ''));
+        if ($apiKey === '') {
+            return response()->json([
+                'message' => 'FASHN API key belum dikonfigurasi di Settings.',
+            ], 422);
         }
 
         $customerPhotoPath = $payload['customer_photo_path'] ?? $payload['customer_photo_url'] ?? null;
@@ -71,7 +83,7 @@ class TryOnSessionController extends Controller
 
     public function show(Request $request, int $id): JsonResponse
     {
-        $seller = Seller::query()->where('owner_user_id', $request->user()->id)->firstOrFail();
+        $seller = $this->currentSellerResolver->resolveForUser($request->user());
 
         $session = TryOnSession::query()
             ->where('seller_id', $seller->id)

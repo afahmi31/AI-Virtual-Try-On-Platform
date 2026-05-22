@@ -29,12 +29,6 @@ class WebAuthController extends Controller
 
         $request->session()->regenerate();
 
-        $role = (string) $request->user()->role;
-
-        if ($role === 'admin') {
-            return redirect()->route('admin.dashboard');
-        }
-
         return redirect()->route('seller.dashboard');
     }
 

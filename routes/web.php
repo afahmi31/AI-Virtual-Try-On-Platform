@@ -1,12 +1,11 @@
 <?php
 
-use App\Http\Controllers\Admin\AdminDashboardController;
-use App\Http\Controllers\Admin\SellerManagementController;
 use App\Http\Controllers\Auth\WebAuthController;
 use App\Http\Controllers\Public\SellerPublicController;
 use App\Http\Controllers\Public\TryOnPublicController;
 use App\Http\Controllers\Seller\SellerDashboardController;
 use App\Http\Controllers\Seller\SellerProductController;
+use App\Http\Controllers\Seller\SellerSettingsController;
 use Illuminate\Support\Facades\Route;
 
 Route::redirect('/', '/login');
@@ -18,17 +17,12 @@ Route::middleware('guest')->group(function (): void {
 
 Route::post('/logout', [WebAuthController::class, 'logout'])->middleware('auth')->name('logout');
 
-Route::prefix('admin')->middleware(['auth', 'role:admin'])->group(function (): void {
-    Route::get('/', [AdminDashboardController::class, 'index'])->name('admin.dashboard');
-    Route::get('/sellers', [SellerManagementController::class, 'index'])->name('admin.sellers.index');
-    Route::post('/sellers', [SellerManagementController::class, 'store'])->name('admin.sellers.store');
-    Route::patch('/sellers/{sellerId}', [SellerManagementController::class, 'update'])->name('admin.sellers.update');
-    Route::post('/sellers/{sellerId}/topup', [SellerManagementController::class, 'topup'])->name('admin.sellers.topup');
-});
-
 Route::prefix('dashboard')->middleware(['auth', 'role:seller'])->group(function (): void {
     Route::get('/', [SellerDashboardController::class, 'index'])->name('seller.dashboard');
     Route::get('/products', [SellerProductController::class, 'index'])->name('seller.products.index');
+    Route::get('/settings', [SellerSettingsController::class, 'index'])->name('seller.settings.index');
+    Route::post('/settings', [SellerSettingsController::class, 'update'])->name('seller.settings.update');
+    Route::post('/settings/test-api-key', [SellerSettingsController::class, 'testApiKey'])->name('seller.settings.test-api-key');
     Route::post('/products', [SellerProductController::class, 'store'])->name('seller.products.store');
     Route::patch('/products/{productId}', [SellerProductController::class, 'update'])->name('seller.products.update');
     Route::delete('/products/{productId}', [SellerProductController::class, 'destroy'])->name('seller.products.destroy');

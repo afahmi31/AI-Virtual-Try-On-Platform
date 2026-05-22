@@ -9,7 +9,6 @@
             <input type="password" name="password" required>
             <button type="submit">Login</button>
         </form>
-        <p>Admin default: admin@tryon.test / password</p>
-        <p>Seller default: seller@tryon.test / password</p>
+        <p>Default owner: seller@tryon.test / password</p>
     </div>
 </x-layouts.app>

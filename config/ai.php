@@ -7,7 +7,6 @@ return [
             'base_url' => env('FASHN_BASE_URL'),
             'run_url' => env('FASHN_RUN_URL'),
             'status_url_template' => env('FASHN_STATUS_URL_TEMPLATE'),
-            'api_key' => env('FASHN_API_KEY'),
             'model' => env('FASHN_MODEL', 'tryon-max'),
             'dummy_enabled' => (bool) env('FASHN_DUMMY_ENABLED', false),
             'dummy_result_url' => env('FASHN_DUMMY_RESULT_URL'),

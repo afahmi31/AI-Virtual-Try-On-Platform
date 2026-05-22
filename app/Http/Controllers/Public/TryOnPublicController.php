@@ -23,7 +23,15 @@ class TryOnPublicController extends Controller
         $seller = Seller::query()
             ->where('slug', $seller_slug)
             ->where('status', 'active')
+            ->with('aiSetting')
             ->firstOrFail();
+
+        $providerConfig = $this->resolveProviderConfig($seller);
+        if (! $this->canUseProvider($providerConfig)) {
+            return response()->json([
+                'message' => 'FASHN API key belum dikonfigurasi oleh store owner.',
+            ], 422);
+        }
 
         return response()->json($this->buildQuotaPayload($request, $seller->slug));
     }
@@ -135,12 +143,15 @@ class TryOnPublicController extends Controller
         if ($session->status !== 'processing' || ! $session->provider_job_id) {
             return;
         }
+        $session->loadMissing('seller.aiSetting');
 
         try {
             /** @var ProviderRouter $providerRouter */
             $providerRouter = app(ProviderRouter::class);
             $provider = $providerRouter->resolve($session->provider_name);
-            $status = $provider->getJobStatus((string) $session->provider_job_id);
+            $status = $provider->getJobStatus((string) $session->provider_job_id, [
+                'provider_config' => $this->resolveProviderConfig($session->seller),
+            ]);
 
             if (($status['status'] ?? null) === 'completed') {
                 $cost = $provider->estimateCost([
@@ -268,5 +279,40 @@ class TryOnPublicController extends Controller
         }
 
         return substr($normalized, 0, 64);
+    }
+
+    private function resolveProviderConfig(?Seller $seller): array
+    {
+        if (! $seller) {
+            return [];
+        }
+
+        $setting = $seller->aiSetting;
+        if (! $setting) {
+            return [];
+        }
+
+        $config = [
+            'dummy_enabled' => (bool) $setting->fashn_dummy_enabled,
+        ];
+
+        if (is_string($setting->fashn_api_key) && trim($setting->fashn_api_key) !== '') {
+            $config['api_key'] = $setting->fashn_api_key;
+        }
+
+        if (is_string($setting->fashn_model) && trim($setting->fashn_model) !== '') {
+            $config['model'] = $setting->fashn_model;
+        }
+
+        if (is_string($setting->fashn_dummy_result_url) && trim($setting->fashn_dummy_result_url) !== '') {
+            $config['dummy_result_url'] = $setting->fashn_dummy_result_url;
+        }
+
+        return $config;
+    }
+
+    private function canUseProvider(array $providerConfig): bool
+    {
+        return isset($providerConfig['api_key']) && trim((string) $providerConfig['api_key']) !== '';
     }
 }

@@ -12,10 +12,12 @@ class FashnProvider implements TryOnProviderContract
 {
     public function createJob(array $input): array
     {
-        if ($this->isDummyMode()) {
+        $providerConfig = $this->mergeProviderConfig($input);
+
+        if ($this->isDummyMode($providerConfig)) {
             return [
                 'provider_name' => 'fashn',
-                'provider_model' => (string) config('ai.providers.fashn.model', 'tryon-max'),
+                'provider_model' => (string) ($providerConfig['model'] ?? config('ai.providers.fashn.model', 'tryon-max')),
                 'provider_job_id' => 'dummy-'.(string) str()->uuid(),
                 'status' => 'processing',
                 'result_path' => null,
@@ -33,12 +35,12 @@ class FashnProvider implements TryOnProviderContract
             ];
         }
 
-        $createUrl = $this->resolveCreateUrl();
+        $createUrl = $this->resolveCreateUrl($providerConfig);
         $generationMode = $this->resolveGenerationMode((string) ($input['quality_mode'] ?? 'standard'));
         $resolution = $this->resolveResolution((string) ($input['quality_mode'] ?? 'standard'));
 
-        $response = $this->httpClient()->post($createUrl, [
-            'model_name' => (string) config('ai.providers.fashn.model', 'tryon-max'),
+        $response = $this->httpClient($providerConfig)->post($createUrl, [
+            'model_name' => (string) ($providerConfig['model'] ?? config('ai.providers.fashn.model', 'tryon-max')),
             'inputs' => [
                 'product_image' => $input['product_image_url'] ?? null,
                 'model_image' => $input['model_image_url'] ?? null,
@@ -59,7 +61,7 @@ class FashnProvider implements TryOnProviderContract
 
         return [
             'provider_name' => 'fashn',
-            'provider_model' => (string) config('ai.providers.fashn.model', 'unknown'),
+            'provider_model' => (string) ($providerConfig['model'] ?? config('ai.providers.fashn.model', 'unknown')),
             'provider_job_id' => $providerJobId,
             'status' => 'processing',
             'result_path' => $body['result_path'] ?? null,
@@ -73,17 +75,18 @@ class FashnProvider implements TryOnProviderContract
         ];
     }
 
-    public function getJobStatus(string $jobId): array
+    public function getJobStatus(string $jobId, array $context = []): array
     {
-        if ($this->isDummyMode()) {
-            $dummyResultUrl = trim((string) config('ai.providers.fashn.dummy_result_url'));
+        $providerConfig = $this->mergeProviderConfig($context);
+        if ($this->isDummyMode($providerConfig)) {
+            $dummyResultUrl = trim((string) ($providerConfig['dummy_result_url'] ?? config('ai.providers.fashn.dummy_result_url')));
             if ($dummyResultUrl === '') {
                 throw new RuntimeException('FASHN_DUMMY_RESULT_URL is required when FASHN_DUMMY_ENABLED=true.');
             }
 
             return [
                 'provider_name' => 'fashn',
-                'provider_model' => (string) config('ai.providers.fashn.model', 'tryon-max'),
+                'provider_model' => (string) ($providerConfig['model'] ?? config('ai.providers.fashn.model', 'tryon-max')),
                 'provider_job_id' => $jobId,
                 'status' => 'completed',
                 'result_path' => $dummyResultUrl,
@@ -106,16 +109,16 @@ class FashnProvider implements TryOnProviderContract
             ];
         }
 
-        $statusUrl = $this->resolveStatusUrl($jobId);
+        $statusUrl = $this->resolveStatusUrl($jobId, $providerConfig);
 
-        $response = $this->httpClient()->get($statusUrl);
+        $response = $this->httpClient($providerConfig)->get($statusUrl);
         $body = $response->json();
         $output = $body['output'] ?? [];
         $resultUrl = is_array($output) && isset($output[0]) && is_string($output[0]) ? $output[0] : null;
 
         return [
             'provider_name' => 'fashn',
-            'provider_model' => (string) config('ai.providers.fashn.model', 'unknown'),
+            'provider_model' => (string) ($providerConfig['model'] ?? config('ai.providers.fashn.model', 'unknown')),
             'provider_job_id' => $jobId,
             'status' => $this->normalizeStatus($body['status'] ?? 'processing'),
             'result_path' => $body['result_path'] ?? null,
@@ -149,9 +152,9 @@ class FashnProvider implements TryOnProviderContract
         return $baseCost * $numImages;
     }
 
-    private function httpClient()
+    private function httpClient(array $providerConfig = [])
     {
-        $config = (array) config('ai.providers.fashn');
+        $config = $providerConfig === [] ? (array) config('ai.providers.fashn') : $providerConfig;
         $apiKey = (string) ($config['api_key'] ?? '');
 
         if ($apiKey === '') {
@@ -174,9 +177,9 @@ class FashnProvider implements TryOnProviderContract
             });
     }
 
-    private function resolveCreateUrl(): string
+    private function resolveCreateUrl(array $providerConfig = []): string
     {
-        $config = (array) config('ai.providers.fashn');
+        $config = $providerConfig === [] ? (array) config('ai.providers.fashn') : $providerConfig;
         $runUrl = trim((string) ($config['run_url'] ?? ''));
         $baseUrl = trim((string) ($config['base_url'] ?? ''));
 
@@ -191,15 +194,15 @@ class FashnProvider implements TryOnProviderContract
         throw new RuntimeException('FASHN run URL is missing. Set FASHN_RUN_URL or FASHN_BASE_URL.');
     }
 
-    private function resolveStatusUrl(string $jobId): string
+    private function resolveStatusUrl(string $jobId, array $providerConfig = []): string
     {
-        $config = (array) config('ai.providers.fashn');
+        $config = $providerConfig === [] ? (array) config('ai.providers.fashn') : $providerConfig;
         $template = trim((string) ($config['status_url_template'] ?? ''));
         if ($template !== '') {
             return str_replace('{job_id}', $jobId, $template);
         }
 
-        $createUrl = $this->resolveCreateUrl();
+        $createUrl = $this->resolveCreateUrl($providerConfig);
         if (str_ends_with($createUrl, '/run')) {
             return preg_replace('#/run$#', '/status/'.$jobId, $createUrl) ?? $createUrl;
         }
@@ -280,8 +283,30 @@ class FashnProvider implements TryOnProviderContract
         };
     }
 
-    private function isDummyMode(): bool
+    private function isDummyMode(array $providerConfig = []): bool
     {
+        if ($providerConfig !== []) {
+            return (bool) ($providerConfig['dummy_enabled'] ?? false);
+        }
+
         return (bool) config('ai.providers.fashn.dummy_enabled', false);
+    }
+
+    private function mergeProviderConfig(array $input): array
+    {
+        $config = (array) config('ai.providers.fashn');
+        // API key must come from seller settings, never from global env/config fallback.
+        $config['api_key'] = null;
+
+        if (isset($input['provider_config']) && is_array($input['provider_config'])) {
+            $override = $input['provider_config'];
+            foreach (['api_key', 'model', 'dummy_enabled', 'dummy_result_url'] as $field) {
+                if (array_key_exists($field, $override) && $override[$field] !== null && $override[$field] !== '') {
+                    $config[$field] = $override[$field];
+                }
+            }
+        }
+
+        return $config;
     }
 }

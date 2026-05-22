@@ -121,7 +121,7 @@
     <aside class="sidebar">
         <a class="menu-item" href="{{ route('seller.dashboard') }}"><span>Dashboard</span></a>
         <a class="menu-item active" href="{{ route('seller.products.index') }}"><span>Products</span></a>
-        <a class="menu-item" href="{{ route('seller.dashboard') }}"><span>Settings</span></a>
+        <a class="menu-item" href="{{ route('seller.settings.index') }}"><span>Settings</span></a>
     </aside>
 
     <main class="content">

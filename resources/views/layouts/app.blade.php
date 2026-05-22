@@ -25,16 +25,12 @@
     <div><strong>AI Try-On Core App</strong></div>
     <nav>
         @auth
-            @if(auth()->user()->role === 'admin')
-                <a href="{{ route('admin.dashboard') }}">Admin Dashboard</a>
-                <a href="{{ route('admin.sellers.index') }}">Sellers</a>
-            @else
-                <a href="{{ route('seller.dashboard') }}">Seller Dashboard</a>
-                <a href="{{ route('seller.products.index') }}">Products</a>
-                @php $mySeller = auth()->user()->seller; @endphp
-                @if($mySeller)
-                    <a href="/{{ $mySeller->slug }}" target="_blank">Open Store</a>
-                @endif
+            <a href="{{ route('seller.dashboard') }}">Dashboard</a>
+            <a href="{{ route('seller.products.index') }}">Products</a>
+            <a href="{{ route('seller.settings.index') }}">Settings</a>
+            @php $mySeller = auth()->user()->seller; @endphp
+            @if($mySeller)
+                <a href="/{{ $mySeller->slug }}" target="_blank">Open Store</a>
             @endif
             <form method="POST" action="{{ route('logout') }}" class="inline">
                 @csrf

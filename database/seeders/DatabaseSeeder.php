@@ -3,6 +3,7 @@
 namespace Database\Seeders;
 
 use App\Models\Seller;
+use App\Models\SellerAiSetting;
 use App\Models\SellerUsageBalance;
 use App\Models\User;
 use Illuminate\Database\Seeder;
@@ -11,15 +12,6 @@ class DatabaseSeeder extends Seeder
 {
     public function run(): void
     {
-        $admin = User::query()->updateOrCreate(
-            ['email' => 'admin@tryon.test'],
-            [
-                'name' => 'System Admin',
-                'password' => 'password',
-                'role' => User::ROLE_ADMIN,
-            ]
-        );
-
         $sellerOwner = User::query()->updateOrCreate(
             ['email' => 'seller@tryon.test'],
             [
@@ -46,6 +38,17 @@ class DatabaseSeeder extends Seeder
                 'token_available' => 100,
                 'success_count' => 0,
                 'failed_count' => 0,
+            ]
+        );
+
+        SellerAiSetting::query()->updateOrCreate(
+            ['seller_id' => $seller->id],
+            [
+                'provider_name' => 'fashn',
+                'fashn_api_key' => null,
+                'fashn_model' => 'tryon-max',
+                'fashn_dummy_enabled' => false,
+                'fashn_dummy_result_url' => null,
             ]
         );
     }

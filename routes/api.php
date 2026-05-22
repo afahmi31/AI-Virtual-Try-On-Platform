@@ -1,7 +1,6 @@
 <?php
 
 use App\Http\Controllers\Api\Auth\AuthController;
-use App\Http\Controllers\Api\Admin\AdminSellerController;
 use App\Http\Controllers\Api\Seller\SellerController;
 use App\Http\Controllers\Api\TryOn\TryOnSessionController;
 use Illuminate\Support\Facades\Route;
@@ -31,13 +30,4 @@ Route::middleware(['auth:sanctum', 'role:seller'])->prefix('seller')->group(func
 Route::middleware(['auth:sanctum', 'role:seller'])->prefix('tryon')->group(function (): void {
     Route::post('/sessions', [TryOnSessionController::class, 'store']);
     Route::get('/sessions/{id}', [TryOnSessionController::class, 'show']);
-});
-
-Route::middleware(['auth:sanctum', 'role:admin'])->prefix('admin')->group(function (): void {
-    Route::get('/sellers', [AdminSellerController::class, 'index']);
-    Route::get('/sellers/{sellerId}', [AdminSellerController::class, 'show']);
-    Route::post('/sellers', [AdminSellerController::class, 'store']);
-    Route::patch('/sellers/{sellerId}', [AdminSellerController::class, 'update']);
-    Route::post('/sellers/{sellerId}/topup', [AdminSellerController::class, 'topUpTokens']);
-    Route::get('/metrics', [AdminSellerController::class, 'metrics']);
 });

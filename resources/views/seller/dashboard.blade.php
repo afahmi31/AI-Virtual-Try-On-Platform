@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Seller Dashboard - AI Try-On Core App</title>
+    <title>Dashboard - AI Try-On Core App</title>
     <style>
         :root {
             --bg: #060b14;
@@ -72,8 +72,11 @@
         }
         .card-label { font-size: 22px; color: var(--muted); margin-top: 12px; }
         .card-value { margin-top: 10px; font-size: 48px; font-weight: 700; }
+        .credit-breakdown { margin-top: 10px; border-top: 1px solid rgba(130, 170, 230, 0.2); padding-top: 10px; }
+        .credit-item { display: flex; justify-content: space-between; align-items: center; font-size: 16px; color: #c6d3e6; margin: 4px 0; }
+        .credit-item strong { color: #e6edf7; font-size: 18px; }
 
-        .split { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; margin-top: 18px; }
+        .split { display: grid; grid-template-columns: 1fr; gap: 18px; margin-top: 18px; }
         .panel { background: var(--panel); border: 1px solid var(--panel-border); border-radius: 14px; padding: 18px; }
         .panel h2 { font-size: 34px; margin: 0 0 16px; }
 
@@ -82,41 +85,43 @@
         th { color: #b9c7da; font-weight: 600; font-size: 20px; background: rgba(255,255,255,0.03); }
         .badge { display: inline-block; padding: 4px 10px; border-radius: 999px; font-size: 18px; border: 1px solid rgba(45, 212, 191, .45); color: var(--success); background: rgba(45, 212, 191, .12); }
         .badge-failed { border-color: rgba(248, 113, 113, .45); color: var(--danger); background: rgba(248, 113, 113, .12); }
+        .badge-processing { border-color: rgba(56, 189, 248, .45); color: #7dd3fc; background: rgba(56, 189, 248, .12); }
+        .preview-thumb { width: 42px; height: 42px; border-radius: 8px; object-fit: cover; border: 1px solid rgba(130, 170, 230, 0.35); }
+        .details-btn { border:1px solid rgba(80,180,255,.45); background:rgba(6,14,26,.65); color:#dbeafe; border-radius:10px; padding:6px 10px; font-size:14px; cursor:pointer; }
+        .req-id { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 15px; color:#dbeafe; }
+        .req-model { font-size: 14px; color:#d4e4f7; background: rgba(255,255,255,.05); border:1px solid rgba(130,170,230,.25); border-radius:8px; padding: 4px 8px; display:inline-block; }
 
-        .donut-wrap { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 360px; }
-        .donut {
-            --used: 0;
-            --remain: 0;
-            width: 290px;
-            height: 290px;
-            border-radius: 50%;
-            background:
-                radial-gradient(circle at center, rgba(8, 18, 32, 1) 47%, transparent 48%),
-                conic-gradient(
-                    #35e5ef 0deg calc(var(--used) * 1deg),
-                    #3b82f6 calc(var(--used) * 1deg) calc((var(--used) + var(--remain)) * 1deg),
-                    rgba(69, 92, 128, .6) calc((var(--used) + var(--remain)) * 1deg) 360deg
-                );
-            border: 1px solid rgba(80, 180, 255, 0.35);
-            box-shadow: inset 0 0 30px rgba(34, 211, 238, .25), 0 0 30px rgba(34, 211, 238, .18);
-            position: relative;
-        }
-        .donut::after {
-            content: '';
-            position: absolute;
-            inset: 34px;
-            border-radius: 50%;
-            border: 1px solid rgba(80, 180, 255, 0.25);
-        }
-        .legend { margin-top: 24px; display: flex; gap: 18px; font-size: 18px; color: #b9c7da; }
-        .dot { width: 14px; height: 14px; border-radius: 4px; display: inline-block; margin-right: 8px; }
+        .modal-backdrop { position: fixed; inset: 0; display: none; align-items: center; justify-content: center; background: rgba(4,10,20,.62); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); z-index: 50; padding: 20px; }
+        .modal-backdrop.open { display: flex; }
+        .modal-card { width: min(980px, 100%); max-height: 90vh; overflow: auto; background: #0e1728; border: 1px solid rgba(130,170,230,.35); border-radius: 14px; padding: 18px; box-shadow: 0 18px 60px rgba(0,0,0,.45); }
+        .modal-header { display:flex; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 12px; }
+        .modal-title { font-size: 32px; margin: 0; }
+        .modal-close { border:1px solid rgba(130,170,230,.35); background:rgba(6,14,26,.65); color:#e6edf7; border-radius:10px; width:38px; height:38px; font-size:20px; cursor:pointer; }
+        .modal-grid { display:grid; grid-template-columns: repeat(4, minmax(0,1fr)); gap: 12px; margin-bottom: 12px; }
+        .modal-kv { background: rgba(255,255,255,.03); border:1px solid rgba(130,170,230,.2); border-radius:10px; padding:10px; }
+        .modal-kv .k { font-size: 12px; color:#9db0c8; text-transform: uppercase; letter-spacing: .03em; margin-bottom: 5px; }
+        .modal-kv .v { font-size: 15px; color:#e6edf7; word-break: break-all; }
+        .modal-tabs { display:flex; gap: 8px; margin: 6px 0 12px; }
+        .tab-btn { border:1px solid rgba(130,170,230,.35); background:rgba(6,14,26,.65); color:#c8d7eb; border-radius:10px; padding:8px 12px; cursor:pointer; font-size:14px; }
+        .tab-btn.active { border-color: rgba(34,211,238,.6); color: #22d3ee; background: rgba(34,211,238,.12); }
+        .tab-content { display:none; }
+        .tab-content.active { display:block; }
+        .image-grid { display:grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 12px; margin-bottom: 12px; }
+        .image-block { background: rgba(255,255,255,.03); border:1px solid rgba(130,170,230,.2); border-radius:10px; padding: 8px; }
+        .image-block h4 { margin: 0 0 8px; font-size: 14px; color:#b9c7da; }
+        .image-block img { width:100%; height:210px; object-fit: cover; border-radius: 8px; border: 1px solid rgba(130,170,230,.3); }
+        .image-empty { height:210px; border-radius: 8px; border: 1px dashed rgba(130,170,230,.35); display:flex; align-items:center; justify-content:center; color:#8fa4bf; font-size:13px; }
+        .json-box { background:#0a0f1a; border:1px solid rgba(130,170,230,.28); border-radius:10px; padding:12px; overflow:auto; max-height: 280px; }
+        .json-box pre { margin:0; color:#d7e7fb; font-size: 13px; line-height: 1.5; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; white-space: pre-wrap; word-break: break-word; }
+
 
         @media (max-width: 1400px) {
             .layout { grid-template-columns: 96px 1fr; }
             .menu-item span { display: none; }
             .cards { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-            .split { grid-template-columns: 1fr; }
             .brand { font-size: 22px; }
+            .modal-grid { grid-template-columns: repeat(2, minmax(0,1fr)); }
+            .image-grid { grid-template-columns: 1fr; }
         }
     </style>
 </head>
@@ -137,23 +142,26 @@
 </header>
 
 @php
-    $balance = max(1, (int) $stats['token_balance']);
-    $usedRatio = min(1, $stats['token_used'] / $balance);
-    $remainRatio = min(1, $stats['token_available'] / $balance);
-    $usedDeg = (int) round($usedRatio * 360);
-    $remainDeg = (int) round($remainRatio * 360);
+    $resolvePublicPath = static function (?string $path): ?string {
+        if (! is_string($path) || trim($path) === '') {
+            return null;
+        }
+        if (str_starts_with($path, 'http://') || str_starts_with($path, 'https://')) {
+            return $path;
+        }
+        return \Illuminate\Support\Facades\Storage::disk('public')->url($path);
+    };
 @endphp
 
 <div class="layout">
     <aside class="sidebar">
         <a class="menu-item active" href="{{ route('seller.dashboard') }}"><span>Dashboard</span></a>
         <a class="menu-item" href="{{ route('seller.products.index') }}"><span>Products</span></a>
-        <a class="menu-item" href="{{ route('seller.dashboard') }}"><span>Store Settings</span></a>
-        <a class="menu-item" href="{{ route('seller.dashboard') }}"><span>Analytics</span></a>
+        <a class="menu-item" href="{{ route('seller.settings.index') }}"><span>Settings</span></a>
     </aside>
 
     <main class="content">
-        <h1>Seller Dashboard</h1>
+        <h1>Dashboard</h1>
 
         <section class="cards">
             <article class="card">
@@ -161,8 +169,18 @@
                 <div class="card-value">{{ number_format($stats['total_products']) }}</div>
             </article>
             <article class="card">
-                <div class="card-label">Token Available</div>
-                <div class="card-value">{{ number_format($stats['token_available']) }}</div>
+                <div class="card-label">FASHN Credits</div>
+                <div class="card-value">{{ number_format($stats['fashn_credits']['total'] ?? 0) }}</div>
+                <div class="credit-breakdown">
+                    <div class="credit-item">
+                        <span>Subscription</span>
+                        <strong>{{ number_format($stats['fashn_credits']['subscription'] ?? 0) }}</strong>
+                    </div>
+                    <div class="credit-item">
+                        <span>On Demand</span>
+                        <strong>{{ number_format($stats['fashn_credits']['on_demand'] ?? 0) }}</strong>
+                    </div>
+                </div>
             </article>
             <article class="card" style="border-color: rgba(53,229,239,.65); box-shadow: inset 0 0 30px rgba(34,211,238,.25), 0 0 34px rgba(34,211,238,.25);">
                 <div class="card-label">Success Generate</div>
@@ -183,41 +201,230 @@
                 <h2>Recent Try-On</h2>
                 <table>
                     <thead>
-                        <tr><th>ID</th><th>Status</th><th>Product</th><th>IP</th><th>Created</th></tr>
+                        <tr>
+                            <th>Request ID</th>
+                            <th>Model</th>
+                            <th>Created</th>
+                            <th>Status</th>
+                            <th>Product</th>
+                            <th>IP</th>
+                            <th>Preview</th>
+                            <th>Action</th>
+                        </tr>
                     </thead>
                     <tbody>
                         @forelse($stats['recent_tryon'] as $session)
+                            @php
+                                $productImage = optional($session->product?->images?->firstWhere('is_primary', true) ?? $session->product?->images?->first())->image_url;
+                                $modelImage = $resolvePublicPath($session->customer_photo_path);
+                                $resultImage = $resolvePublicPath($session->result_path);
+                                $statusClass = $session->status === 'failed' ? 'badge-failed' : (($session->status === 'processing' || $session->status === 'pending') ? 'badge-processing' : '');
+                                $requestPayload = [
+                                    'model' => $stats['fashn_model'],
+                                    'product' => $session->product?->name,
+                                    'source_channel' => $session->source_channel,
+                                    'ip' => $session->ip_address,
+                                    'inputs' => [
+                                        'model_image' => $modelImage,
+                                        'product_image' => $productImage,
+                                    ],
+                                ];
+                                $responsePayload = [
+                                    'id' => $session->provider_job_id ?: ('local-'.$session->id),
+                                    'status' => $session->status,
+                                    'error' => $session->error_message,
+                                    'output' => $resultImage ? [$resultImage] : [],
+                                    'token_cost' => (int) ($session->token_cost ?? 0),
+                                ];
+                            @endphp
                             <tr>
-                                <td>{{ $session->id }}</td>
+                                <td class="req-id">{{ $session->provider_job_id ?: ('local-'.$session->id) }}</td>
+                                <td><span class="req-model">{{ $stats['fashn_model'] }}</span></td>
+                                <td>{{ $session->created_at->format('Y-m-d H:i:s') }}</td>
                                 <td>
-                                    <span class="badge {{ $session->status === 'failed' ? 'badge-failed' : '' }}">
+                                    <span class="badge {{ $statusClass }}">
                                         {{ ucfirst($session->status) }}
                                     </span>
                                 </td>
                                 <td>{{ $session->product?->name ?? '-' }}</td>
                                 <td>{{ \App\Support\IpMasker::mask($session->ip_address) }}</td>
-                                <td>{{ $session->created_at->format('Y-m-d H:i:s') }}</td>
+                                <td>
+                                    @if($resultImage)
+                                        <img class="preview-thumb" src="{{ $resultImage }}" alt="Preview">
+                                    @else
+                                        -
+                                    @endif
+                                </td>
+                                <td>
+                                    <button
+                                        type="button"
+                                        class="details-btn js-open-request-modal"
+                                        data-request-id="{{ $session->provider_job_id ?: ('local-'.$session->id) }}"
+                                        data-model="{{ $stats['fashn_model'] }}"
+                                        data-created="{{ $session->created_at->format('Y-m-d H:i:s') }}"
+                                        data-status="{{ $session->status }}"
+                                        data-credits="{{ (int) ($session->token_cost ?? 0) }}"
+                                        data-product="{{ $session->product?->name ?? '-' }}"
+                                        data-ip="{{ \App\Support\IpMasker::mask($session->ip_address) }}"
+                                        data-model-image="{{ $modelImage }}"
+                                        data-product-image="{{ $productImage }}"
+                                        data-output-image="{{ $resultImage }}"
+                                        data-request-json='@json($requestPayload)'
+                                        data-response-json='@json($responsePayload)'
+                                    >
+                                        Details
+                                    </button>
+                                </td>
                             </tr>
                         @empty
-                            <tr><td colspan="5">Belum ada session try-on.</td></tr>
+                            <tr><td colspan="8">Belum ada request.</td></tr>
                         @endforelse
                     </tbody>
                 </table>
             </div>
-
-            <div class="panel">
-                <h2>Token Usage Trends</h2>
-                <div class="donut-wrap">
-                    <div class="donut" style="--used: {{ $usedDeg }}; --remain: {{ $remainDeg }};"></div>
-                    <div class="legend">
-                        <span><i class="dot" style="background:#35e5ef"></i>Used</span>
-                        <span><i class="dot" style="background:#3b82f6"></i>Remaining</span>
-                        <span><i class="dot" style="background:rgba(69, 92, 128, .6)"></i>Bonus</span>
-                    </div>
-                </div>
-            </div>
         </section>
     </main>
 </div>
+
+<div id="requestModal" class="modal-backdrop" role="dialog" aria-modal="true" aria-hidden="true">
+    <div class="modal-card">
+        <div class="modal-header">
+            <h3 class="modal-title">Request Details</h3>
+            <button type="button" id="requestModalClose" class="modal-close">&times;</button>
+        </div>
+        <div class="modal-grid">
+            <div class="modal-kv"><div class="k">Request ID</div><div class="v" id="mRequestId">-</div></div>
+            <div class="modal-kv"><div class="k">Model</div><div class="v" id="mModel">-</div></div>
+            <div class="modal-kv"><div class="k">Status</div><div class="v" id="mStatus">-</div></div>
+            <div class="modal-kv"><div class="k">Credits</div><div class="v" id="mCredits">0</div></div>
+            <div class="modal-kv"><div class="k">Product</div><div class="v" id="mProduct">-</div></div>
+            <div class="modal-kv"><div class="k">IP</div><div class="v" id="mIp">-</div></div>
+            <div class="modal-kv"><div class="k">Created at</div><div class="v" id="mCreated">-</div></div>
+        </div>
+        <div class="modal-tabs">
+            <button type="button" class="tab-btn active" data-tab="tabInput">Input</button>
+            <button type="button" class="tab-btn" data-tab="tabOutput">Output</button>
+        </div>
+        <section id="tabInput" class="tab-content active">
+            <div class="image-grid">
+                <div class="image-block">
+                    <h4>Model</h4>
+                    <img id="mModelImage" src="" alt="Model image">
+                    <div id="mModelImageEmpty" class="image-empty" style="display:none;">No image</div>
+                </div>
+                <div class="image-block">
+                    <h4>Product</h4>
+                    <img id="mProductImage" src="" alt="Product image">
+                    <div id="mProductImageEmpty" class="image-empty" style="display:none;">No image</div>
+                </div>
+            </div>
+            <div class="json-box"><pre id="mRequestJson">{}</pre></div>
+        </section>
+        <section id="tabOutput" class="tab-content">
+            <div class="image-grid">
+                <div class="image-block">
+                    <h4>Output</h4>
+                    <img id="mOutputImage" src="" alt="Output image">
+                    <div id="mOutputImageEmpty" class="image-empty" style="display:none;">No output image</div>
+                </div>
+            </div>
+            <div class="json-box"><pre id="mResponseJson">{}</pre></div>
+        </section>
+    </div>
+</div>
+
+<script>
+    const requestModal = document.getElementById('requestModal');
+    const requestModalClose = document.getElementById('requestModalClose');
+    const detailButtons = document.querySelectorAll('.js-open-request-modal');
+    const tabButtons = document.querySelectorAll('.tab-btn');
+    const tabContents = document.querySelectorAll('.tab-content');
+
+    const mRequestId = document.getElementById('mRequestId');
+    const mModel = document.getElementById('mModel');
+    const mStatus = document.getElementById('mStatus');
+    const mCredits = document.getElementById('mCredits');
+    const mProduct = document.getElementById('mProduct');
+    const mIp = document.getElementById('mIp');
+    const mCreated = document.getElementById('mCreated');
+    const mModelImage = document.getElementById('mModelImage');
+    const mProductImage = document.getElementById('mProductImage');
+    const mOutputImage = document.getElementById('mOutputImage');
+    const mModelImageEmpty = document.getElementById('mModelImageEmpty');
+    const mProductImageEmpty = document.getElementById('mProductImageEmpty');
+    const mOutputImageEmpty = document.getElementById('mOutputImageEmpty');
+    const mRequestJson = document.getElementById('mRequestJson');
+    const mResponseJson = document.getElementById('mResponseJson');
+
+    const showImage = (imgEl, emptyEl, url) => {
+        if (url && String(url).trim() !== '') {
+            imgEl.src = url;
+            imgEl.style.display = 'block';
+            emptyEl.style.display = 'none';
+        } else {
+            imgEl.removeAttribute('src');
+            imgEl.style.display = 'none';
+            emptyEl.style.display = 'flex';
+        }
+    };
+
+    detailButtons.forEach((btn) => {
+        btn.addEventListener('click', () => {
+            mRequestId.textContent = btn.dataset.requestId || '-';
+            mModel.textContent = btn.dataset.model || '-';
+            mStatus.textContent = btn.dataset.status || '-';
+            mCredits.textContent = btn.dataset.credits || '0';
+            mProduct.textContent = btn.dataset.product || '-';
+            mIp.textContent = btn.dataset.ip || '-';
+            mCreated.textContent = btn.dataset.created || '-';
+
+            showImage(mModelImage, mModelImageEmpty, btn.dataset.modelImage || '');
+            showImage(mProductImage, mProductImageEmpty, btn.dataset.productImage || '');
+            showImage(mOutputImage, mOutputImageEmpty, btn.dataset.outputImage || '');
+
+            let requestJson = {};
+            let responseJson = {};
+            try { requestJson = JSON.parse(btn.dataset.requestJson || '{}'); } catch (e) {}
+            try { responseJson = JSON.parse(btn.dataset.responseJson || '{}'); } catch (e) {}
+            mRequestJson.textContent = JSON.stringify(requestJson, null, 2);
+            mResponseJson.textContent = JSON.stringify(responseJson, null, 2);
+
+            tabButtons.forEach((tabBtn) => tabBtn.classList.remove('active'));
+            tabContents.forEach((content) => content.classList.remove('active'));
+            document.querySelector('[data-tab="tabInput"]').classList.add('active');
+            document.getElementById('tabInput').classList.add('active');
+
+            requestModal.classList.add('open');
+            requestModal.setAttribute('aria-hidden', 'false');
+        });
+    });
+
+    tabButtons.forEach((tabBtn) => {
+        tabBtn.addEventListener('click', () => {
+            const target = tabBtn.dataset.tab;
+            tabButtons.forEach((x) => x.classList.remove('active'));
+            tabContents.forEach((x) => x.classList.remove('active'));
+            tabBtn.classList.add('active');
+            document.getElementById(target).classList.add('active');
+        });
+    });
+
+    const closeModal = () => {
+        requestModal.classList.remove('open');
+        requestModal.setAttribute('aria-hidden', 'true');
+    };
+
+    requestModalClose.addEventListener('click', closeModal);
+    requestModal.addEventListener('click', (event) => {
+        if (event.target === requestModal) {
+            closeModal();
+        }
+    });
+    document.addEventListener('keydown', (event) => {
+        if (event.key === 'Escape' && requestModal.classList.contains('open')) {
+            closeModal();
+        }
+    });
+</script>
 </body>
 </html>
