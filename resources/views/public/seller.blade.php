@@ -5,24 +5,21 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>{{ $seller->store_name }} - AI Try-On Store</title>
+    <title>{{ $seller->store_name }} - Katalog Produk</title>
     <style>
         :root {
-            --bg: #060b14;
-            --panel: rgba(16, 25, 40, 0.92);
-            --panel-border: rgba(80, 180, 255, 0.25);
-            --text: #e6edf7;
-            --muted: #9db0c8;
-            --primary: #22d3ee;
-            --accent: #3b82f6;
-            --fs-caption: 12px;
-            --fs-label: 13px;
-            --fs-control: 14px;
-            --fs-body: 15px;
-            --fs-body-strong: 16px;
-            --fs-nav: 16px;
-            --fs-section-title: 26px;
-            --fs-page-title: 38px;
+            --bg: #f6f2e6;
+            --surface: #fffdf7;
+            --surface-soft: #fff8ed;
+            --text: #2f1f16;
+            --muted: #7d6a57;
+            --orange: #ef7c3f;
+            --orange-deep: #dc6a31;
+            --blue-soft: #c7e0ff;
+            --blue-text: #6f93bf;
+            --radius-xl: 24px;
+            --radius-lg: 18px;
+            --radius-md: 14px;
         }
 
         * {
@@ -31,167 +28,105 @@
 
         body {
             margin: 0;
-            font-family: "Segoe UI", Arial, sans-serif;
-            font-size: var(--fs-body);
+            font-family: "Nunito", "Segoe UI", sans-serif;
             color: var(--text);
             background:
-                radial-gradient(circle at 20% 20%, rgba(34, 211, 238, 0.2), transparent 30%),
-                radial-gradient(circle at 80% 70%, rgba(59, 130, 246, 0.2), transparent 25%),
+                radial-gradient(1200px 420px at 16% -12%, #fff8e1 0%, transparent 60%),
+                radial-gradient(900px 400px at 90% -10%, #eaf4ff 0%, transparent 65%),
                 var(--bg);
         }
 
+        .topbar-wrap {
+            padding: 0 18px 0;
+        }
+
         .topbar {
-            min-height: 74px;
-            padding: 0 24px;
-            border-bottom: 1px solid rgba(120, 170, 255, 0.25);
-            background: linear-gradient(90deg, #0b162f, #0a1b3d);
+            max-width: 1300px;
+            margin: 0 auto;
+            background: var(--surface);
+            border-radius: 0 0 22px 22px;
+            box-shadow: 0 14px 30px rgba(76, 52, 31, 0.12);
+            padding: 18px 26px;
             display: flex;
             align-items: center;
             justify-content: space-between;
-            gap: 16px;
+            gap: 18px;
         }
 
         .brand {
-            font-size: 20px;
-            font-weight: 700;
-            display: flex;
+            display: inline-flex;
+            align-items: center;
             gap: 12px;
-            align-items: center;
         }
 
-        .brand-dot {
-            width: 36px;
-            height: 36px;
-            border-radius: 10px;
-            background: rgba(34, 211, 238, .15);
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            color: var(--primary);
+        .brand-logo {
+            height: 56px;
+            width: auto;
+            display: block;
         }
 
-        .store-logo {
-            width: 38px;
-            height: 38px;
-            border-radius: 50%;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            font-size: var(--fs-caption);
-            font-weight: 700;
-            color: #052a31;
-            background: linear-gradient(160deg, #3b82f6, #22d3ee);
-            box-shadow: 0 0 16px rgba(34, 211, 238, .28);
+        .brand-label {
+            font-size: 34px;
+            font-weight: 900;
+            letter-spacing: .2px;
+            color: #6f93bf;
+            line-height: 1;
         }
 
         .wrap {
-            max-width: 1280px;
+            max-width: 1300px;
             margin: 0 auto;
-            padding: 24px;
-        }
-
-        .hero {
-            background: var(--panel);
-            border: 1px solid var(--panel-border);
-            border-radius: 14px;
-            padding: 22px;
-            box-shadow: inset 0 0 32px rgba(56, 189, 248, .08), 0 8px 28px rgba(0, 0, 0, .35);
-            margin-bottom: 18px;
-        }
-
-        .hero h1 {
-            margin: 0 0 8px;
-            font-size: var(--fs-page-title);
-            line-height: 1.08;
-        }
-
-        .hero p {
-            margin: 0;
-            color: var(--muted);
-            font-size: var(--fs-body-strong, 16px);
-        }
-
-        .selected {
-            margin-top: 12px;
-            border: 1px solid rgba(34, 211, 238, .35);
-            background: rgba(34, 211, 238, .09);
-            border-radius: 10px;
-            padding: 10px 12px;
-            font-size: var(--fs-control);
+            padding: 26px;
         }
 
         .section-title {
-            font-size: var(--fs-section-title);
-            margin: 0 0 14px;
+            margin: 0 0 16px;
+            font-size: 46px;
+            line-height: 1.06;
+            color: #b35e26;
         }
 
-        .page-grid {
-            display: grid;
-            grid-template-columns: 1fr 360px;
-            gap: 18px;
-            align-items: start;
-        }
-
-        .catalog-panel {
-            background: var(--panel);
-            border: 1px solid var(--panel-border);
-            border-radius: 14px;
-            padding: 18px;
-            box-shadow: inset 0 0 24px rgba(56, 189, 248, .06), 0 6px 20px rgba(0, 0, 0, .32);
+        .section-subtitle {
+            margin: 0 0 20px;
+            font-size: 18px;
+            color: var(--muted);
         }
 
         .grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            grid-template-columns: repeat(auto-fill, minmax(245px, 1fr));
             gap: 16px;
         }
 
         .card {
             display: flex;
             flex-direction: column;
-            width: 100%;
-            height: 100%;
-            text-align: left;
-            cursor: pointer;
-            font: inherit;
-            line-height: inherit;
-            text-decoration: none;
-            color: var(--text);
-            background: var(--panel);
-            border: 1px solid var(--panel-border);
-            border-radius: 14px;
+            border: 1px solid #eedfcb;
+            border-radius: var(--radius-lg);
+            background: var(--surface);
             overflow: hidden;
-            transition: border-color .16s ease;
-            box-shadow: inset 0 0 24px rgba(56, 189, 248, .06), 0 6px 20px rgba(0, 0, 0, .32);
-            appearance: none;
-            -webkit-appearance: none;
+            cursor: pointer;
+            text-align: left;
             padding: 0;
-            margin: 0;
+            transition: transform .14s ease, box-shadow .14s ease, border-color .14s ease;
         }
 
-        .card::-moz-focus-inner {
-            border: 0;
-            padding: 0;
-        }
-
-        .card:hover,
-        .card:active,
-        .card:focus,
-        .card:focus-visible {
-            transform: none;
-            outline: none;
-            box-shadow: inset 0 0 24px rgba(56, 189, 248, .06), 0 6px 20px rgba(0, 0, 0, .32);
+        .card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 20px rgba(116, 75, 43, 0.12);
+            border-color: #f3c8a8;
         }
 
         .card.selected {
-            border-color: rgba(34, 211, 238, .95);
+            border-color: #ef7c3f;
+            box-shadow: 0 10px 18px rgba(222, 122, 64, 0.2);
         }
 
         .thumb-wrap {
             width: 100%;
             aspect-ratio: 1 / 1;
-            background: rgba(255, 255, 255, .03);
-            border-bottom: 1px solid rgba(130, 170, 230, .15);
+            background: #fff;
+            border-bottom: 1px solid #f4e8d7;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -206,93 +141,191 @@
         }
 
         .thumb-fallback {
-            width: 100%;
-            height: 100%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: #8fb2d9;
-            font-size: 24px;
+            color: #ceb69f;
+            font-weight: 700;
+            font-size: 14px;
         }
 
         .card-body {
             padding: 12px;
             display: flex;
             flex-direction: column;
-            gap: 2px;
-            min-height: 150px;
+            gap: 6px;
+            min-height: 120px;
         }
 
         .product-name {
-            margin: 0 0 6px;
+            margin: 0;
             font-size: 18px;
-            line-height: 1.3;
+            line-height: 1.22;
+            color: #302015;
         }
 
         .meta {
             margin: 0;
             color: var(--muted);
-            font-size: var(--fs-control);
+            font-size: 13px;
+            line-height: 1.3;
         }
 
         .empty {
-            background: var(--panel);
-            border: 1px dashed rgba(80, 180, 255, 0.4);
-            border-radius: 14px;
-            padding: 28px;
-            color: var(--muted);
-            font-size: var(--fs-body);
+            border: 1px dashed #e4ceb3;
+            border-radius: var(--radius-lg);
+            background: var(--surface);
+            padding: 26px;
             text-align: center;
+            color: var(--muted);
         }
 
-        .tryon-panel {
-            position: sticky;
-            top: 16px;
-            background: var(--panel);
-            border: 1px solid var(--panel-border);
-            border-radius: 14px;
-            padding: 16px;
-            box-shadow: inset 0 0 24px rgba(56, 189, 248, .06), 0 6px 20px rgba(0, 0, 0, .32);
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(43, 23, 9, 0.5);
+            backdrop-filter: blur(3px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 18px;
+            z-index: 1500;
+            opacity: 0;
+            visibility: hidden;
+            pointer-events: none;
+            transition: opacity .24s ease, visibility .24s ease;
         }
 
-        .tryon-title {
-            margin: 0 0 10px;
-            font-size: 24px;
+        .modal-overlay.active {
+            opacity: 1;
+            visibility: visible;
+            pointer-events: auto;
+        }
+
+        .modal {
+            width: min(980px, 100%);
+            max-height: 95vh;
+            overflow: auto;
+            background: linear-gradient(180deg, #ffffff, #fff6e9);
+            border-radius: var(--radius-xl);
+            border: 1px solid #ebd4ba;
+            box-shadow: 0 22px 60px rgba(80, 49, 22, 0.26);
+            padding: 20px;
+            transform: translateY(14px) scale(.98);
+            opacity: 0;
+            transition: transform .24s ease, opacity .24s ease;
+        }
+
+        .modal-overlay.active .modal {
+            transform: translateY(0) scale(1);
+            opacity: 1;
+        }
+
+        .modal-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            margin-bottom: 14px;
+        }
+
+        .modal-title {
+            margin: 0;
+            font-size: 31px;
+            color: #c4662f;
+        }
+
+        .modal-close {
+            border: none;
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            background: #f9e7d4;
+            color: #9b5327;
+            font-size: 22px;
+            cursor: pointer;
+        }
+
+        .selected-product {
+            border-radius: 12px;
+            border: 1px solid #f1c9a9;
+            background: #fff3e6;
+            padding: 10px 12px;
+            margin-bottom: 12px;
+            font-size: 14px;
+        }
+
+        .quota-box {
+            border-radius: 12px;
+            border: 1px solid #f4bf94;
+            background: #fff0df;
+            color: #8c4c22;
+            padding: 10px 12px;
+            margin-bottom: 12px;
+            font-size: 14px;
         }
 
         .field {
-            margin-bottom: 12px;
+            border-radius: var(--radius-md);
+            background: var(--surface);
+            border: 1px solid #edd9c3;
+            padding: 12px;
         }
 
         .label {
             display: block;
-            margin-bottom: 6px;
-            color: #cad7ea;
-            font-size: var(--fs-label);
+            margin-bottom: 8px;
+            font-size: 14px;
+            font-weight: 700;
+            color: #7f5739;
         }
 
-        .input-file,
-        .select {
+        .input-file {
+            display: none;
+        }
+
+        .upload-trigger {
             width: 100%;
-            border-radius: 10px;
-            border: 1px solid rgba(54, 198, 230, .45);
-            background: rgba(6, 14, 26, .65);
-            color: var(--text);
-            padding: 10px;
-            font-size: 14px;
+            height: 48px;
+            border: none;
+            border-radius: 12px;
+            background: linear-gradient(180deg, #f89b5f, #ec7a3f);
+            color: #fff;
+            font-size: 17px;
+            font-weight: 800;
+            cursor: pointer;
+        }
+
+        .status-note {
+            margin-top: 8px;
+            min-height: 18px;
+            font-size: 13px;
+            color: var(--muted);
+        }
+
+        .status-error {
+            color: #bf3e2e;
+        }
+
+        .status-success {
+            color: #206a52;
+        }
+
+        .modal-preview-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 14px;
+            margin-bottom: 14px;
         }
 
         .preview-box {
             position: relative;
             width: 100%;
-            aspect-ratio: 1 / 1;
-            border-radius: 12px;
-            border: 1px solid rgba(130, 170, 230, .25);
-            background: rgba(255, 255, 255, .03);
+            aspect-ratio: 3 / 4;
+            border-radius: var(--radius-md);
+            border: 1px solid #e8d3bc;
+            background: #fff;
+            overflow: hidden;
             display: flex;
             align-items: center;
             justify-content: center;
-            overflow: hidden;
         }
 
         .preview-box img {
@@ -303,240 +336,202 @@
         }
 
         .preview-placeholder {
-            color: var(--muted);
-            font-size: var(--fs-control);
+            color: #9f8772;
             text-align: center;
-            padding: 10px;
+            padding: 14px;
+            font-size: 14px;
+            line-height: 1.35;
         }
-        .loading-dots {
-            display: inline-flex;
-            align-items: flex-end;
-            gap: 8px;
-            height: 28px;
-        }
-        .loading-dots span {
-            width: 10px;
-            height: 10px;
-            border-radius: 50%;
-            background: #35e5ef;
-            box-shadow: 0 0 12px rgba(53, 229, 239, 0.45);
-            animation: dot-bounce 0.9s ease-in-out infinite;
-        }
-        .loading-dots span:nth-child(2) { animation-delay: 0.15s; }
-        .loading-dots span:nth-child(3) { animation-delay: 0.3s; }
-        @keyframes dot-bounce {
-            0%, 80%, 100% { transform: translateY(0); opacity: 0.5; }
-            40% { transform: translateY(-10px); opacity: 1; }
-        }
-        .upload-center {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            margin-top: 10px;
-            padding: 10px 14px;
-            border-radius: 10px;
-            border: 1px solid rgba(54, 198, 230, .45);
-            background: rgba(6, 14, 26, .65);
-            color: var(--text);
-            font-size: var(--fs-label);
-            cursor: pointer;
-        }
+
         .preview-remove {
             position: absolute;
             top: 10px;
             right: 10px;
-            width: 28px;
-            height: 28px;
+            width: 30px;
+            height: 30px;
             border: none;
-            border-radius: 8px;
-            background: rgba(7, 14, 24, 0.85);
-            color: #fca5a5;
+            border-radius: 10px;
+            background: rgba(255, 255, 255, 0.9);
+            color: #cb4f3e;
             font-size: 20px;
-            line-height: 1;
+            cursor: pointer;
             display: none;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            border: 1px solid rgba(248, 113, 113, 0.45);
         }
 
-        .selected-product {
-            border-radius: 10px;
-            border: 1px solid rgba(34, 211, 238, .35);
-            background: rgba(34, 211, 238, .09);
-            padding: 10px;
-            font-size: var(--fs-control);
-            margin-bottom: 12px;
+        .loading-dots {
+            display: inline-flex;
+            align-items: flex-end;
+            gap: 8px;
+            height: 26px;
         }
 
-        .quota-box {
-            border-radius: 10px;
-            border: 1px solid rgba(248, 113, 113, 0.45);
-            background: rgba(248, 113, 113, 0.12);
-            padding: 10px;
-            font-size: var(--fs-label);
-            margin-bottom: 12px;
-            color: #fecaca;
+        .loading-dots span {
+            width: 9px;
+            height: 9px;
+            border-radius: 50%;
+            background: #eb7a3f;
+            animation: dot-bounce 0.9s ease-in-out infinite;
         }
 
-        .btn {
+        .loading-dots span:nth-child(2) {
+            animation-delay: 0.15s;
+        }
+
+        .loading-dots span:nth-child(3) {
+            animation-delay: 0.3s;
+        }
+
+        @keyframes dot-bounce {
+            0%,
+            80%,
+            100% {
+                transform: translateY(0);
+                opacity: 0.5;
+            }
+
+            40% {
+                transform: translateY(-10px);
+                opacity: 1;
+            }
+        }
+
+        .generate-btn {
             width: 100%;
+            height: 50px;
             border: none;
-            border-radius: 12px;
-            padding: 12px;
-            font-size: var(--fs-control);
-            font-weight: 700;
+            border-radius: 14px;
+            background: linear-gradient(180deg, #f99657, #ec7a3f);
+            color: #fff;
+            font-size: 19px;
+            font-weight: 900;
             cursor: pointer;
-            color: #052a31;
-            background: linear-gradient(180deg, #35e5ef, #1ac6d7);
-            box-shadow: 0 0 24px rgba(34, 211, 238, .3);
         }
 
-        .result-note {
-            margin-top: 8px;
-            color: var(--muted);
-            font-size: var(--fs-label);
-            line-height: 1.45;
-        }
-
-        .status-note {
-            margin-top: 10px;
-            font-size: var(--fs-label);
-            color: var(--muted);
-            min-height: 18px;
-        }
-
-        .status-error {
-            color: #fecaca;
-        }
-
-        .status-success {
-            color: #78f6dc;
-        }
-
-        .btn:disabled {
-            opacity: .65;
+        .generate-btn:disabled {
+            opacity: .6;
             cursor: not-allowed;
         }
 
         @media (max-width: 900px) {
+            .topbar {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
             .brand {
-                font-size: 18px;
+                gap: 8px;
             }
 
-            .hero h1 {
-                font-size: 30px;
+            .brand-logo {
+                height: 44px;
             }
 
-            .page-grid {
+            .brand-label {
+                font-size: 26px;
+            }
+
+            .section-title {
+                font-size: 36px;
+            }
+
+            .modal-preview-grid {
                 grid-template-columns: 1fr;
-            }
-
-            .tryon-panel {
-                position: static;
             }
         }
     </style>
 </head>
 
 <body>
-    @php
-    $storeInitials = strtoupper(substr(trim($seller->store_name), 0, 2));
-    @endphp
-
-    <header class="topbar">
-        <div class="brand"><span class="brand-dot">AI</span>{{ $seller->store_name }}</div>
-        <div class="store-logo">{{ $storeInitials }}</div>
-    </header>
+    <div class="topbar-wrap">
+        <header class="topbar">
+            <div class="brand">
+                <img src="{{ asset('images/seller-logo.png') }}" alt="{{ $seller->store_name }}" class="brand-logo">
+                <span class="brand-label">- Katalog Produk</span>
+            </div>
+        </header>
+    </div>
 
     <main class="wrap">
-        <section class="hero">
-            <h1>{{ $seller->store_name }}</h1>
-            <p>Katalog produk</p>
-
-        </section>
-
-        <section class="page-grid">
-            <div class="catalog-panel">
-                <h2 class="section-title">Product Catalog</h2>
-
-                @if($products->isEmpty())
-                <div class="empty">Belum ada produk aktif.</div>
-                @else
-                <div class="grid" id="productGrid">
-                    @foreach ($products as $product)
-                    @php
-                    $image = $product->images->firstWhere('is_primary', true) ?? $product->images->first();
-                    $isSelected = !empty($selectedProduct) && $selectedProduct->id === $product->id;
-                    @endphp
-                    <button
-                        type="button"
-                        class="card {{ $isSelected ? 'selected' : '' }}"
-                        data-product-id="{{ $product->id }}"
-                        data-product-name="{{ $product->name }}"
-                        data-product-slug="{{ $product->slug }}"
-                        data-product-sku="{{ $product->sku }}"
-                        data-product-image="{{ $image?->image_url ?? '' }}"
-                        onclick="selectProduct(this)">
-                        <div class="thumb-wrap">
-                            @if($image)
-                            <img src="{{ $image->image_url }}" alt="{{ $product->name }}" class="thumb">
-                            @else
-                            <div class="thumb-fallback">IMG</div>
-                            @endif
-                        </div>
-                        <div class="card-body">
-                            <h3 class="product-name">{{ $product->name }}</h3>
-                            <p class="meta">SKU: {{ $product->sku ?: '-' }}</p>
-                            <p class="meta">Category: {{ $product->category ?: '-' }}</p>
-                        </div>
-                    </button>
-                    @endforeach
-                </div>
-                @endif
-            </div>
-
-            <aside class="tryon-panel">
-                <h2 class="tryon-title">Try-On Tool</h2>
-
-                <div id="selectedProductInfo" class="selected-product">
-                    @if(!empty($selectedProduct))
-                    Produk: <strong id="selectedProductName">{{ $selectedProduct->name }}</strong>
+@if($products->isEmpty())
+        <div class="empty">Belum ada produk aktif.</div>
+        @else
+        <section class="grid" id="productGrid">
+            @foreach ($products as $product)
+            @php
+            $image = $product->images->firstWhere('is_primary', true) ?? $product->images->first();
+            $isSelected = !empty($selectedProduct) && $selectedProduct->id === $product->id;
+            @endphp
+            <button
+                type="button"
+                class="card {{ $isSelected ? 'selected' : '' }}"
+                data-product-id="{{ $product->id }}"
+                data-product-name="{{ $product->name }}"
+                data-product-slug="{{ $product->slug }}"
+                data-product-sku="{{ $product->sku }}"
+                data-product-category="{{ $product->category }}"
+                data-product-image="{{ $image?->image_url ?? '' }}"
+                onclick="openTryOnModal(this)">
+                <div class="thumb-wrap">
+                    @if($image)
+                    <img src="{{ $image->image_url }}" alt="{{ $product->name }}" class="thumb">
                     @else
-                    Produk: <strong id="selectedProductName">Belum dipilih</strong>
+                    <div class="thumb-fallback">No Image</div>
                     @endif
                 </div>
-
-                <div id="quotaBox" class="quota-box">
-                    Sisa generate hari ini: <strong id="remainingQuotaText">-</strong>
+                <div class="card-body">
+                    <h3 class="product-name">{{ $product->name }}</h3>
+                    <p class="meta">Category: {{ $product->category ?: '-' }}</p>
                 </div>
+            </button>
+            @endforeach
+        </section>
+        @endif
+    </main>
 
-                <input class="input-file" id="customerPhoto" type="file" accept="image/*" style="display:none">
+    <div class="modal-overlay" id="tryOnModal" aria-hidden="true">
+        <div class="modal" role="dialog" aria-modal="true" aria-labelledby="tryOnModalTitle">
+            <div class="modal-header">
+                <h2 class="modal-title" id="tryOnModalTitle">Try-On Tool</h2>
+                <button type="button" class="modal-close" onclick="closeTryOnModal()" aria-label="Tutup">&times;</button>
+            </div>
 
+            <div id="selectedProductInfo" class="selected-product">
+                Produk: <strong id="selectedProductName">Belum dipilih</strong>
+            </div>
+
+            <div id="quotaBox" class="quota-box">
+                Sisa generate hari ini: <strong id="remainingQuotaText">-</strong>
+            </div>
+
+            <input class="input-file" id="customerPhoto" type="file" accept="image/*">
+
+            <div class="modal-preview-grid">
                 <div class="field">
-                    <label class="label">Model</label>
+                    <label class="label">Foto Model</label>
                     <div class="preview-box">
                         <img id="customerPreview" alt="Customer preview">
-                        <button id="removePhotoBtn" class="preview-remove" type="button" aria-label="Hapus foto">×</button>
+                        <button id="removePhotoBtn" class="preview-remove" type="button" aria-label="Hapus foto">&times;</button>
                         <div id="customerPlaceholder" class="preview-placeholder">
-                            <label for="customerPhoto" class="upload-center">Pilih File</label>
+                            <p>Foto model yang diupload akan tampil di sini.</p>
+                            <button type="button" class="upload-trigger" onclick="document.getElementById('customerPhoto').click()">Pilih File</button>
                         </div>
                     </div>
+                    <div id="statusNote" class="status-note"></div>
                 </div>
 
                 <div class="field">
-                    <label class="label">Try-On</label>
+                    <label class="label">Hasil Generated Fashn AI</label>
                     <div class="preview-box">
                         <img id="resultPreview" alt="Try-on result">
-                        <div id="resultPlaceholder" class="preview-placeholder"></div>
+                        <div id="resultPlaceholder" class="preview-placeholder">Hasil generate akan muncul di samping foto model setelah proses selesai.</div>
                     </div>
                 </div>
+            </div>
 
-                <button id="generateBtn" class="btn" type="button" onclick="submitTryOn()">Try-On</button>
-                <div id="statusNote" class="status-note"></div>
-            </aside>
-        </section>
-    </main>
+            <button id="generateBtn" class="generate-btn" type="button" onclick="submitTryOn()">Try-On</button>
+        </div>
+    </div>
+
     <script>
         let selectedProductId = @json(optional($selectedProduct)->id);
         let pollTimer = null;
@@ -578,6 +573,33 @@
                 window.history.replaceState({}, '', newUrl);
             }
         }
+
+        function openTryOnModal(el) {
+            selectProduct(el);
+            const modal = document.getElementById('tryOnModal');
+            modal.classList.add('active');
+            modal.setAttribute('aria-hidden', 'false');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeTryOnModal() {
+            const modal = document.getElementById('tryOnModal');
+            modal.classList.remove('active');
+            modal.setAttribute('aria-hidden', 'true');
+            document.body.style.overflow = '';
+        }
+
+        document.getElementById('tryOnModal').addEventListener('click', function(event) {
+            if (event.target === this) {
+                closeTryOnModal();
+            }
+        });
+
+        document.addEventListener('keydown', function(event) {
+            if (event.key === 'Escape') {
+                closeTryOnModal();
+            }
+        });
 
         document.getElementById('customerPhoto').addEventListener('change', function() {
             const file = this.files && this.files[0] ? this.files[0] : null;
@@ -629,12 +651,14 @@
             const btn = document.getElementById('generateBtn');
             const resultPlaceholder = document.getElementById('resultPlaceholder');
             const mustDisableByQuota = remainingDailyQuota !== null && remainingDailyQuota <= 0;
+
             btn.disabled = loading || mustDisableByQuota;
             btn.textContent = loading ? 'Processing...' : 'Try-On';
+
             if (resultPlaceholder) {
                 resultPlaceholder.innerHTML = loading
                     ? '<div class="loading-dots" aria-label="Loading"><span></span><span></span><span></span></div>'
-                    : '';
+                    : 'Hasil generate akan muncul di samping foto model setelah proses selesai.';
             }
         }
 
@@ -652,6 +676,7 @@
             if (remaining <= 0) {
                 setStatus('Batas generate harian sudah habis (0).', 'error');
             }
+
             const btn = document.getElementById('generateBtn');
             if (btn && !btn.disabled && remaining <= 0) {
                 btn.disabled = true;
@@ -674,7 +699,7 @@
 
                 updateQuotaUI(payload);
             } catch (error) {
-                // Keep silent; quota endpoint failure should not break page interaction.
+                // Quota failure should not block the page.
             }
         }
 
@@ -692,7 +717,7 @@
 
             const file = customerPhotoInput.files && customerPhotoInput.files[0] ? customerPhotoInput.files[0] : null;
             if (!file || !customerPreview.getAttribute('src')) {
-                setStatus('upload foto model', 'error');
+                setStatus('Upload foto model terlebih dahulu.', 'error');
                 return;
             }
 
@@ -734,7 +759,7 @@
                 if (createPayload.quota) {
                     updateQuotaUI(createPayload.quota);
                 }
-                setStatus('', '');
+
                 await pollTryOnStatus(createPayload.id);
             } catch (error) {
                 setStatus(error.message || 'Terjadi kesalahan saat generate try-on.', 'error');
@@ -763,6 +788,7 @@
                             'Accept': 'application/json'
                         },
                     });
+
                     const payload = await response.json();
                     if (!response.ok) {
                         throw new Error(payload.message || 'Gagal cek status try-on.');
@@ -777,9 +803,10 @@
                             resultPreview.style.display = 'block';
                             resultPlaceholder.style.display = 'none';
                         }
-                    setStatus('', '');
-                    setLoading(false);
-                    return;
+
+                        setStatus('Generate selesai.', 'success');
+                        setLoading(false);
+                        return;
                     }
 
                     if (payload.status === 'failed') {
@@ -805,7 +832,7 @@
             }, 2000);
         }
 
-        (function ensureInitialSelectedProduct() {
+        (function initPage() {
             const current = document.querySelector('#productGrid .card.selected');
             if (current) {
                 selectProduct(current);
@@ -816,5 +843,4 @@
 </body>
 
 </html>
-
 
