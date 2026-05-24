@@ -127,6 +127,21 @@
         }
         .card-label { font-size: 18px; color: var(--muted); margin-top: 12px; }
         .card-value { margin-top: 10px; font-size: var(--fs-metric); font-weight: 700; line-height: 1.05; }
+        .card-value-text { margin-top: 8px; font-size: var(--fs-body-strong); color: #e6edf7; }
+        .model-select {
+            width: 100%;
+            height: 36px;
+            border-radius: 8px;
+            border: 1px solid rgba(80, 180, 255, 0.45);
+            background: rgba(6, 14, 26, 0.65);
+            color: #e6edf7;
+            font-size: var(--fs-control);
+            padding: 0 10px;
+            margin-top: 6px;
+        }
+        .model-update-status { margin-top: 8px; font-size: var(--fs-label); min-height: 16px; }
+        .model-update-status.ok { color: #78f6dc; }
+        .model-update-status.fail { color: #fecaca; }
         .credit-breakdown { margin-top: 10px; border-top: 1px solid rgba(130, 170, 230, 0.2); padding-top: 10px; }
         .credit-item { display: flex; justify-content: space-between; align-items: center; font-size: var(--fs-body); color: #c6d3e6; margin: 4px 0; }
         .credit-item strong { color: #e6edf7; font-size: var(--fs-body-strong); }
@@ -255,35 +270,36 @@
             </article>
             <article class="card">
                 <div class="card-label">Model</div>
-                <div class="card-value-text">{{ $stats['fashn_model_label'] }}</div>
+                <select id="dashboardModelSelect" class="model-select" aria-label="Select model">
+                    <option value="tryon-v1.6" {{ $stats['fashn_model'] === 'tryon-v1.6' ? 'selected' : '' }}>FASHN Virtual Try-On v1.6</option>
+                    <option value="tryon-max" {{ $stats['fashn_model'] === 'tryon-max' ? 'selected' : '' }}>Try-On Max</option>
+                </select>
+                <div id="dashboardModelStatus" class="model-update-status"></div>
                 <div class="credit-breakdown">
-                    @if($stats['fashn_model'] === 'tryon-v1.6')
-                        <div class="credit-item">
-                            <span>Mode</span>
-                            <strong>{{ ucfirst($stats['fashn_model_config']['mode'] ?? 'balanced') }}</strong>
-                        </div>
-                        <div class="credit-item">
-                            <span>Samples</span>
-                            <strong>{{ (int) ($stats['fashn_model_config']['samples'] ?? 1) }}</strong>
-                        </div>
-                        <div class="credit-item">
-                            <span>Format</span>
-                            <strong>{{ strtoupper((string) ($stats['fashn_model_config']['format'] ?? 'png')) }}</strong>
-                        </div>
-                    @else
-                        <div class="credit-item">
-                            <span>Mode</span>
-                            <strong>{{ ucfirst($stats['fashn_model_config']['generation_mode'] ?? 'balanced') }}</strong>
-                        </div>
-                        <div class="credit-item">
-                            <span>Resolution</span>
-                            <strong>{{ strtoupper((string) ($stats['fashn_model_config']['resolution'] ?? '1k')) }}</strong>
-                        </div>
-                        <div class="credit-item">
-                            <span>Format</span>
-                            <strong>{{ strtoupper((string) ($stats['fashn_model_config']['format'] ?? 'png')) }}</strong>
-                        </div>
-                    @endif
+                    <div class="credit-item">
+                        <span id="modelMetaLabel1">{{ $stats['fashn_model'] === 'tryon-v1.6' ? 'Mode' : 'Mode' }}</span>
+                        <strong id="modelMetaValue1">
+                            {{ $stats['fashn_model'] === 'tryon-v1.6'
+                                ? ucfirst($stats['fashn_model_config']['mode'] ?? 'balanced')
+                                : ucfirst($stats['fashn_model_config']['generation_mode'] ?? 'balanced') }}
+                        </strong>
+                    </div>
+                    <div class="credit-item">
+                        <span id="modelMetaLabel2">{{ $stats['fashn_model'] === 'tryon-v1.6' ? 'Samples' : 'Resolution' }}</span>
+                        <strong id="modelMetaValue2">
+                            {{ $stats['fashn_model'] === 'tryon-v1.6'
+                                ? (int) ($stats['fashn_model_config']['samples'] ?? 1)
+                                : strtoupper((string) ($stats['fashn_model_config']['resolution'] ?? '1k')) }}
+                        </strong>
+                    </div>
+                    <div class="credit-item">
+                        <span>Format</span>
+                        <strong id="modelMetaValue3">
+                            {{ $stats['fashn_model'] === 'tryon-v1.6'
+                                ? strtoupper((string) ($stats['fashn_model_config']['format'] ?? 'png'))
+                                : strtoupper((string) ($stats['fashn_model_config']['format'] ?? 'png')) }}
+                        </strong>
+                    </div>
                 </div>
             </article>
         </section>
@@ -429,6 +445,71 @@
 </div>
 
 <script>
+    const dashboardModelSelect = document.getElementById('dashboardModelSelect');
+    const dashboardModelStatus = document.getElementById('dashboardModelStatus');
+    const modelMetaLabel2 = document.getElementById('modelMetaLabel2');
+    const modelMetaValue1 = document.getElementById('modelMetaValue1');
+    const modelMetaValue2 = document.getElementById('modelMetaValue2');
+    const modelMetaValue3 = document.getElementById('modelMetaValue3');
+    const csrfToken = @json(csrf_token());
+
+    const updateModelMeta = (model, config) => {
+        if (model === 'tryon-v1.6') {
+            modelMetaValue1.textContent = String((config.mode || 'balanced')).replace(/^./, (c) => c.toUpperCase());
+            modelMetaLabel2.textContent = 'Samples';
+            modelMetaValue2.textContent = String(config.samples ?? 1);
+            modelMetaValue3.textContent = String((config.format || 'png')).toUpperCase();
+            return;
+        }
+
+        modelMetaValue1.textContent = String((config.generation_mode || 'balanced')).replace(/^./, (c) => c.toUpperCase());
+        modelMetaLabel2.textContent = 'Resolution';
+        modelMetaValue2.textContent = String((config.resolution || '1k')).toUpperCase();
+        modelMetaValue3.textContent = String((config.format || 'png')).toUpperCase();
+    };
+
+    if (dashboardModelSelect) {
+        dashboardModelSelect.addEventListener('change', async () => {
+            const selectedModel = dashboardModelSelect.value;
+            const previousModel = dashboardModelSelect.dataset.current || selectedModel;
+            dashboardModelSelect.disabled = true;
+            dashboardModelStatus.className = 'model-update-status';
+            dashboardModelStatus.textContent = 'Updating model...';
+
+            try {
+                const response = await fetch(@json(route('seller.dashboard.model.update')), {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': csrfToken,
+                    },
+                    body: JSON.stringify({
+                        fashn_model: selectedModel,
+                    }),
+                });
+
+                const payload = await response.json();
+                if (!response.ok || !payload.ok) {
+                    throw new Error(payload.message || 'Gagal update model.');
+                }
+
+                dashboardModelSelect.dataset.current = payload.model;
+                updateModelMeta(payload.model, payload.config || {});
+                dashboardModelStatus.className = 'model-update-status ok';
+                dashboardModelStatus.textContent = 'Model aktif berhasil diperbarui.';
+            } catch (error) {
+                dashboardModelSelect.value = previousModel;
+                dashboardModelStatus.className = 'model-update-status fail';
+                dashboardModelStatus.textContent = error.message || 'Gagal update model.';
+            } finally {
+                dashboardModelSelect.disabled = false;
+            }
+        });
+
+        dashboardModelSelect.dataset.current = dashboardModelSelect.value;
+    }
+
     const requestModal = document.getElementById('requestModal');
     const requestModalClose = document.getElementById('requestModalClose');
     const detailButtons = document.querySelectorAll('.js-open-request-modal');

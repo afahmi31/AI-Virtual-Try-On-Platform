@@ -19,6 +19,7 @@ Route::post('/logout', [WebAuthController::class, 'logout'])->middleware('auth')
 
 Route::prefix('dashboard')->middleware(['auth', 'role:seller'])->group(function (): void {
     Route::get('/', [SellerDashboardController::class, 'index'])->name('seller.dashboard');
+    Route::post('/model', [SellerDashboardController::class, 'updateModel'])->name('seller.dashboard.model.update');
     Route::get('/products', [SellerProductController::class, 'index'])->name('seller.products.index');
     Route::get('/settings', [SellerSettingsController::class, 'index'])->name('seller.settings.index');
     Route::post('/settings', [SellerSettingsController::class, 'update'])->name('seller.settings.update');

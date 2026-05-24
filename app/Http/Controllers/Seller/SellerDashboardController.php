@@ -3,8 +3,11 @@
 namespace App\Http\Controllers\Seller;
 
 use App\Http\Controllers\Controller;
+use App\Models\SellerAiSetting;
 use App\Models\TryOnSession;
 use App\Support\CurrentSellerResolver;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 
 class SellerDashboardController extends Controller
@@ -60,6 +63,33 @@ class SellerDashboardController extends Controller
         ];
 
         return view('seller.dashboard', compact('seller', 'stats'));
+    }
+
+    public function updateModel(Request $request): JsonResponse
+    {
+        $seller = $this->currentSellerResolver->resolveForUser($request->user());
+        $payload = $request->validate([
+            'fashn_model' => ['required', 'in:tryon-v1.6,tryon-max'],
+        ]);
+
+        $setting = SellerAiSetting::query()->firstOrNew(['seller_id' => $seller->id]);
+        $setting->provider_name = 'fashn';
+        $setting->fashn_model = $payload['fashn_model'];
+        $setting->save();
+
+        $setting->refresh();
+
+        $activeModel = (string) ($setting->fashn_model ?: 'tryon-max');
+        $activeModelLabel = $activeModel === 'tryon-v1.6'
+            ? 'FASHN Virtual Try-On v1.6'
+            : 'Try-On Max';
+
+        return response()->json([
+            'ok' => true,
+            'model' => $activeModel,
+            'model_label' => $activeModelLabel,
+            'config' => $this->resolveActiveModelConfig($activeModel, $setting),
+        ]);
     }
 
     private function resolveFashnCredits(?string $apiKey, int $fallback): array
