@@ -28,7 +28,7 @@
 </head>
 <body>
 <header>
-    <div><strong>AI Try-On Core App</strong></div>
+    <div><strong>Try-On Commerce Studio</strong></div>
     <nav>
         @auth
             <a href="{{ route('seller.dashboard') }}">Dashboard</a>

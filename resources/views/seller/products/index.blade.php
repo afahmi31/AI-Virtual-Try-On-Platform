@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Manage Products - AI Try-On Core App</title>
+    <title>Manage Products - Try-On Commerce Studio</title>
     <style>
         :root {
             --bg: #050b17;
@@ -95,6 +95,7 @@
             background: linear-gradient(160deg, #3b82f6, #32ddf2);
             box-shadow: 0 0 16px rgba(50, 221, 242, 0.35);
         }
+        .store-icon-svg { width: 18px; height: 18px; stroke: #032a33; stroke-width: 1.9; fill: none; }
 
         .topnav button {
             color: var(--text);
@@ -700,13 +701,18 @@
 </head>
 <body>
 <header class="topbar">
-    <div class="brand"><span class="brand-dot">AI</span>AI Try-On Core App - {{ $seller->store_name }}</div>
-    <nav class="topnav">
+    <div class="brand">Try-On Commerce Studio</div>
+        <nav class="topnav">
         @php
-            $storeInitials = strtoupper(substr(trim($seller->store_name), 0, 2));
             $storeUrl = route('public.seller.page', ['seller_slug' => $seller->slug]);
         @endphp
-        <a class="store-logo-link" href="{{ $storeUrl }}" target="_blank" rel="noopener noreferrer" title="Open Store: {{ $storeUrl }}">{{ $storeInitials }}</a>
+        <a class="store-logo-link" href="{{ $storeUrl }}" target="_blank" rel="noopener noreferrer" title="Open Store: {{ $storeUrl }}">
+            <svg viewBox="0 0 24 24" aria-hidden="true" class="store-icon-svg">
+                <path d="M3 9l2-4h14l2 4"></path>
+                <path d="M4 9h16v10a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V9z"></path>
+                <path d="M9 20v-5h6v5"></path>
+            </svg>
+        </a>
         <form method="POST" action="{{ route('logout') }}">
             @csrf
             <button type="submit">Logout</button>
@@ -830,19 +836,21 @@
                     <div class="field">
                         <label>AI Category <span class="preview-hint">(Try-On v1.6)</span></label>
                         <select name="ai_category">
-                            <option value="auto" selected>auto</option>
-                            <option value="tops">tops</option>
-                            <option value="bottoms">bottoms</option>
-                            <option value="one-pieces">one-pieces</option>
+                            <option value="auto" selected>auto - biarkan AI deteksi otomatis</option>
+                            <option value="tops">tops - atasan (kemeja, blouse, t-shirt)</option>
+                            <option value="bottoms">bottoms - bawahan (rok, celana)</option>
+                            <option value="one-pieces">one-pieces - baju terusan (dress, gamis)</option>
                         </select>
+                        <div class="preview-hint">Pilih sesuai jenis utama pakaian pada foto produk agar hasil try-on lebih pas.</div>
                     </div>
                     <div class="field">
                         <label>Garment Photo Type <span class="preview-hint">(Try-On v1.6)</span></label>
                         <select name="ai_garment_photo_type">
-                            <option value="auto" selected>auto</option>
-                            <option value="flat-lay">flat-lay</option>
-                            <option value="model">model</option>
+                            <option value="auto" selected>auto - biarkan AI deteksi otomatis</option>
+                            <option value="flat-lay">flat-lay - foto produk tanpa dipakai model</option>
+                            <option value="model">model - foto produk sedang dipakai model/manekin</option>
                         </select>
+                        <div class="preview-hint">Sesuaikan dengan tipe foto garment yang di-upload supaya bentuk baju tidak salah baca.</div>
                     </div>
                     <div class="field">
                         <input type="hidden" name="ai_segmentation_free" value="0">
@@ -905,19 +913,21 @@
                     <div class="field">
                         <label>AI Category <span class="preview-hint">(Try-On v1.6)</span></label>
                         <select id="editAiCategory" name="ai_category">
-                            <option value="auto">auto</option>
-                            <option value="tops">tops</option>
-                            <option value="bottoms">bottoms</option>
-                            <option value="one-pieces">one-pieces</option>
+                            <option value="auto">auto - biarkan AI deteksi otomatis</option>
+                            <option value="tops">tops - atasan (kemeja, blouse, t-shirt)</option>
+                            <option value="bottoms">bottoms - bawahan (rok, celana)</option>
+                            <option value="one-pieces">one-pieces - baju terusan (dress, gamis)</option>
                         </select>
+                        <div class="preview-hint">Pilih sesuai jenis utama pakaian pada foto produk agar hasil try-on lebih pas.</div>
                     </div>
                     <div class="field">
                         <label>Garment Photo Type <span class="preview-hint">(Try-On v1.6)</span></label>
                         <select id="editAiGarmentPhotoType" name="ai_garment_photo_type">
-                            <option value="auto">auto</option>
-                            <option value="flat-lay">flat-lay</option>
-                            <option value="model">model</option>
+                            <option value="auto">auto - biarkan AI deteksi otomatis</option>
+                            <option value="flat-lay">flat-lay - foto produk tanpa dipakai model</option>
+                            <option value="model">model - foto produk sedang dipakai model/manekin</option>
                         </select>
+                        <div class="preview-hint">Sesuaikan dengan tipe foto garment yang di-upload supaya bentuk baju tidak salah baca.</div>
                     </div>
                     <div class="field">
                         <input type="hidden" name="ai_segmentation_free" value="0">

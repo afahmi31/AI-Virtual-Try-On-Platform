@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard - AI Try-On Core App</title>
+    <title>Dashboard - Try-On Commerce Studio</title>
     <style>
         :root {
             --bg: #060b14;
@@ -80,6 +80,7 @@
             background: linear-gradient(160deg, #3b82f6, #32ddf2);
             box-shadow: 0 0 16px rgba(50, 221, 242, 0.35);
         }
+        .store-icon-svg { width: 18px; height: 18px; stroke: #032a33; stroke-width: 1.9; fill: none; }
         .topnav button {
             color: var(--text);
             border: 1px solid rgba(130, 170, 225, 0.24);
@@ -192,13 +193,18 @@
 </head>
 <body>
 <header class="topbar">
-    <div class="brand"><span class="brand-dot">AI</span>AI Try-On Core App - {{ $seller->store_name }}</div>
-    <nav class="topnav">
+    <div class="brand">Try-On Commerce Studio</div>
+        <nav class="topnav">
         @php
-            $storeInitials = strtoupper(substr(trim($seller->store_name), 0, 2));
             $storeUrl = route('public.seller.page', ['seller_slug' => $seller->slug]);
         @endphp
-        <a class="store-logo-link" href="{{ $storeUrl }}" target="_blank" rel="noopener noreferrer" title="Open Store: {{ $storeUrl }}">{{ $storeInitials }}</a>
+        <a class="store-logo-link" href="{{ $storeUrl }}" target="_blank" rel="noopener noreferrer" title="Open Store: {{ $storeUrl }}">
+            <svg viewBox="0 0 24 24" aria-hidden="true" class="store-icon-svg">
+                <path d="M3 9l2-4h14l2 4"></path>
+                <path d="M4 9h16v10a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V9z"></path>
+                <path d="M9 20v-5h6v5"></path>
+            </svg>
+        </a>
         <form method="POST" action="{{ route('logout') }}">
             @csrf
             <button type="submit">Logout</button>

@@ -39,6 +39,9 @@ Route::prefix('{seller_slug}/try-on')->group(function (): void {
     Route::get('/sessions/{sessionId}', [TryOnPublicController::class, 'show'])
         ->middleware('throttle:tryon-public-polling')
         ->name('public.tryon.sessions.show');
+
+    Route::get('/sessions', [TryOnPublicController::class, 'history'])
+        ->name('public.tryon.sessions.history');
 });
 
 Route::get('/{seller_slug}/{product_ref?}', [SellerPublicController::class, 'index'])

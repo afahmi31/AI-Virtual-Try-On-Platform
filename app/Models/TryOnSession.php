@@ -18,6 +18,7 @@ class TryOnSession extends Model
         'source_channel',
         'ip_address',
         'user_agent',
+        'device_id',
         'provider_name',
         'provider_model',
         'provider_job_id',

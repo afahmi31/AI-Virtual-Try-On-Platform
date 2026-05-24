@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>{{ $seller->store_name }} - Katalog Produk</title>
+    <title>Katalog Produk</title>
     <style>
         :root {
             --bg: #f6f2e6;
@@ -56,13 +56,7 @@
         .brand {
             display: inline-flex;
             align-items: center;
-            gap: 12px;
-        }
-
-        .brand-logo {
-            height: 56px;
-            width: auto;
-            display: block;
+            gap: 0;
         }
 
         .brand-label {
@@ -488,6 +482,61 @@
             cursor: not-allowed;
         }
 
+        .history-wrap {
+            margin: 8px 0 14px;
+            border: 1px solid #edd9c3;
+            border-radius: var(--radius-md);
+            background: var(--surface);
+            padding: 10px;
+        }
+
+        .history-title {
+            margin: 0 0 8px;
+            font-size: 13px;
+            font-weight: 800;
+            color: #7f5739;
+        }
+
+        .history-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(84px, 1fr));
+            gap: 8px;
+        }
+
+        .history-item {
+            border: 1px solid #e7cfb3;
+            border-radius: 10px;
+            background: #fff;
+            overflow: hidden;
+            padding: 0;
+            cursor: pointer;
+            min-height: 112px;
+        }
+
+        .history-item img {
+            width: 100%;
+            aspect-ratio: 1 / 1;
+            object-fit: cover;
+            display: block;
+        }
+
+        .history-item-time {
+            display: block;
+            font-size: 10px;
+            color: #8c725b;
+            padding: 5px 6px 6px;
+            text-align: center;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .history-empty {
+            margin: 0;
+            font-size: 12px;
+            color: #8c725b;
+        }
+
         @media (max-width: 900px) {
             .topbar {
                 flex-direction: column;
@@ -495,11 +544,7 @@
             }
 
             .brand {
-                gap: 8px;
-            }
-
-            .brand-logo {
-                height: 44px;
+                gap: 0;
             }
 
             .brand-label {
@@ -525,8 +570,7 @@
     <div class="topbar-wrap">
         <header class="topbar">
             <div class="brand">
-                <img src="{{ asset('images/seller-logo.png') }}" alt="{{ $seller->store_name }}" class="brand-logo">
-                <span class="brand-label">- Katalog Produk</span>
+                <span class="brand-label">Katalog Produk</span>
             </div>
         </header>
     </div>
@@ -616,6 +660,12 @@
                 </div>
             </div>
 
+            <div class="history-wrap">
+                <p class="history-title">Riwayat Generate</p>
+                <div id="historyList" class="history-list"></div>
+                <p id="historyEmpty" class="history-empty">Belum ada riwayat generate.</p>
+            </div>
+
             <button id="generateBtn" class="generate-btn" type="button" onclick="submitTryOn()">Try-On</button>
         </div>
     </div>
@@ -625,6 +675,7 @@
         let pollTimer = null;
         const TRYON_DEVICE_KEY = 'tryon_device_id_v1';
         const TRYON_DUMMY = @json($tryOnDummy ?? ['enabled' => false, 'model_image_url' => '', 'result_url' => '']);
+        const TRYON_HISTORY_URL = @json(route('public.tryon.sessions.history', ['seller_slug' => $seller->slug]));
         let remainingDailyQuota = null;
         let useDummyModelForRealGenerate = Boolean(TRYON_DUMMY.model_image_url);
 
@@ -670,6 +721,7 @@
             modal.classList.add('active');
             modal.setAttribute('aria-hidden', 'false');
             document.body.style.overflow = 'hidden';
+            refreshHistory();
         }
 
         function closeTryOnModal() {
@@ -752,6 +804,97 @@
                 resultPlaceholder.innerHTML = loading
                     ? '<div class="loading-dots" aria-label="Loading"><span></span><span></span><span></span></div>'
                     : '';
+            }
+        }
+
+        function formatHistoryDateLabel(isoDate) {
+            if (!isoDate) {
+                return '-';
+            }
+
+            const dt = new Date(isoDate);
+            if (Number.isNaN(dt.getTime())) {
+                return '-';
+            }
+
+            return new Intl.DateTimeFormat('id-ID', {
+                day: '2-digit',
+                month: 'short',
+                hour: '2-digit',
+                minute: '2-digit',
+            }).format(dt);
+        }
+
+        function showHistoryResult(url) {
+            if (!url) {
+                return;
+            }
+
+            const resultPreview = document.getElementById('resultPreview');
+            const resultPlaceholder = document.getElementById('resultPlaceholder');
+            resultPreview.src = url;
+            resultPreview.style.display = 'block';
+            resultPlaceholder.style.display = 'none';
+            setStatus('Menampilkan hasil dari riwayat.', 'success');
+        }
+
+        function renderHistory(items) {
+            const listEl = document.getElementById('historyList');
+            const emptyEl = document.getElementById('historyEmpty');
+            if (!listEl || !emptyEl) {
+                return;
+            }
+
+            listEl.innerHTML = '';
+
+            if (!Array.isArray(items) || items.length === 0) {
+                emptyEl.style.display = 'block';
+                return;
+            }
+
+            emptyEl.style.display = 'none';
+            items.forEach((item) => {
+                if (!item || !item.result_url) {
+                    return;
+                }
+
+                const btn = document.createElement('button');
+                btn.type = 'button';
+                btn.className = 'history-item';
+                btn.setAttribute('aria-label', 'Lihat hasil riwayat');
+
+                const img = document.createElement('img');
+                img.src = item.result_url;
+                img.alt = 'Riwayat hasil try-on';
+
+                const time = document.createElement('span');
+                time.className = 'history-item-time';
+                time.textContent = formatHistoryDateLabel(item.created_at);
+
+                btn.appendChild(img);
+                btn.appendChild(time);
+                btn.addEventListener('click', () => showHistoryResult(item.result_url));
+                listEl.appendChild(btn);
+            });
+        }
+
+        async function refreshHistory() {
+            try {
+                const response = await fetch(TRYON_HISTORY_URL, {
+                    headers: {
+                        'Accept': 'application/json',
+                        'X-Tryon-Device-Id': resolveTryOnDeviceId(),
+                    },
+                });
+
+                const payload = await response.json();
+                if (!response.ok) {
+                    return;
+                }
+
+                renderHistory(payload.items || []);
+            } catch (error) {
+                // History failure should not block the page.
             }
         }
 
@@ -898,6 +1041,7 @@
                 consumeDummyQuotaUI();
                 setStatus('Generate selesai (dummy mode).', 'success');
                 setLoading(false);
+                refreshHistory();
                 return;
             }
 
@@ -996,6 +1140,7 @@
 
                         setStatus('Generate selesai.', 'success');
                         setLoading(false);
+                        refreshHistory();
                         return;
                     }
 
@@ -1037,6 +1182,7 @@
             }
             applyDummyModelSelectionUI();
             refreshQuota();
+            refreshHistory();
         })();
     </script>
 </body>

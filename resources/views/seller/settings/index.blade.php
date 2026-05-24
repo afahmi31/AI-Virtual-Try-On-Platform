@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Settings - AI Try-On Core App</title>
+    <title>Settings - Try-On Commerce Studio</title>
     <style>
         :root { --bg:#060b14; --panel:rgba(16,25,40,.92); --panel-border:rgba(80,180,255,.25); --text:#e6edf7; --muted:#9db0c8; --primary:#22d3ee; --fs-caption:12px; --fs-label:13px; --fs-control:14px; --fs-body:15px; --fs-nav:16px; --fs-section-title:30px; --fs-page-title:40px; }
         * { box-sizing: border-box; }
@@ -13,6 +13,7 @@
         .brand-dot { width:30px; height:30px; border-radius:9px; background:rgba(49,217,241,.14); display:inline-flex; align-items:center; justify-content:center; color:var(--primary); font-weight:800; font-size:13px; border:1px solid rgba(49,217,241,.28); }
         .topnav { display:flex; gap:12px; align-items:center; }
         .store-logo-link { width:34px; height:34px; border-radius:50%; display:inline-flex; align-items:center; justify-content:center; text-decoration:none; font-size:12px; font-weight:700; color:#032a33; background:linear-gradient(160deg,#3b82f6,#32ddf2); box-shadow:0 0 16px rgba(50,221,242,.35); }
+        .store-icon-svg { width:18px; height:18px; stroke:#032a33; stroke-width:1.9; fill:none; }
         .layout { display:grid; grid-template-columns:220px minmax(0,1fr); min-height:calc(100vh - 72px); }
         .sidebar { border-right:1px solid rgba(115,170,240,.18); background:linear-gradient(180deg, rgba(8,16,30,.95), rgba(6,13,24,.96)); padding:18px 14px; }
         .menu-item { display:flex; align-items:center; color:var(--muted); text-decoration:none; padding:11px 14px; border-radius:10px; margin-bottom:8px; font-size:var(--fs-nav); border:1px solid transparent; transition:color .2s ease, border-color .2s ease, background .2s ease; }
@@ -112,13 +113,18 @@
 </head>
 <body>
 <header class="topbar">
-    <div class="brand"><span class="brand-dot">AI</span>AI Try-On Core App - {{ $seller->store_name }}</div>
+    <div class="brand">Try-On Commerce Studio</div>
     <nav class="topnav">
         @php
-            $storeInitials = strtoupper(substr(trim($seller->store_name), 0, 2));
             $storeUrl = route('public.seller.page', ['seller_slug' => $seller->slug]);
         @endphp
-        <a class="store-logo-link" href="{{ $storeUrl }}" target="_blank" rel="noopener noreferrer" title="Open Store: {{ $storeUrl }}">{{ $storeInitials }}</a>
+        <a class="store-logo-link" href="{{ $storeUrl }}" target="_blank" rel="noopener noreferrer" title="Open Store: {{ $storeUrl }}">
+            <svg viewBox="0 0 24 24" aria-hidden="true" class="store-icon-svg">
+                <path d="M3 9l2-4h14l2 4"></path>
+                <path d="M4 9h16v10a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V9z"></path>
+                <path d="M9 20v-5h6v5"></path>
+            </svg>
+        </a>
         <form method="POST" action="{{ route('logout') }}">
             @csrf
             <button type="submit">Logout</button>

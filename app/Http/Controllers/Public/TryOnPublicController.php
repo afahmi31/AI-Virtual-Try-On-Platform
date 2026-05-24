@@ -14,6 +14,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\RateLimiter;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Storage;
 
 class TryOnPublicController extends Controller
@@ -94,7 +95,7 @@ class TryOnPublicController extends Controller
             ? $dummyModelImageUrl
             : $payload['customer_photo']->store('tryon/customers/'.$seller->id, 'public');
 
-        $session = TryOnSession::query()->create([
+        $sessionPayload = [
             'seller_id' => $seller->id,
             'product_id' => $product->id,
             'customer_photo_path' => $photoPath,
@@ -106,7 +107,13 @@ class TryOnPublicController extends Controller
             'provider_model' => $providerModel,
             'status' => 'pending',
             'expires_at' => Carbon::now()->addMinutes((int) config('tryon.retention_minutes')),
-        ]);
+        ];
+
+        if ($this->hasTryOnDeviceIdColumn()) {
+            $sessionPayload['device_id'] = $this->resolveTryOnDeviceId($request);
+        }
+
+        $session = TryOnSession::query()->create($sessionPayload);
 
         AuditLog::query()->create([
             'actor_user_id' => null,
@@ -156,6 +163,39 @@ class TryOnPublicController extends Controller
         $this->refreshProcessingSession($session);
 
         return response()->json($this->sessionResponse($session));
+    }
+
+    public function history(Request $request, string $seller_slug): JsonResponse
+    {
+        $seller = Seller::query()
+            ->where('slug', $seller_slug)
+            ->where('status', 'active')
+            ->firstOrFail();
+
+        $deviceId = $this->resolveTryOnDeviceId($request);
+
+        $query = TryOnSession::query()
+            ->where('seller_id', $seller->id)
+            ->where('source_channel', 'seller_subpage')
+            ->where('status', 'completed')
+            ->whereNotNull('result_path')
+            ->latest();
+
+        if ($this->hasTryOnDeviceIdColumn()) {
+            $query->where('device_id', $deviceId);
+        } else {
+            // Backward-compatible fallback until migration for device_id is applied.
+            $query->where('ip_address', $request->ip())
+                ->where('user_agent', (string) $request->userAgent());
+        }
+
+        $sessions = $query->limit(12)->get();
+
+        return response()->json([
+            'items' => $sessions
+                ->map(fn (TryOnSession $session): array => $this->sessionResponse($session))
+                ->values(),
+        ]);
     }
 
     private function refreshProcessingSession(TryOnSession $session): void
@@ -433,5 +473,17 @@ class TryOnPublicController extends Controller
         }
 
         return isset($providerConfig['api_key']) && trim((string) $providerConfig['api_key']) !== '';
+    }
+
+    private function hasTryOnDeviceIdColumn(): bool
+    {
+        static $hasColumn = null;
+        if ($hasColumn !== null) {
+            return $hasColumn;
+        }
+
+        $hasColumn = Schema::hasColumn('tryon_sessions', 'device_id');
+
+        return $hasColumn;
     }
 }
