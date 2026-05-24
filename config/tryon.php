@@ -2,7 +2,9 @@
 
 return [
     'retention_minutes' => (int) env('TRYON_RETENTION_MINUTES', 30),
-    'dummy_model_image_url' => env('TRYON_DUMMY_MODEL_IMAGE_URL'),
+    // Seller-level dummy model URL is stored in DB settings.
+    // Keep null fallback only for backward compatibility.
+    'dummy_model_image_url' => null,
     'polling' => [
         'max_attempts' => (int) env('TRYON_PROVIDER_MAX_ATTEMPTS', 90),
         'release_seconds' => (int) env('TRYON_PROVIDER_RELEASE_SECONDS', 2),
@@ -12,8 +14,9 @@ return [
         'charge_on_provider_failure' => (bool) env('TRYON_CHARGE_ON_PROVIDER_FAILURE', false),
     ],
     'public_limits' => [
-        // Hard cap for customer/public generate requests to protect provider credits.
-        'generate_per_day' => (int) env('TRYON_PUBLIC_GENERATE_PER_DAY', 3),
+        // Hard cap fallback for customer/public generate requests.
+        // Primary source is seller setting (public_generate_per_day).
+        'generate_per_day' => 3,
         // Burst protection for repeated clicks/spam.
         'generate_per_minute_per_ip' => 3,
         // Polling limit stays higher because frontend polls processing status.
