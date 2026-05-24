@@ -1,59 +1,287 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# Try-On Commerce Studio (Seller-Owned)
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+Laravel-based virtual try-on system focused on a single seller operation model.  
+This repository reflects the active implementation in `core-app` (not development plans).
 
-## About Laravel
+## What This System Does
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+- Seller logs in to a private dashboard.
+- Seller manages products and product images.
+- Seller configures FASHN AI credentials and model behavior from Settings.
+- Customer opens seller public page, uploads model photo, and runs try-on.
+- System creates try-on session, processes it via FASHN, and returns result.
+- Public usage is protected by backend quota/rate-limit controls (IP + device + daily cap).
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+## AI Provider Used
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+Current provider integration:
 
-## Learning Laravel
+- `FASHN AI` only (`App\Domain\AI\Providers\FashnProvider`)
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework. You can also check out [Laravel Learn](https://laravel.com/learn), where you will be guided through building a modern Laravel application.
+Supported model profiles:
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+- `tryon-max`
+- `tryon-v1.6`
 
-## Laravel Sponsors
+Supported operating modes:
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+- Real provider mode (requires seller API key in Settings)
+- Dummy mode per seller (for local/beta cost control)
 
-### Premium Partners
+## Main Features Available
 
-- **[Vehikl](https://vehikl.com)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Redberry](https://redberry.international/laravel-development)**
-- **[Active Logic](https://activelogic.com)**
+### 1) Seller Dashboard (Web)
 
-## Contributing
+- Route prefix: `/dashboard`
+- Sections:
+  - Dashboard metrics (products, token usage, recent try-on, FASHN credits)
+  - Products management
+  - Settings management
+- Recent try-on table includes:
+  - Request ID
+  - Model
+  - Created time
+  - Status
+  - Product name
+  - IP (masked)
+  - Preview
+  - Details modal (input/output snapshot)
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+### 2) Product Management
 
-## Code of Conduct
+- CRUD product for current seller only
+- Product image source:
+  - Uploaded file
+  - External public URL
+- AI metadata per product:
+  - Prompt
+  - Category (`auto`, `tops`, `bottoms`, `one-pieces`)
+  - Garment photo type
+  - Segmentation flag
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+### 3) Seller AI Settings
 
-## Security Vulnerabilities
+Configured from `/dashboard/settings`:
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+- FASHN API key (stored encrypted)
+- Test API key against FASHN credits endpoint
+- Model selection (`tryon-max` or `tryon-v1.6`)
+- Model-specific generation config
+- Dummy mode + dummy result URL + dummy model image URL
+- Public generate limit per day
+- Public limiter toggle:
+  - Per IP
+  - Per Device
 
-## License
+Rule enforced:
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+- At least one limiter must stay enabled (IP or device).
+
+### 4) Public Seller Page + Try-On
+
+Public page route pattern:
+
+- `/{seller_slug}/{product_ref?}`
+
+`product_ref` supports:
+
+- Product slug
+- SKU (case-insensitive)
+
+Try-on endpoints under:
+
+- `/{seller_slug}/try-on/...`
+
+Public flow:
+
+- Customer selects product
+- Uploads photo (or uses dummy model toggle if configured)
+- Generates try-on
+- Polls session status
+- Sees result and recent history
+
+### 5) Public Credit Protection
+
+Backend protections implemented:
+
+- Daily quota per seller public page
+- Per IP limiter
+- Per device limiter (`X-Tryon-Device-Id`)
+- Polling throttle for status endpoint
+- Generation is rejected at backend when limit is exhausted
+
+Public quality mode behavior:
+
+- Locked to cheapest mode on public flow (`standard` -> balanced/1k mapping).
+
+### 6) Queue Processing
+
+Try-on processing job:
+
+- `App\Jobs\ProcessTryOnSessionJob`
+
+Behavior:
+
+- Creates provider job
+- Polls status
+- Updates token usage and session status
+- Stores audit logs for provider request/response
+
+Queue mode notes:
+
+- Recommended: Redis queue worker in server/staging.
+- Local fallback: if `QUEUE_CONNECTION=sync`, polling runs in-request (blocking behavior).
+
+### 7) Media Retention Cleanup
+
+Cleanup job available:
+
+- `App\Jobs\CleanupExpiredMediaJob`
+
+What it does:
+
+- Finds expired completed/failed sessions
+- Deletes local stored media paths
+- Marks session as `expired`
+
+Note:
+
+- Cleanup scheduling is not wired in `routes/console.php` yet; run/dispatch this job from your own scheduler setup.
+
+## Active Route Summary
+
+### Web Routes
+
+- `GET /login`
+- `POST /login`
+- `POST /logout`
+- `GET /dashboard`
+- `GET /dashboard/products`
+- `POST /dashboard/products`
+- `PATCH /dashboard/products/{productId}`
+- `DELETE /dashboard/products/{productId}`
+- `POST /dashboard/products/{productId}/images`
+- `GET /dashboard/settings`
+- `POST /dashboard/settings`
+- `POST /dashboard/settings/test-api-key`
+- `POST /dashboard/model`
+- `POST /{seller_slug}/try-on/sessions`
+- `GET /{seller_slug}/try-on/quota`
+- `GET /{seller_slug}/try-on/sessions/{sessionId}`
+- `GET /{seller_slug}/try-on/sessions`
+- `GET /{seller_slug}/{product_ref?}`
+
+### API Routes (Sanctum)
+
+- `POST /api/auth/login`
+- `POST /api/auth/logout`
+- `GET /api/auth/me`
+- `GET /api/seller/me`
+- `GET /api/seller/profile`
+- `PATCH /api/seller/profile`
+- `GET /api/seller/usage`
+- `GET /api/seller/products`
+- `POST /api/seller/products`
+- `GET /api/seller/products/{id}`
+- `PATCH /api/seller/products/{id}`
+- `DELETE /api/seller/products/{id}`
+- `POST /api/seller/products/{id}/images`
+- `POST /api/tryon/sessions`
+- `GET /api/tryon/sessions/{id}`
+
+## Roles and Access
+
+- Active dashboard role: `seller`
+- Role middleware: `role:seller`
+- Legacy multi-admin SaaS module is not part of active `core-app` flow.
+
+## Tech Stack
+
+- PHP `^8.2`
+- Laravel `^12`
+- PostgreSQL
+- Redis (recommended for queue/cache)
+- Laravel Sanctum
+- Blade views + vanilla JS
+- Vite build pipeline
+
+## Local Setup
+
+From `core-app` directory:
+
+```bash
+composer install
+copy .env.example .env
+php artisan key:generate
+php artisan migrate
+php artisan db:seed
+npm install
+```
+
+Run app:
+
+```bash
+php artisan serve
+npm run dev
+```
+
+Run queue worker (recommended):
+
+```bash
+php artisan queue:work
+```
+
+Or use combined dev script:
+
+```bash
+composer dev
+```
+
+## Seeded Demo Account
+
+Created by `DatabaseSeeder`:
+
+- Email: `seller@tryon.test`
+- Password: `password`
+- Seller slug: `ceriakid`
+
+## Configuration Model (Important)
+
+### A) Server-Level (`.env`)
+
+Still controlled from env:
+
+- Provider transport URL and status template
+- Timeout and retry policy
+- Queue/cache/db runtime behavior
+- Retention and polling config
+
+See `.env.example` for active keys.
+
+### B) Seller-Level (Database via Settings UI)
+
+Controlled from dashboard settings:
+
+- API key
+- Model selection and model config
+- Dummy mode and dummy URLs
+- Public generate limit and limiter toggles
+
+## Testing
+
+Run tests:
+
+```bash
+php artisan test
+```
+
+Current tests in repository focus on:
+
+- Basic application response
+- Seller API profile/product/image ownership flow
+
+## Current Scope Boundaries
+
+- This system is currently seller-owned oriented.
+- No active feature in this codebase for old SaaS admin management panel.
+- README intentionally documents only what exists in runtime code now.
