@@ -836,7 +836,7 @@
                     <div class="field">
                         <label>AI Category <span class="preview-hint">(Try-On v1.6)</span></label>
                         <select name="ai_category">
-                            <option value="auto" selected>auto - biarkan AI deteksi otomatis</option>
+                            <option value="auto" selected>auto</option>
                             <option value="tops">tops - atasan (kemeja, blouse, t-shirt)</option>
                             <option value="bottoms">bottoms - bawahan (rok, celana)</option>
                             <option value="one-pieces">one-pieces - baju terusan (dress, gamis)</option>
@@ -846,7 +846,7 @@
                     <div class="field">
                         <label>Garment Photo Type <span class="preview-hint">(Try-On v1.6)</span></label>
                         <select name="ai_garment_photo_type">
-                            <option value="auto" selected>auto - biarkan AI deteksi otomatis</option>
+                            <option value="auto" selected>auto</option>
                             <option value="flat-lay">flat-lay - foto produk tanpa dipakai model</option>
                             <option value="model">model - foto produk sedang dipakai model/manekin</option>
                         </select>
@@ -860,6 +860,7 @@
                             <span class="status-toggle-switch"></span>
                             <span class="status-toggle-label">enabled</span>
                         </label>
+                        <div class="preview-hint">Aktifkan untuk membiarkan AI memproses tanpa segmentasi ketat garment, cocok untuk banyak foto katalog umum.</div>
                     </div>
                 </div>
             </div>
@@ -913,7 +914,7 @@
                     <div class="field">
                         <label>AI Category <span class="preview-hint">(Try-On v1.6)</span></label>
                         <select id="editAiCategory" name="ai_category">
-                            <option value="auto">auto - biarkan AI deteksi otomatis</option>
+                            <option value="auto">auto</option>
                             <option value="tops">tops - atasan (kemeja, blouse, t-shirt)</option>
                             <option value="bottoms">bottoms - bawahan (rok, celana)</option>
                             <option value="one-pieces">one-pieces - baju terusan (dress, gamis)</option>
@@ -923,7 +924,7 @@
                     <div class="field">
                         <label>Garment Photo Type <span class="preview-hint">(Try-On v1.6)</span></label>
                         <select id="editAiGarmentPhotoType" name="ai_garment_photo_type">
-                            <option value="auto">auto - biarkan AI deteksi otomatis</option>
+                            <option value="auto">auto</option>
                             <option value="flat-lay">flat-lay - foto produk tanpa dipakai model</option>
                             <option value="model">model - foto produk sedang dipakai model/manekin</option>
                         </select>
@@ -937,6 +938,7 @@
                             <span class="status-toggle-switch"></span>
                             <span id="editAiSegmentationFreeLabel" class="status-toggle-label">enabled</span>
                         </label>
+                        <div class="preview-hint">Aktifkan untuk membiarkan AI memproses tanpa segmentasi ketat garment, cocok untuk banyak foto katalog umum.</div>
                     </div>
                 </div>
             </div>
