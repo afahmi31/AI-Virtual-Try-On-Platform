@@ -174,7 +174,6 @@ class ProcessTryOnSessionJob implements ShouldQueue
 
             $this->failSession($session, (string) ($payload['provider_job_id'] ?? null), 'Provider status check error. '.$exception->getMessage());
             $usage->increment('failed_count');
-            $this->chargeIfPolicyRequiresFailureCharge($usage, $cost);
 
             return;
         }
@@ -197,7 +196,6 @@ class ProcessTryOnSessionJob implements ShouldQueue
                 if (($status['status'] ?? null) === 'processing') {
                     $this->failSession($session, (string) ($payload['provider_job_id'] ?? null), 'Provider timeout: status belum completed.');
                     $usage->increment('failed_count');
-                    $this->chargeIfPolicyRequiresFailureCharge($usage, $cost);
 
                     return;
                 }
@@ -210,7 +208,6 @@ class ProcessTryOnSessionJob implements ShouldQueue
             if ($attempts >= (int) config('tryon.polling.max_attempts', 30)) {
                 $this->failSession($session, (string) ($payload['provider_job_id'] ?? null), 'Provider timeout: status belum completed.');
                 $usage->increment('failed_count');
-                $this->chargeIfPolicyRequiresFailureCharge($usage, $cost);
 
                 return;
             }
@@ -261,7 +258,6 @@ class ProcessTryOnSessionJob implements ShouldQueue
         }
 
         $usage->increment('failed_count');
-        $this->chargeIfPolicyRequiresFailureCharge($usage, $cost);
 
         $this->failSession(
             $session,
@@ -297,18 +293,6 @@ class ProcessTryOnSessionJob implements ShouldQueue
             'status' => 'failed',
             'provider_job_id' => $providerJobId,
             'error_message' => $errorMessage,
-        ]);
-    }
-
-    private function chargeIfPolicyRequiresFailureCharge(SellerUsageBalance $usage, int $cost): void
-    {
-        if (! config('tryon.token_policy.charge_on_provider_failure', false)) {
-            return;
-        }
-
-        $usage->incrementEach([
-            'token_used' => $cost,
-            'token_available' => -$cost,
         ]);
     }
 

@@ -71,6 +71,7 @@
             max-width: 1300px;
             margin: 0 auto;
             padding: 26px;
+            position: relative;
         }
 
         .section-title {
@@ -364,9 +365,10 @@
         }
 
         .status-note {
-            margin-top: 8px;
-            min-height: 18px;
+            margin-top: 10px;
+            min-height: 20px;
             font-size: 13px;
+            line-height: 1.4;
             color: var(--muted);
         }
 
@@ -480,6 +482,71 @@
         .generate-btn:disabled {
             opacity: .6;
             cursor: not-allowed;
+        }
+
+        .floating-history-btn {
+            position: fixed;
+            right: max(18px, calc((100vw - 1300px) / 2 + 26px));
+            bottom: 26px;
+            width: 56px;
+            height: 56px;
+            border: none;
+            border-radius: 999px;
+            background: linear-gradient(180deg, #f89b5f, #ec7a3f);
+            color: #fff;
+            box-shadow: 0 14px 28px rgba(116, 75, 43, 0.28);
+            cursor: pointer;
+            z-index: 1400;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 22px;
+            font-weight: 900;
+        }
+
+        .floating-history-panel {
+            position: fixed;
+            right: max(18px, calc((100vw - 1300px) / 2 + 26px));
+            bottom: 96px;
+            width: min(360px, calc(100vw - 36px));
+            max-height: 62vh;
+            overflow: auto;
+            background: #fffdf7;
+            border: 1px solid #edd9c3;
+            border-radius: 14px;
+            box-shadow: 0 18px 36px rgba(56, 34, 20, 0.24);
+            z-index: 1400;
+            padding: 10px;
+            display: none;
+        }
+
+        .floating-history-panel.active {
+            display: block;
+        }
+
+        .floating-history-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 8px;
+            margin-bottom: 10px;
+        }
+
+        .floating-history-title {
+            margin: 0;
+            font-size: 14px;
+            font-weight: 800;
+            color: #7f5739;
+        }
+
+        .floating-history-close {
+            border: none;
+            width: 28px;
+            height: 28px;
+            border-radius: 8px;
+            background: #f5e4d2;
+            color: #9b5327;
+            cursor: pointer;
         }
 
         .history-wrap {
@@ -610,6 +677,17 @@
             @endforeach
         </section>
         @endif
+        <button id="floatingHistoryBtn" type="button" class="floating-history-btn" aria-label="Lihat riwayat try-on">
+            &#128340;
+        </button>
+        <div id="floatingHistoryPanel" class="floating-history-panel" aria-hidden="true">
+            <div class="floating-history-header">
+                <p class="floating-history-title">Riwayat Try-On</p>
+                <button id="floatingHistoryClose" type="button" class="floating-history-close" aria-label="Tutup riwayat">&times;</button>
+            </div>
+            <div id="floatingHistoryList" class="history-list"></div>
+            <p id="floatingHistoryEmpty" class="history-empty">Belum ada riwayat generate.</p>
+        </div>
     </main>
 
     <div class="modal-overlay" id="tryOnModal" aria-hidden="true">
@@ -657,6 +735,7 @@
                         <img id="resultPreview" alt="Try-on result">
                         <div id="resultPlaceholder" class="preview-placeholder"></div>
                     </div>
+                    <div id="statusNote" class="status-note" role="status" aria-live="polite"></div>
                 </div>
             </div>
 
@@ -807,6 +886,22 @@
             }
         }
 
+        function showResultPlaceholderMessage(message, type = '') {
+            const resultPreview = document.getElementById('resultPreview');
+            const resultPlaceholder = document.getElementById('resultPlaceholder');
+            if (!resultPlaceholder || !resultPreview) {
+                return;
+            }
+
+            resultPreview.removeAttribute('src');
+            resultPreview.style.display = 'none';
+            resultPlaceholder.style.display = 'block';
+            resultPlaceholder.textContent = message || '';
+            resultPlaceholder.classList.remove('status-error', 'status-success');
+            if (type === 'error') resultPlaceholder.classList.add('status-error');
+            if (type === 'success') resultPlaceholder.classList.add('status-success');
+        }
+
         function formatHistoryDateLabel(isoDate) {
             if (!isoDate) {
                 return '-';
@@ -878,6 +973,74 @@
             });
         }
 
+        function renderFloatingHistory(items) {
+            const listEl = document.getElementById('floatingHistoryList');
+            const emptyEl = document.getElementById('floatingHistoryEmpty');
+            if (!listEl || !emptyEl) {
+                return;
+            }
+
+            listEl.innerHTML = '';
+
+            if (!Array.isArray(items) || items.length === 0) {
+                emptyEl.style.display = 'block';
+                return;
+            }
+
+            emptyEl.style.display = 'block';
+            emptyEl.style.display = 'none';
+
+            items.forEach((item) => {
+                if (!item || !item.result_url) {
+                    return;
+                }
+
+                const btn = document.createElement('button');
+                btn.type = 'button';
+                btn.className = 'history-item';
+                btn.setAttribute('aria-label', 'Lihat hasil riwayat');
+
+                const img = document.createElement('img');
+                img.src = item.result_url;
+                img.alt = 'Riwayat hasil try-on';
+
+                const time = document.createElement('span');
+                time.className = 'history-item-time';
+                time.textContent = formatHistoryDateLabel(item.created_at);
+
+                btn.appendChild(img);
+                btn.appendChild(time);
+                btn.addEventListener('click', () => {
+                    const currentCard = document.querySelector('#productGrid .card.selected') || document.querySelector('#productGrid .card');
+                    if (currentCard) {
+                        openTryOnModal(currentCard);
+                    }
+                    showHistoryResult(item.result_url);
+                    closeFloatingHistoryPanel();
+                });
+                listEl.appendChild(btn);
+            });
+        }
+
+        function openFloatingHistoryPanel() {
+            const panel = document.getElementById('floatingHistoryPanel');
+            if (!panel) {
+                return;
+            }
+            panel.classList.add('active');
+            panel.setAttribute('aria-hidden', 'false');
+            refreshHistory();
+        }
+
+        function closeFloatingHistoryPanel() {
+            const panel = document.getElementById('floatingHistoryPanel');
+            if (!panel) {
+                return;
+            }
+            panel.classList.remove('active');
+            panel.setAttribute('aria-hidden', 'true');
+        }
+
         async function refreshHistory() {
             try {
                 const response = await fetch(TRYON_HISTORY_URL, {
@@ -893,6 +1056,7 @@
                 }
 
                 renderHistory(payload.items || []);
+                renderFloatingHistory(payload.items || []);
             } catch (error) {
                 // History failure should not block the page.
             }
@@ -1013,16 +1177,19 @@
             if (TRYON_DUMMY.enabled) {
                 if (!TRYON_DUMMY.model_image_url) {
                     setStatus('Dummy aktif, tetapi Dummy Model Image URL belum diisi.', 'error');
+                    showResultPlaceholderMessage('Dummy Model Image URL belum diisi.', 'error');
                     return;
                 }
 
                 if (!TRYON_DUMMY.result_url) {
                     setStatus('Dummy aktif, tetapi Dummy Result URL belum diisi.', 'error');
+                    showResultPlaceholderMessage('Dummy Result URL belum diisi.', 'error');
                     return;
                 }
 
                 if (remainingDailyQuota !== null && remainingDailyQuota <= 0) {
                     setStatus('Batas generate harian sudah habis (0).', 'error');
+                    showResultPlaceholderMessage('Batas generate harian sudah habis.', 'error');
                     setLoading(false);
                     return;
                 }
@@ -1049,11 +1216,13 @@
             const file = customerPhotoInput.files && customerPhotoInput.files[0] ? customerPhotoInput.files[0] : null;
             if (!useDummyModelImage && (!file || !customerPreview.getAttribute('src'))) {
                 setStatus('Upload foto model terlebih dahulu.', 'error');
+                showResultPlaceholderMessage('Upload foto model terlebih dahulu.', 'error');
                 return;
             }
 
             if (remainingDailyQuota !== null && remainingDailyQuota <= 0) {
                 setStatus('Batas generate harian sudah habis (0).', 'error');
+                showResultPlaceholderMessage('Batas generate harian sudah habis.', 'error');
                 setLoading(false);
                 return;
             }
@@ -1097,6 +1266,7 @@
                 await pollTryOnStatus(createPayload.id);
             } catch (error) {
                 setStatus(error.message || 'Terjadi kesalahan saat generate try-on.', 'error');
+                showResultPlaceholderMessage(error.message || 'Terjadi kesalahan saat generate try-on.', 'error');
                 setLoading(false);
             }
         }
@@ -1147,7 +1317,9 @@
                     if (payload.status === 'failed') {
                         clearInterval(pollTimer);
                         pollTimer = null;
-                        setStatus(payload.error_message || 'Try-on gagal diproses.', 'error');
+                        const errorMessage = payload.error_message || 'Try-on gagal diproses.';
+                        setStatus(errorMessage, 'error');
+                        showResultPlaceholderMessage(errorMessage, 'error');
                         setLoading(false);
                         return;
                     }
@@ -1155,13 +1327,17 @@
                     if (attempts >= maxAttempts) {
                         clearInterval(pollTimer);
                         pollTimer = null;
-                        setStatus('Proses masih berjalan. Silakan coba lagi sebentar.', 'error');
+                        const timeoutMessage = 'Proses masih berjalan. Silakan coba lagi sebentar.';
+                        setStatus(timeoutMessage, 'error');
+                        showResultPlaceholderMessage(timeoutMessage, 'error');
                         setLoading(false);
                     }
                 } catch (error) {
                     clearInterval(pollTimer);
                     pollTimer = null;
-                    setStatus(error.message || 'Gagal polling status try-on.', 'error');
+                    const pollingErrorMessage = error.message || 'Gagal polling status try-on.';
+                    setStatus(pollingErrorMessage, 'error');
+                    showResultPlaceholderMessage(pollingErrorMessage, 'error');
                     setLoading(false);
                 }
             }, 2000);
@@ -1172,6 +1348,28 @@
             if (current) {
                 selectProduct(current);
             }
+
+            const floatingBtn = document.getElementById('floatingHistoryBtn');
+            const floatingClose = document.getElementById('floatingHistoryClose');
+            const floatingPanel = document.getElementById('floatingHistoryPanel');
+            if (floatingBtn) {
+                floatingBtn.addEventListener('click', openFloatingHistoryPanel);
+            }
+            if (floatingClose) {
+                floatingClose.addEventListener('click', closeFloatingHistoryPanel);
+            }
+            if (floatingPanel) {
+                document.addEventListener('click', function(event) {
+                    if (!floatingPanel.classList.contains('active')) {
+                        return;
+                    }
+                    if (floatingPanel.contains(event.target) || (floatingBtn && floatingBtn.contains(event.target))) {
+                        return;
+                    }
+                    closeFloatingHistoryPanel();
+                });
+            }
+
             const toggle = document.getElementById('useDummyModelToggle');
             if (toggle) {
                 toggle.checked = Boolean(TRYON_DUMMY.model_image_url);
@@ -1188,4 +1386,3 @@
 </body>
 
 </html>
-
