@@ -52,6 +52,7 @@ class FashnProvider implements TryOnProviderContract
             'resolution' => $resolution,
             'num_images' => 1,
             'output_format' => $outputFormat,
+            'prompt' => $this->resolveTryOnMaxPrompt($input),
             'return_base64' => false,
         ];
 
@@ -65,6 +66,9 @@ class FashnProvider implements TryOnProviderContract
                 'mode' => $this->resolveV16Mode($providerConfig),
                 'num_samples' => $this->resolveV16NumSamples($providerConfig),
                 'output_format' => $this->resolveV16OutputFormat($providerConfig),
+                'category' => $this->resolveV16Category($input),
+                'garment_photo_type' => $this->resolveV16GarmentPhotoType($input),
+                'segmentation_free' => $this->resolveV16SegmentationFree($input),
                 'return_base64' => false,
             ];
         }
@@ -358,6 +362,42 @@ class FashnProvider implements TryOnProviderContract
         }
 
         return 'png';
+    }
+
+    private function resolveTryOnMaxPrompt(array $input = []): string
+    {
+        $prompt = trim((string) ($input['product_ai_prompt'] ?? ''));
+
+        return $prompt;
+    }
+
+    private function resolveV16Category(array $input = []): string
+    {
+        $category = strtolower(trim((string) ($input['product_ai_category'] ?? 'auto')));
+        if (in_array($category, ['auto', 'tops', 'bottoms', 'one-pieces'], true)) {
+            return $category;
+        }
+
+        return 'auto';
+    }
+
+    private function resolveV16GarmentPhotoType(array $input = []): string
+    {
+        $type = strtolower(trim((string) ($input['product_ai_garment_photo_type'] ?? 'auto')));
+        if (in_array($type, ['auto', 'flat-lay', 'model'], true)) {
+            return $type;
+        }
+
+        return 'auto';
+    }
+
+    private function resolveV16SegmentationFree(array $input = []): bool
+    {
+        if (array_key_exists('product_ai_segmentation_free', $input)) {
+            return (bool) $input['product_ai_segmentation_free'];
+        }
+
+        return true;
     }
 
     private function isDummyMode(array $providerConfig = []): bool

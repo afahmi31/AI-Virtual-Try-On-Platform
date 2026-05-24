@@ -773,7 +773,7 @@
                             </td>
                             <td>
                                 <div class="actions">
-                                    <button class="btn btn-ghost" type="button" onclick="openEditModal({{ $product->id }}, '{{ addslashes($product->name) }}', '{{ addslashes($product->sku ?? '') }}', '{{ addslashes($product->category ?? '') }}', '{{ $product->status }}', '{{ addslashes($primaryImage?->image_url ?? '') }}')">Edit</button>
+                                    <button class="btn btn-ghost" type="button" onclick="openEditModal({{ $product->id }}, '{{ addslashes($product->name) }}', '{{ addslashes($product->sku ?? '') }}', '{{ addslashes($product->category ?? '') }}', '{{ $product->status }}', '{{ addslashes($primaryImage?->image_url ?? '') }}', '{{ addslashes($product->ai_prompt ?? '') }}', '{{ addslashes($product->ai_category ?? 'auto') }}', '{{ addslashes($product->ai_garment_photo_type ?? 'auto') }}', '{{ (int) ($product->ai_segmentation_free ?? true) }}')">Edit</button>
                                     <form method="POST" action="{{ route('seller.products.destroy', $product->id) }}" onsubmit="return confirm('Hapus produk ini?');" style="display:inline;">
                                         @csrf
                                         @method('DELETE')
@@ -823,6 +823,36 @@
                     <div class="field"><label>Product Name</label><input name="name" required></div>
                     <div class="field"><label>SKU</label><input name="sku"></div>
                     <div class="field"><label>Category</label><input name="category" placeholder="Select Category..."></div>
+                    <div class="field">
+                        <label>AI Prompt <span class="preview-hint">(Try-On Max)</span></label>
+                        <input name="ai_prompt" placeholder="Opsional, contoh: long modest muslim dress for 12-year-old girl">
+                    </div>
+                    <div class="field">
+                        <label>AI Category <span class="preview-hint">(Try-On v1.6)</span></label>
+                        <select name="ai_category">
+                            <option value="auto" selected>auto</option>
+                            <option value="tops">tops</option>
+                            <option value="bottoms">bottoms</option>
+                            <option value="one-pieces">one-pieces</option>
+                        </select>
+                    </div>
+                    <div class="field">
+                        <label>Garment Photo Type <span class="preview-hint">(Try-On v1.6)</span></label>
+                        <select name="ai_garment_photo_type">
+                            <option value="auto" selected>auto</option>
+                            <option value="flat-lay">flat-lay</option>
+                            <option value="model">model</option>
+                        </select>
+                    </div>
+                    <div class="field">
+                        <input type="hidden" name="ai_segmentation_free" value="0">
+                        <label class="status-toggle" style="justify-content:flex-start;">
+                            <span>Segmentation Free <span class="preview-hint">(Try-On v1.6)</span></span>
+                            <input type="checkbox" name="ai_segmentation_free" value="1" checked>
+                            <span class="status-toggle-switch"></span>
+                            <span class="status-toggle-label">enabled</span>
+                        </label>
+                    </div>
                 </div>
             </div>
             <div class="modal-bottom-row">
@@ -868,6 +898,36 @@
                     <div class="field"><label>Product Name</label><input id="editName" name="name" required></div>
                     <div class="field"><label>SKU</label><input id="editSku" name="sku"></div>
                     <div class="field"><label>Category</label><input id="editCategory" name="category"></div>
+                    <div class="field">
+                        <label>AI Prompt <span class="preview-hint">(Try-On Max)</span></label>
+                        <input id="editAiPrompt" name="ai_prompt" placeholder="Opsional, contoh: long modest muslim dress for 12-year-old girl">
+                    </div>
+                    <div class="field">
+                        <label>AI Category <span class="preview-hint">(Try-On v1.6)</span></label>
+                        <select id="editAiCategory" name="ai_category">
+                            <option value="auto">auto</option>
+                            <option value="tops">tops</option>
+                            <option value="bottoms">bottoms</option>
+                            <option value="one-pieces">one-pieces</option>
+                        </select>
+                    </div>
+                    <div class="field">
+                        <label>Garment Photo Type <span class="preview-hint">(Try-On v1.6)</span></label>
+                        <select id="editAiGarmentPhotoType" name="ai_garment_photo_type">
+                            <option value="auto">auto</option>
+                            <option value="flat-lay">flat-lay</option>
+                            <option value="model">model</option>
+                        </select>
+                    </div>
+                    <div class="field">
+                        <input type="hidden" name="ai_segmentation_free" value="0">
+                        <label class="status-toggle" style="justify-content:flex-start;">
+                            <span>Segmentation Free <span class="preview-hint">(Try-On v1.6)</span></span>
+                            <input id="editAiSegmentationFree" type="checkbox" name="ai_segmentation_free" value="1" checked>
+                            <span class="status-toggle-switch"></span>
+                            <span id="editAiSegmentationFreeLabel" class="status-toggle-label">enabled</span>
+                        </label>
+                    </div>
                 </div>
             </div>
             <div class="modal-bottom-row">
@@ -890,13 +950,21 @@
         openModal('createModal');
     }
 
-    function openEditModal(id, name, sku, category, status, imageUrl) {
+    function openEditModal(id, name, sku, category, status, imageUrl, aiPrompt, aiCategory, aiGarmentPhotoType, aiSegmentationFree) {
         const form = document.getElementById('editForm');
         form.action = `/dashboard/products/${id}`;
         document.getElementById('editProductId').value = id;
         document.getElementById('editName').value = name;
         document.getElementById('editSku').value = sku;
         document.getElementById('editCategory').value = category;
+        document.getElementById('editAiPrompt').value = aiPrompt || '';
+        document.getElementById('editAiCategory').value = aiCategory || 'auto';
+        document.getElementById('editAiGarmentPhotoType').value = aiGarmentPhotoType || 'auto';
+        document.getElementById('editAiSegmentationFree').checked = String(aiSegmentationFree) !== '0';
+        const editSegmentationLabel = document.getElementById('editAiSegmentationFreeLabel');
+        if (editSegmentationLabel) {
+            editSegmentationLabel.textContent = document.getElementById('editAiSegmentationFree').checked ? 'enabled' : 'disabled';
+        }
         setEditStatus(status || 'active');
         resetPreview('editImageFile', 'editImageUrl', 'editImagePreview');
         document.getElementById('editImageUrl').value = imageUrl || '';
@@ -1009,6 +1077,14 @@
         });
     }
 
+    const editAiSegmentationFree = document.getElementById('editAiSegmentationFree');
+    const editAiSegmentationFreeLabel = document.getElementById('editAiSegmentationFreeLabel');
+    if (editAiSegmentationFree && editAiSegmentationFreeLabel) {
+        editAiSegmentationFree.addEventListener('change', function () {
+            editAiSegmentationFreeLabel.textContent = this.checked ? 'enabled' : 'disabled';
+        });
+    }
+
     @if($errors->any() && old('edit_product_id'))
         openEditModal(
             {{ (int) old('edit_product_id') }},
@@ -1016,7 +1092,11 @@
             @json(old('sku', '')),
             @json(old('category', '')),
             @json(old('status', 'active')),
-            @json(old('image_url', ''))
+            @json(old('image_url', '')),
+            @json(old('ai_prompt', '')),
+            @json(old('ai_category', 'auto')),
+            @json(old('ai_garment_photo_type', 'auto')),
+            @json((int) old('ai_segmentation_free', 1))
         );
     @endif
 </script>

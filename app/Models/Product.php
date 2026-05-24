@@ -14,8 +14,19 @@ class Product extends Model
         'slug',
         'sku',
         'category',
+        'ai_prompt',
+        'ai_category',
+        'ai_garment_photo_type',
+        'ai_segmentation_free',
         'status',
     ];
+
+    protected function casts(): array
+    {
+        return [
+            'ai_segmentation_free' => 'boolean',
+        ];
+    }
 
     public function seller(): BelongsTo
     {

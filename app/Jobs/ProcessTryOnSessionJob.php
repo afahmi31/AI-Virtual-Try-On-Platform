@@ -69,6 +69,10 @@ class ProcessTryOnSessionJob implements ShouldQueue
                 'product_image_url' => $productImageUrl,
                 'model_image_url' => $modelImageUrl,
                 'num_images' => 1,
+                'product_ai_prompt' => $session->product?->ai_prompt,
+                'product_ai_category' => $session->product?->ai_category,
+                'product_ai_garment_photo_type' => $session->product?->ai_garment_photo_type,
+                'product_ai_segmentation_free' => $session->product?->ai_segmentation_free,
                 'provider_config' => $providerConfig,
             ]);
             $createRequestFinishedAt = now();
