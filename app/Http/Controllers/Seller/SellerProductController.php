@@ -29,8 +29,10 @@ class SellerProductController extends Controller
         $seller = $this->seller();
         $search = trim((string) $request->query('q', ''));
         $status = trim((string) $request->query('status', 'all'));
+        $aiCategory = trim((string) $request->query('ai_category', 'all'));
+        $photoType = trim((string) $request->query('photo_type', 'all'));
         $perPage = (int) $request->query('per_page', 20);
-        $perPage = in_array($perPage, [10, 20, 50], true) ? $perPage : 20;
+        $perPage = in_array($perPage, [5, 10, 20, 50], true) ? $perPage : 20;
 
         $products = Product::query()
             ->with('images')
@@ -46,11 +48,17 @@ class SellerProductController extends Controller
             ->when(in_array($status, ['active', 'inactive'], true), function ($query) use ($status) {
                 $query->where('status', $status);
             })
+            ->when(in_array($aiCategory, ['auto', 'tops', 'bottoms', 'one-pieces'], true), function ($query) use ($aiCategory) {
+                $query->where('ai_category', $aiCategory);
+            })
+            ->when(in_array($photoType, ['auto', 'flat-lay', 'model'], true), function ($query) use ($photoType) {
+                $query->where('ai_garment_photo_type', $photoType);
+            })
             ->latest()
             ->paginate($perPage)
             ->withQueryString();
 
-        return view('seller.products.index', compact('seller', 'products', 'search', 'status', 'perPage'));
+        return view('seller.products.index', compact('seller', 'products', 'search', 'status', 'aiCategory', 'photoType', 'perPage'));
     }
 
     public function store(Request $request): RedirectResponse

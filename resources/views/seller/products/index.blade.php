@@ -70,9 +70,25 @@
                             </select>
                             <label for="perPageFilter">Per Page</label>
                             <select id="perPageFilter" name="per_page" aria-label="Jumlah data per halaman">
+                                <option value="5" @selected(($perPage ?? 20) === 5)>5 / page</option>
                                 <option value="10" @selected(($perPage ?? 20) === 10)>10 / page</option>
                                 <option value="20" @selected(($perPage ?? 20) === 20)>20 / page</option>
                                 <option value="50" @selected(($perPage ?? 20) === 50)>50 / page</option>
+                            </select>
+                            <label for="aiCategoryFilter">AI Category</label>
+                            <select id="aiCategoryFilter" name="ai_category" aria-label="Filter AI category">
+                                <option value="all" @selected(($aiCategory ?? 'all') === 'all')>Semua AI Category</option>
+                                <option value="auto" @selected(($aiCategory ?? 'all') === 'auto')>auto</option>
+                                <option value="tops" @selected(($aiCategory ?? 'all') === 'tops')>tops</option>
+                                <option value="bottoms" @selected(($aiCategory ?? 'all') === 'bottoms')>bottoms</option>
+                                <option value="one-pieces" @selected(($aiCategory ?? 'all') === 'one-pieces')>one-pieces</option>
+                            </select>
+                            <label for="photoTypeFilter">Photo Type</label>
+                            <select id="photoTypeFilter" name="photo_type" aria-label="Filter photo type">
+                                <option value="all" @selected(($photoType ?? 'all') === 'all')>Semua Photo Type</option>
+                                <option value="auto" @selected(($photoType ?? 'all') === 'auto')>auto</option>
+                                <option value="flat-lay" @selected(($photoType ?? 'all') === 'flat-lay')>flat-lay</option>
+                                <option value="model" @selected(($photoType ?? 'all') === 'model')>model</option>
                             </select>
                             <button class="btn btn-primary filter-apply-btn" type="submit">Apply Filter</button>
                         </div>
@@ -102,7 +118,8 @@
                         <th>ID</th>
                         <th>Product</th>
                         <th>Name</th>
-                        <th>Slug</th>
+                        <th>AI Category</th>
+                        <th>Photo Type</th>
                         <th>Status</th>
                         <th>Actions</th>
                     </tr>
@@ -121,11 +138,33 @@
                             </td>
                             <td data-label="Name">
                                 <div class="product-name">{{ $product->name }}</div>
+                                <div class="product-slug-row">
+                                    <code class="slug-chip">{{ $product->slug }}</code>
+                                    <a
+                                        class="slug-link-icon"
+                                        href="{{ route('public.seller.page', ['seller_slug' => $seller->slug, 'product_ref' => $product->slug]) }}"
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        title="Buka produk di halaman store"
+                                        aria-label="Buka produk di halaman store"
+                                    >
+                                        <svg viewBox="0 0 24 24" aria-hidden="true">
+                                            <path d="M14 4h6v6"></path>
+                                            <path d="M10 14L20 4"></path>
+                                            <path d="M20 14v6H4V4h6"></path>
+                                        </svg>
+                                    </a>
+                                </div>
                                 @if($product->sku)
                                     <div class="product-meta">SKU: {{ $product->sku }}</div>
                                 @endif
                             </td>
-                            <td data-label="Slug"><code class="slug-chip">{{ $product->slug }}</code></td>
+                            <td data-label="AI Category">
+                                <span class="ai-category-badge">{{ $product->ai_category ?? 'auto' }}</span>
+                            </td>
+                            <td data-label="Photo Type">
+                                <span class="ai-photo-type-badge">{{ $product->ai_garment_photo_type ?? 'auto' }}</span>
+                            </td>
                             <td data-label="Status">
                                 <span class="status-badge {{ $product->status === 'inactive' ? 'status-inactive' : '' }}">
                                     {{ ucfirst($product->status) }}
@@ -143,15 +182,17 @@
                             </td>
                         </tr>
                     @empty
-                        <tr><td colspan="6">Belum ada produk.</td></tr>
+                        <tr><td colspan="7">Belum ada produk.</td></tr>
                     @endforelse
                 </tbody>
             </table>
             </div>
-            <div class="products-footer-meta">
-                Menampilkan {{ $products->firstItem() ?? 0 }}-{{ $products->lastItem() ?? 0 }} dari {{ $products->total() }} produk
+            <div class="products-footer-row">
+                <div class="products-footer-meta">
+                    Menampilkan {{ $products->firstItem() ?? 0 }}-{{ $products->lastItem() ?? 0 }} dari {{ $products->total() }} produk
+                </div>
+                <div class="pagination-wrap">{{ $products->links() }}</div>
             </div>
-            <div class="pagination-wrap">{{ $products->links() }}</div>
         </section>
     </main>
 </div>
@@ -582,6 +623,15 @@
                 closeDeleteConfirm();
             }
         }
+    });
+
+    document.addEventListener('click', function (event) {
+        const openPopovers = document.querySelectorAll('.filter-popover[open]');
+        openPopovers.forEach(function (popover) {
+            if (!popover.contains(event.target)) {
+                popover.removeAttribute('open');
+            }
+        });
     });
 
     @if($errors->any() && old('edit_product_id'))
