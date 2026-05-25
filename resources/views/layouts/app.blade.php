@@ -1,9 +1,14 @@
+@props([
+    'title' => 'AI Try-On',
+    'hideHeader' => false,
+])
+
 <!DOCTYPE html>
 <html lang="id">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ $title ?? 'AI Try-On' }}</title>
+    <title>{{ $title }}</title>
     <style>
         :root { --fs-caption: 12px; --fs-label: 13px; --fs-control: 14px; --fs-body: 15px; --fs-heading: 34px; }
         body { font-family: Arial, sans-serif; font-size: var(--fs-body); line-height: 1.5; margin: 0; background: #f5f7fb; color: #1f2937; }
@@ -27,24 +32,26 @@
     </style>
 </head>
 <body>
-<header>
-    <div><strong>Try-On Commerce Studio</strong></div>
-    <nav>
-        @auth
-            <a href="{{ route('seller.dashboard') }}">Dashboard</a>
-            <a href="{{ route('seller.products.index') }}">Products</a>
-            <a href="{{ route('seller.settings.index') }}">Settings</a>
-            @php $mySeller = auth()->user()->seller; @endphp
-            @if($mySeller)
-                <a href="/{{ $mySeller->slug }}" target="_blank">Open Store</a>
-            @endif
-            <form method="POST" action="{{ route('logout') }}" class="inline">
-                @csrf
-                <button type="submit">Logout</button>
-            </form>
-        @endauth
-    </nav>
-</header>
+@if(!$hideHeader)
+    <header>
+        <div><strong>Try-On Commerce Studio</strong></div>
+        <nav>
+            @auth
+                <a href="{{ route('seller.dashboard') }}">Dashboard</a>
+                <a href="{{ route('seller.products.index') }}">Products</a>
+                <a href="{{ route('seller.settings.index') }}">Settings</a>
+                @php $mySeller = auth()->user()->seller; @endphp
+                @if($mySeller)
+                    <a href="/{{ $mySeller->slug }}" target="_blank">Open Store</a>
+                @endif
+                <form method="POST" action="{{ route('logout') }}" class="inline">
+                    @csrf
+                    <button type="submit">Logout</button>
+                </form>
+            @endauth
+        </nav>
+    </header>
+@endif
 <main>
     @if(session('success'))
         <p class="text-success">{{ session('success') }}</p>
