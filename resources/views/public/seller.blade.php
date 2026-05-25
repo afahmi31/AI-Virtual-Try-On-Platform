@@ -5,7 +5,28 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>Katalog Produk</title>
+    @php
+        $seoTitle = trim((string) ($seller->seo_title ?? '')) ?: ('Katalog Produk '.$seller->store_name);
+        $seoDescription = trim((string) ($seller->seo_description ?? '')) ?: ('Belanja produk terbaik dari '.$seller->store_name.'.');
+        $seoImage = trim((string) ($seller->seo_logo_url ?? ''));
+        $canonicalUrl = route('public.seller.page', ['seller_slug' => $seller->slug]);
+    @endphp
+    <title>{{ $seoTitle }}</title>
+    <meta name="description" content="{{ $seoDescription }}">
+    <link rel="canonical" href="{{ $canonicalUrl }}">
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="{{ $seoTitle }}">
+    <meta property="og:description" content="{{ $seoDescription }}">
+    <meta property="og:url" content="{{ $canonicalUrl }}">
+    @if($seoImage !== '')
+    <meta property="og:image" content="{{ $seoImage }}">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:image" content="{{ $seoImage }}">
+    @else
+    <meta name="twitter:card" content="summary">
+    @endif
+    <meta name="twitter:title" content="{{ $seoTitle }}">
+    <meta name="twitter:description" content="{{ $seoDescription }}">
     <style>
         :root {
             --bg: #f6f2e6;

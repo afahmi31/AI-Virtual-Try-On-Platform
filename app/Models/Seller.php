@@ -13,6 +13,9 @@ class Seller extends Model
         'owner_user_id',
         'store_name',
         'slug',
+        'seo_title',
+        'seo_description',
+        'seo_logo_url',
         'status',
     ];
 

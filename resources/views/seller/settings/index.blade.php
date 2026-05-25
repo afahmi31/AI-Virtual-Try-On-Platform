@@ -179,6 +179,35 @@
                 </section>
 
                 <section class="panel">
+                    <h2>Store URL & SEO</h2>
+                    @php
+                        $sellerSlug = old('seller_slug', $seller->slug);
+                        $sellerSeoTitle = old('seo_title', $seller->seo_title ?? '');
+                        $sellerSeoDescription = old('seo_description', $seller->seo_description ?? '');
+                        $sellerSeoLogoUrl = old('seo_logo_url', $seller->seo_logo_url ?? '');
+                        $storeUrlPreview = url('/' . $sellerSlug);
+                    @endphp
+                    <div class="row">
+                        <label>Seller URL (Slug)</label>
+                        <input type="text" name="seller_slug" value="{{ $sellerSlug }}" placeholder="contoh: ceriakid" required>
+                        <div class="hint">Hanya huruf kecil, angka, dan tanda minus. URL store: {{ $storeUrlPreview }}</div>
+                    </div>
+                    <div class="row">
+                        <label>SEO Title</label>
+                        <input type="text" name="seo_title" value="{{ $sellerSeoTitle }}" placeholder="Judul SEO halaman seller">
+                    </div>
+                    <div class="row">
+                        <label>SEO Description</label>
+                        <input type="text" name="seo_description" value="{{ $sellerSeoDescription }}" placeholder="Deskripsi SEO halaman seller">
+                    </div>
+                    <div class="row">
+                        <label>SEO Logo URL (OG Image)</label>
+                        <input type="url" name="seo_logo_url" value="{{ $sellerSeoLogoUrl }}" placeholder="https://...">
+                        <div class="hint">Dipakai untuk meta image (Open Graph/Twitter) di halaman store publik.</div>
+                    </div>
+                </section>
+
+                <section class="panel">
                     <h2>FASHN Model</h2>
                     <div class="row">
                         <label>Select Model</label>

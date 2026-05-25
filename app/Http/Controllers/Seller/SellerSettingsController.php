@@ -5,9 +5,11 @@ namespace App\Http\Controllers\Seller;
 use App\Http\Controllers\Controller;
 use App\Models\SellerAiSetting;
 use App\Support\CurrentSellerResolver;
+use App\Support\SellerSlug;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Carbon;
 use Illuminate\Validation\ValidationException;
@@ -31,6 +33,21 @@ class SellerSettingsController extends Controller
         $seller = $this->currentSellerResolver->resolveForUser($request->user());
 
         $payload = $request->validate([
+            'seller_slug' => [
+                'required',
+                'string',
+                'max:100',
+                'regex:/^[a-z0-9\-]+$/',
+                Rule::unique('sellers', 'slug')->ignore($seller->id),
+                function (string $attribute, mixed $value, \Closure $fail): void {
+                    if (SellerSlug::isReserved((string) $value)) {
+                        $fail('Seller URL menggunakan keyword yang tidak diizinkan.');
+                    }
+                },
+            ],
+            'seo_title' => ['nullable', 'string', 'max:255'],
+            'seo_description' => ['nullable', 'string', 'max:500'],
+            'seo_logo_url' => ['nullable', 'url', 'max:2048'],
             'fashn_api_key' => ['nullable', 'string', 'max:500'],
             'fashn_model' => ['required', 'in:tryon-v1.6,tryon-max'],
             'fashn_tryon_max_generation_mode' => ['nullable', 'in:balanced,quality'],
@@ -55,6 +72,18 @@ class SellerSettingsController extends Controller
                 'public_limit_per_ip_enabled' => 'Minimal salah satu limit harus aktif: Per IP atau Per Device.',
             ]);
         }
+
+        $seller->slug = strtolower((string) $payload['seller_slug']);
+        $seller->seo_title = isset($payload['seo_title']) && trim((string) $payload['seo_title']) !== ''
+            ? trim((string) $payload['seo_title'])
+            : null;
+        $seller->seo_description = isset($payload['seo_description']) && trim((string) $payload['seo_description']) !== ''
+            ? trim((string) $payload['seo_description'])
+            : null;
+        $seller->seo_logo_url = isset($payload['seo_logo_url']) && trim((string) $payload['seo_logo_url']) !== ''
+            ? trim((string) $payload['seo_logo_url'])
+            : null;
+        $seller->save();
 
         $setting = SellerAiSetting::query()->firstOrNew(['seller_id' => $seller->id]);
         $setting->provider_name = 'fashn';
