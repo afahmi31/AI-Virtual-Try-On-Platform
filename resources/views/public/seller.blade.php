@@ -27,20 +27,23 @@
     @endif
     <meta name="twitter:title" content="{{ $seoTitle }}">
     <meta name="twitter:description" content="{{ $seoDescription }}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600;700;800&family=Inter:wght@500;600&display=swap" rel="stylesheet">
     <style>
         :root {
-            --bg: #f6f2e6;
-            --surface: #fffdf7;
-            --surface-soft: #fff8ed;
-            --text: #2f1f16;
-            --muted: #7d6a57;
-            --orange: #ef7c3f;
-            --orange-deep: #dc6a31;
-            --blue-soft: #c7e0ff;
-            --blue-text: #6f93bf;
-            --radius-xl: 24px;
-            --radius-lg: 18px;
-            --radius-md: 14px;
+            --bg: #f7f9fd;
+            --surface: #ffffff;
+            --surface-soft: #f3f7fc;
+            --text: #11253d;
+            --muted: #49627f;
+            --primary: #21759b;
+            --primary-strong: #005c7e;
+            --secondary: #1e3a5f;
+            --outline: #d4dfec;
+            --radius-xl: 20px;
+            --radius-lg: 14px;
+            --radius-md: 10px;
         }
 
         * {
@@ -49,11 +52,11 @@
 
         body {
             margin: 0;
-            font-family: "Nunito", "Segoe UI", sans-serif;
+            font-family: "Hanken Grotesk", "Segoe UI", sans-serif;
             color: var(--text);
             background:
-                radial-gradient(1200px 420px at 16% -12%, #fff8e1 0%, transparent 60%),
-                radial-gradient(900px 400px at 90% -10%, #eaf4ff 0%, transparent 65%),
+                radial-gradient(1200px 420px at 16% -12%, rgba(33, 117, 155, 0.08) 0%, transparent 60%),
+                radial-gradient(900px 400px at 90% -10%, rgba(74, 120, 166, 0.11) 0%, transparent 65%),
                 var(--bg);
         }
 
@@ -66,7 +69,9 @@
             margin: 0 auto;
             background: var(--surface);
             border-radius: 0 0 22px 22px;
-            box-shadow: 0 14px 30px rgba(76, 52, 31, 0.12);
+            border: 1px solid var(--outline);
+            border-top: 0;
+            box-shadow: 0 12px 24px rgba(17, 40, 68, 0.08);
             padding: 18px 26px;
             display: flex;
             align-items: center;
@@ -82,9 +87,9 @@
 
         .brand-label {
             font-size: 34px;
-            font-weight: 900;
+            font-weight: 800;
             letter-spacing: .2px;
-            color: #6f93bf;
+            color: var(--secondary);
             line-height: 1;
         }
 
@@ -108,6 +113,90 @@
             color: var(--muted);
         }
 
+        .catalog-toolbar {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            margin-bottom: 18px;
+            padding: 14px;
+            background: var(--surface);
+            border: 1px solid var(--outline);
+            border-radius: var(--radius-lg);
+        }
+
+        .catalog-toolbar form {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            align-items: center;
+            width: 100%;
+        }
+
+        .catalog-field {
+            height: 42px;
+            border-radius: var(--radius-md);
+            border: 1px solid #c9d7e6;
+            background: #fff;
+            color: var(--text);
+            padding: 0 12px;
+            min-width: 180px;
+            font: inherit;
+        }
+
+        .catalog-search {
+            flex: 1;
+            min-width: 220px;
+        }
+
+        .catalog-btn {
+            border: 1px solid var(--primary);
+            background: var(--primary);
+            color: #fff;
+            height: 42px;
+            border-radius: var(--radius-md);
+            padding: 0 14px;
+            font-family: Inter, "Segoe UI", sans-serif;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .catalog-btn:hover {
+            background: var(--primary-strong);
+            border-color: var(--primary-strong);
+        }
+
+        .catalog-btn.catalog-btn-ghost {
+            background: #fff;
+            border-color: #c4d1e0;
+            color: var(--secondary);
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+        }
+
+        .catalog-btn.catalog-btn-ghost:hover {
+            background: #f6faff;
+            border-color: #8ca5bf;
+        }
+
+        .catalog-meta {
+            margin: 0;
+            color: var(--muted);
+            font-size: 14px;
+        }
+
+        .catalog-footer-row {
+            margin-top: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
         .grid {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(245px, 1fr));
@@ -117,7 +206,7 @@
         .card {
             display: flex;
             flex-direction: column;
-            border: 1px solid #eedfcb;
+            border: 1px solid var(--outline);
             border-radius: var(--radius-lg);
             background: var(--surface);
             overflow: hidden;
@@ -129,20 +218,20 @@
 
         .card:hover {
             transform: translateY(-2px);
-            box-shadow: 0 12px 20px rgba(116, 75, 43, 0.12);
-            border-color: #f3c8a8;
+            box-shadow: 0 12px 20px rgba(17, 40, 68, 0.12);
+            border-color: #afc7de;
         }
 
         .card.selected {
-            border-color: #ef7c3f;
-            box-shadow: 0 10px 18px rgba(222, 122, 64, 0.2);
+            border-color: var(--primary);
+            box-shadow: 0 10px 18px rgba(33, 117, 155, 0.24);
         }
 
         .thumb-wrap {
             width: 100%;
             aspect-ratio: 1 / 1;
             background: #fff;
-            border-bottom: 1px solid #f4e8d7;
+            border-bottom: 1px solid #e7edf5;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -157,7 +246,7 @@
         }
 
         .thumb-fallback {
-            color: #ceb69f;
+            color: #99abc1;
             font-weight: 700;
             font-size: 14px;
         }
@@ -174,7 +263,7 @@
             margin: 0;
             font-size: 18px;
             line-height: 1.22;
-            color: #302015;
+            color: var(--text);
         }
 
         .meta {
@@ -185,7 +274,7 @@
         }
 
         .empty {
-            border: 1px dashed #e4ceb3;
+            border: 1px dashed #bfcddb;
             border-radius: var(--radius-lg);
             background: var(--surface);
             padding: 26px;
@@ -193,10 +282,43 @@
             color: var(--muted);
         }
 
+        .catalog-pagination {
+            margin-top: 0;
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .catalog-pagination a,
+        .catalog-pagination span {
+            min-width: 36px;
+            height: 36px;
+            padding: 0 10px;
+            border-radius: var(--radius-md);
+            border: 1px solid #c9d7e6;
+            background: #fff;
+            color: var(--secondary);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            text-decoration: none;
+            font-family: Inter, "Segoe UI", sans-serif;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .catalog-pagination .active {
+            background: var(--primary);
+            border-color: var(--primary);
+            color: #fff;
+        }
+
         .modal-overlay {
             position: fixed;
             inset: 0;
-            background: rgba(43, 23, 9, 0.5);
+            background: rgba(15, 32, 54, 0.55);
             backdrop-filter: blur(3px);
             display: flex;
             align-items: center;
@@ -216,14 +338,14 @@
         }
 
         .modal {
-            width: min(980px, 100%);
-            max-height: 92vh;
+            width: min(1040px, 100%);
+            max-height: calc(100vh - 28px);
             overflow: auto;
-            background: linear-gradient(180deg, #ffffff, #fff6e9);
+            background: linear-gradient(180deg, #ffffff, #f7fbff);
             border-radius: var(--radius-xl);
-            border: 1px solid #ebd4ba;
-            box-shadow: 0 22px 60px rgba(80, 49, 22, 0.26);
-            padding: 16px;
+            border: 1px solid #d2dfee;
+            box-shadow: 0 22px 60px rgba(17, 40, 68, 0.26);
+            padding: 14px;
             transform: translateY(14px) scale(.98);
             opacity: 0;
             transition: transform .24s ease, opacity .24s ease;
@@ -239,13 +361,37 @@
             align-items: center;
             justify-content: space-between;
             gap: 12px;
-            margin-bottom: 14px;
+            margin-bottom: 10px;
         }
 
         .modal-title {
             margin: 0;
-            font-size: 31px;
-            color: #c4662f;
+            font-size: 42px;
+            color: var(--secondary);
+            line-height: 1.05;
+        }
+
+        .modal-title-row {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .dummy-mode-badge {
+            display: inline-flex;
+            align-items: center;
+            height: 24px;
+            padding: 0 10px;
+            border-radius: 999px;
+            border: 1px solid #b7cce1;
+            background: #edf6ff;
+            color: #1f4e78;
+            font-family: Inter, "Segoe UI", sans-serif;
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: .03em;
+            text-transform: uppercase;
+            white-space: nowrap;
         }
 
         .modal-close {
@@ -253,8 +399,8 @@
             width: 40px;
             height: 40px;
             border-radius: 10px;
-            background: #f9e7d4;
-            color: #9b5327;
+            background: #edf4ff;
+            color: var(--secondary);
             font-size: 22px;
             cursor: pointer;
         }
@@ -263,19 +409,20 @@
             display: grid;
             grid-template-columns: minmax(0, 1.6fr) minmax(220px, 0.8fr);
             gap: 12px;
-            margin-bottom: 12px;
+            margin-bottom: 8px;
         }
 
         .selected-product {
             padding: 2px 0;
             font-size: 14px;
             margin: 0;
+            color: var(--text);
         }
 
         .quota-box {
             border: none;
             background: transparent;
-            color: #8c4c22;
+            color: #295884;
             padding: 2px 0;
             font-size: 13px;
             margin: 0;
@@ -289,8 +436,8 @@
         .field {
             border-radius: var(--radius-md);
             background: var(--surface);
-            border: 1px solid #edd9c3;
-            padding: 12px;
+            border: 1px solid #d7e3ef;
+            padding: 10px;
         }
 
         .label {
@@ -298,7 +445,7 @@
             margin-bottom: 8px;
             font-size: 14px;
             font-weight: 700;
-            color: #7f5739;
+            color: #2f4d6c;
         }
 
         .label-row {
@@ -318,7 +465,7 @@
             align-items: center;
             gap: 8px;
             font-size: 12px;
-            color: #7f5739;
+            color: #2f4d6c;
             user-select: none;
             cursor: pointer;
         }
@@ -336,8 +483,8 @@
             width: 40px;
             height: 22px;
             border-radius: 999px;
-            background: #e5d6c2;
-            border: 1px solid #d8c3a9;
+            background: #c9d7e6;
+            border: 1px solid #b9cadb;
             transition: background .2s ease, border-color .2s ease;
             flex: 0 0 auto;
         }
@@ -356,8 +503,8 @@
         }
 
         .dummy-toggle input:checked + .dummy-toggle-switch {
-            background: #f29a63;
-            border-color: #ea8344;
+            background: #8eb9da;
+            border-color: #5f98c4;
         }
 
         .dummy-toggle input:checked + .dummy-toggle-switch::after {
@@ -375,13 +522,14 @@
 
         .upload-trigger {
             width: 100%;
-            height: 48px;
+            height: 40px;
             border: none;
             border-radius: 12px;
-            background: linear-gradient(180deg, #f89b5f, #ec7a3f);
+            background: linear-gradient(180deg, #2a8ab4, #21759b);
             color: #fff;
-            font-size: 17px;
-            font-weight: 800;
+            font-size: 14px;
+            font-weight: 700;
+            letter-spacing: .01em;
             cursor: pointer;
         }
 
@@ -394,26 +542,26 @@
         }
 
         .status-error {
-            color: #bf3e2e;
+            color: #ba1a1a;
         }
 
         .status-success {
-            color: #206a52;
+            color: #0e7a61;
         }
 
         .modal-preview-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 14px;
-            margin-bottom: 14px;
+            gap: 10px;
+            margin-bottom: 10px;
         }
 
         .preview-box {
             position: relative;
             width: 100%;
-            aspect-ratio: 4 / 5;
+            height: clamp(320px, 48vh, 520px);
             border-radius: var(--radius-md);
-            border: 1px solid #e8d3bc;
+            border: 1px solid #d5e2ef;
             background: #fff;
             overflow: hidden;
             display: flex;
@@ -424,12 +572,12 @@
         .preview-box img {
             width: 100%;
             height: 100%;
-            object-fit: cover;
+            object-fit: contain;
             display: none;
         }
 
         .preview-placeholder {
-            color: #9f8772;
+            color: #55708c;
             text-align: center;
             padding: 14px;
             font-size: 14px;
@@ -445,7 +593,7 @@
             border: none;
             border-radius: 10px;
             background: rgba(255, 255, 255, 0.9);
-            color: #cb4f3e;
+            color: #2f628c;
             font-size: 20px;
             cursor: pointer;
             display: none;
@@ -462,7 +610,7 @@
             width: 9px;
             height: 9px;
             border-radius: 50%;
-            background: #eb7a3f;
+            background: #21759b;
             animation: dot-bounce 0.9s ease-in-out infinite;
         }
 
@@ -490,13 +638,13 @@
 
         .generate-btn {
             width: 100%;
-            height: 50px;
+            height: 44px;
             border: none;
             border-radius: 14px;
-            background: linear-gradient(180deg, #f99657, #ec7a3f);
+            background: linear-gradient(180deg, #2a8ab4, #21759b);
             color: #fff;
-            font-size: 19px;
-            font-weight: 900;
+            font-size: 16px;
+            font-weight: 800;
             cursor: pointer;
         }
 
@@ -508,14 +656,14 @@
         .floating-history-btn {
             position: fixed;
             right: max(18px, calc((100vw - 1300px) / 2 + 26px));
-            bottom: 26px;
+            bottom: 86px;
             width: 56px;
             height: 56px;
             border: none;
             border-radius: 999px;
-            background: linear-gradient(180deg, #f89b5f, #ec7a3f);
+            background: linear-gradient(180deg, #2a8ab4, #21759b);
             color: #fff;
-            box-shadow: 0 14px 28px rgba(116, 75, 43, 0.28);
+            box-shadow: 0 14px 28px rgba(17, 58, 88, 0.28);
             cursor: pointer;
             z-index: 1400;
             display: inline-flex;
@@ -528,16 +676,16 @@
         .floating-history-panel {
             position: fixed;
             right: max(18px, calc((100vw - 1300px) / 2 + 26px));
-            bottom: 96px;
+            bottom: 152px;
             width: min(360px, calc(100vw - 36px));
             max-height: 62vh;
             overflow: auto;
-            background: #fffdf7;
-            border: 1px solid #edd9c3;
-            border-radius: 14px;
-            box-shadow: 0 18px 36px rgba(56, 34, 20, 0.24);
+            background: #ffffff;
+            border: 1px solid #d7e3ef;
+            border-radius: 12px;
+            box-shadow: 0 18px 36px rgba(15, 44, 73, 0.24);
             z-index: 1400;
-            padding: 10px;
+            padding: 12px;
             display: none;
         }
 
@@ -555,34 +703,36 @@
 
         .floating-history-title {
             margin: 0;
-            font-size: 14px;
-            font-weight: 800;
-            color: #7f5739;
+            font-size: 20px;
+            font-weight: 700;
+            color: #143050;
         }
 
         .floating-history-close {
             border: none;
-            width: 28px;
-            height: 28px;
+            width: 32px;
+            height: 32px;
             border-radius: 8px;
-            background: #f5e4d2;
-            color: #9b5327;
+            background: #edf4ff;
+            color: #2b5378;
+            font-size: 20px;
+            line-height: 1;
             cursor: pointer;
         }
 
         .history-wrap {
-            margin: 8px 0 14px;
-            border: 1px solid #edd9c3;
+            margin: 4px 0 10px;
+            border: 1px solid #d7e3ef;
             border-radius: var(--radius-md);
             background: var(--surface);
-            padding: 10px;
+            padding: 8px;
         }
 
         .history-title {
             margin: 0 0 8px;
             font-size: 13px;
             font-weight: 800;
-            color: #7f5739;
+            color: #2f4d6c;
         }
 
         .history-list {
@@ -592,7 +742,7 @@
         }
 
         .history-item {
-            border: 1px solid #e7cfb3;
+            border: 1px solid #d7e3ef;
             border-radius: 10px;
             background: #fff;
             overflow: hidden;
@@ -611,7 +761,7 @@
         .history-item-time {
             display: block;
             font-size: 10px;
-            color: #8c725b;
+            color: #49627f;
             padding: 5px 6px 6px;
             text-align: center;
             white-space: nowrap;
@@ -621,8 +771,9 @@
 
         .history-empty {
             margin: 0;
-            font-size: 12px;
-            color: #8c725b;
+            font-size: 13px;
+            color: #49627f;
+            padding: 2px 0 0;
         }
 
         @media (max-width: 900px) {
@@ -650,6 +801,26 @@
             .modal-info-grid {
                 grid-template-columns: 1fr;
             }
+
+            .catalog-footer-row {
+                align-items: flex-start;
+                flex-direction: column;
+            }
+
+            .catalog-pagination {
+                width: 100%;
+                justify-content: flex-start;
+            }
+
+            .floating-history-btn {
+                right: 16px;
+                bottom: 96px;
+            }
+
+            .floating-history-panel {
+                right: 16px;
+                bottom: 164px;
+            }
         }
     </style>
 </head>
@@ -664,6 +835,32 @@
     </div>
 
     <main class="wrap">
+        <div class="catalog-toolbar">
+            <form method="GET" action="{{ route('public.seller.page', ['seller_slug' => $seller->slug]) }}">
+                <input
+                    class="catalog-field catalog-search"
+                    type="search"
+                    name="q"
+                    value="{{ $activeFilters['q'] }}"
+                    placeholder="Cari produk, slug, atau SKU...">
+                <select class="catalog-field" name="category">
+                    <option value="">Semua Kategori</option>
+                    @foreach ($categories as $categoryOption)
+                        <option value="{{ $categoryOption }}" {{ $activeFilters['category'] === $categoryOption ? 'selected' : '' }}>
+                            {{ $categoryOption }}
+                        </option>
+                    @endforeach
+                </select>
+                <select class="catalog-field" name="sort">
+                    <option value="latest" {{ $activeFilters['sort'] === 'latest' ? 'selected' : '' }}>Terbaru</option>
+                    <option value="name_asc" {{ $activeFilters['sort'] === 'name_asc' ? 'selected' : '' }}>Nama A-Z</option>
+                    <option value="name_desc" {{ $activeFilters['sort'] === 'name_desc' ? 'selected' : '' }}>Nama Z-A</option>
+                </select>
+                <button class="catalog-btn" type="submit">Terapkan</button>
+                <a class="catalog-btn catalog-btn-ghost" href="{{ route('public.seller.page', ['seller_slug' => $seller->slug]) }}">Reset</a>
+            </form>
+        </div>
+
 @if($products->isEmpty())
         <div class="empty">Belum ada produk aktif.</div>
         @else
@@ -697,6 +894,40 @@
             </button>
             @endforeach
         </section>
+        <div class="catalog-footer-row">
+            <p class="catalog-meta">
+                Menampilkan {{ $products->count() }} dari total {{ $products->total() }} produk aktif.
+            </p>
+            @if ($products->lastPage() > 1)
+            @php
+                $currentPage = $products->currentPage();
+                $lastPage = $products->lastPage();
+                $startPage = max(1, $currentPage - 2);
+                $endPage = min($lastPage, $currentPage + 2);
+            @endphp
+            <nav class="catalog-pagination" aria-label="Pagination produk">
+                @if ($products->onFirstPage())
+                    <span>&laquo;</span>
+                @else
+                    <a href="{{ $products->previousPageUrl() }}" rel="prev">&laquo;</a>
+                @endif
+
+                @for ($page = $startPage; $page <= $endPage; $page++)
+                    @if ($page === $currentPage)
+                        <span class="active">{{ $page }}</span>
+                    @else
+                        <a href="{{ $products->url($page) }}">{{ $page }}</a>
+                    @endif
+                @endfor
+
+                @if ($products->hasMorePages())
+                    <a href="{{ $products->nextPageUrl() }}" rel="next">&raquo;</a>
+                @else
+                    <span>&raquo;</span>
+                @endif
+            </nav>
+            @endif
+        </div>
         @endif
         <button id="floatingHistoryBtn" type="button" class="floating-history-btn" aria-label="Lihat riwayat try-on">
             &#128340;
@@ -714,7 +945,12 @@
     <div class="modal-overlay" id="tryOnModal" aria-hidden="true">
         <div class="modal" role="dialog" aria-modal="true" aria-labelledby="tryOnModalTitle">
             <div class="modal-header">
-                <h2 class="modal-title" id="tryOnModalTitle">Try-On Tool</h2>
+                <div class="modal-title-row">
+                    <h2 class="modal-title" id="tryOnModalTitle">Try-On Tool</h2>
+                    @if (($tryOnDummy['enabled'] ?? false) === true)
+                        <span class="dummy-mode-badge">Dummy Mode</span>
+                    @endif
+                </div>
                 <button type="button" class="modal-close" onclick="closeTryOnModal()" aria-label="Tutup">&times;</button>
             </div>
 
@@ -821,6 +1057,7 @@
             modal.classList.add('active');
             modal.setAttribute('aria-hidden', 'false');
             document.body.style.overflow = 'hidden';
+            applyDummyModelSelectionUI();
             refreshHistory();
         }
 
@@ -1133,7 +1370,27 @@
                 return;
             }
 
-            if (!hasDummyModelUrl || TRYON_DUMMY.enabled) {
+            if (TRYON_DUMMY.enabled) {
+                toggleWrap.style.display = 'none';
+                useDummyModelForRealGenerate = hasDummyModelUrl;
+                toggle.checked = hasDummyModelUrl;
+                customerPhotoInput.value = '';
+                customerPhotoInput.disabled = true;
+                removePhotoBtn.style.display = 'none';
+
+                if (hasDummyModelUrl) {
+                    customerPreview.src = TRYON_DUMMY.model_image_url;
+                    customerPreview.style.display = 'block';
+                    customerPlaceholder.style.display = 'none';
+                } else {
+                    customerPreview.removeAttribute('src');
+                    customerPreview.style.display = 'none';
+                    customerPlaceholder.style.display = 'block';
+                }
+                return;
+            }
+
+            if (!hasDummyModelUrl) {
                 toggleWrap.style.display = 'none';
                 useDummyModelForRealGenerate = false;
                 toggle.checked = false;
@@ -1227,7 +1484,7 @@
                 resultPreview.style.display = 'block';
                 resultPlaceholder.style.display = 'none';
                 consumeDummyQuotaUI();
-                setStatus('Generate selesai (dummy mode).', 'success');
+                setStatus('Generate selesai.', 'success');
                 setLoading(false);
                 refreshHistory();
                 return;

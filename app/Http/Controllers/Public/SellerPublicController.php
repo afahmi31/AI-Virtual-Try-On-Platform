@@ -3,11 +3,13 @@
 namespace App\Http\Controllers\Public;
 
 use App\Http\Controllers\Controller;
+use App\Models\Product;
 use App\Models\Seller;
+use Illuminate\Http\Request;
 
 class SellerPublicController extends Controller
 {
-    public function index(string $seller_slug, ?string $product_ref = null)
+    public function index(Request $request, string $seller_slug, ?string $product_ref = null)
     {
         $seller = Seller::query()
             ->where('slug', $seller_slug)
@@ -15,25 +17,74 @@ class SellerPublicController extends Controller
             ->with('aiSetting')
             ->firstOrFail();
 
-        $products = $seller->products()
+        $search = trim((string) $request->query('q', ''));
+        $category = trim((string) $request->query('category', ''));
+        $sort = trim((string) $request->query('sort', 'latest'));
+
+        $productsQuery = $seller->products()
             ->with('images')
+            ->where('status', 'active');
+
+        if ($search !== '') {
+            $productsQuery->where(function ($query) use ($search): void {
+                $query->where('name', 'like', '%'.$search.'%')
+                    ->orWhere('slug', 'like', '%'.$search.'%')
+                    ->orWhere('sku', 'like', '%'.$search.'%');
+            });
+        }
+
+        if ($category !== '') {
+            $productsQuery->where('category', $category);
+        }
+
+        if ($sort === 'name_asc') {
+            $productsQuery->orderBy('name');
+        } elseif ($sort === 'name_desc') {
+            $productsQuery->orderByDesc('name');
+        } else {
+            $sort = 'latest';
+            $productsQuery->latest();
+        }
+
+        $products = $productsQuery
+            ->paginate(12)
+            ->withQueryString();
+
+        $categories = Product::query()
+            ->where('seller_id', $seller->id)
             ->where('status', 'active')
-            ->latest()
-            ->get();
+            ->whereNotNull('category')
+            ->where('category', '!=', '')
+            ->distinct()
+            ->orderBy('category')
+            ->pluck('category');
+
         $selectedProduct = null;
 
         if ($product_ref !== null) {
-            $selectedProduct = $products->first(function ($product) use ($product_ref): bool {
-                $sku = (string) ($product->sku ?? '');
-
-                return $product->slug === $product_ref
-                    || ($sku !== '' && strcasecmp($sku, $product_ref) === 0);
-            });
+            $selectedProduct = $seller->products()
+                ->with('images')
+                ->where('status', 'active')
+                ->where(function ($query) use ($product_ref): void {
+                    $query->where('slug', $product_ref)
+                        ->orWhereRaw('LOWER(sku) = ?', [strtolower($product_ref)]);
+                })
+                ->first();
 
             if (! $selectedProduct) {
                 abort(404);
             }
+
+            $selectedProduct = $products->getCollection()->first(function ($product) use ($selectedProduct): bool {
+                return (int) $product->id === (int) $selectedProduct->id;
+            });
         }
+
+        $activeFilters = [
+            'q' => $search,
+            'category' => $category,
+            'sort' => $sort,
+        ];
 
         $dummyEnabled = (bool) ($seller->aiSetting?->fashn_dummy_enabled ?? false);
         $dummyModelImageUrl = is_string($seller->aiSetting?->fashn_dummy_model_image_url)
@@ -49,6 +100,13 @@ class SellerPublicController extends Controller
             'result_url' => $dummyResultUrl,
         ];
 
-        return view('public.seller', compact('seller', 'products', 'selectedProduct', 'tryOnDummy'));
+        return view('public.seller', compact(
+            'seller',
+            'products',
+            'selectedProduct',
+            'tryOnDummy',
+            'categories',
+            'activeFilters',
+        ));
     }
 }
