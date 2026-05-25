@@ -338,7 +338,7 @@
                                 <h4>FASHN AI Configuration</h4>
                                 <button type="button" class="section-toggle-btn" onclick="toggleAiSection('editAiConfigSection', this)">Collapse</button>
                             </div>
-                            <p>Optimalkan parameter AI agar hasil generated try-on tetap konsisten dan presisi.</p>
+                            <p>Optimalkan parameter AI saat generated try-on.</p>
                             <div class="ai-summary" id="editAiSummary">
                                 <span id="editSummaryCategory" class="summary-chip">AI Category: auto</span>
                                 <span id="editSummaryPhotoType" class="summary-chip">Garment Photo Type: auto</span>
