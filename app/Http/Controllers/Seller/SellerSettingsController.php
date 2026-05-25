@@ -12,6 +12,7 @@ use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\ValidationException;
 
 class SellerSettingsController extends Controller
@@ -47,7 +48,7 @@ class SellerSettingsController extends Controller
             ],
             'seo_title' => ['nullable', 'string', 'max:255'],
             'seo_description' => ['nullable', 'string', 'max:500'],
-            'seo_logo_url' => ['nullable', 'url', 'max:2048'],
+            'seo_logo_file' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:4096'],
             'fashn_api_key' => ['nullable', 'string', 'max:500'],
             'fashn_model' => ['required', 'in:tryon-v1.6,tryon-max'],
             'fashn_tryon_max_generation_mode' => ['nullable', 'in:balanced,quality'],
@@ -80,9 +81,11 @@ class SellerSettingsController extends Controller
         $seller->seo_description = isset($payload['seo_description']) && trim((string) $payload['seo_description']) !== ''
             ? trim((string) $payload['seo_description'])
             : null;
-        $seller->seo_logo_url = isset($payload['seo_logo_url']) && trim((string) $payload['seo_logo_url']) !== ''
-            ? trim((string) $payload['seo_logo_url'])
-            : null;
+        if ($request->hasFile('seo_logo_file')) {
+            $file = $request->file('seo_logo_file');
+            $path = $file->store('seller-logos', 'public');
+            $seller->seo_logo_url = Storage::disk('public')->url($path);
+        }
         $seller->save();
 
         $setting = SellerAiSetting::query()->firstOrNew(['seller_id' => $seller->id]);
