@@ -70,10 +70,9 @@
                             </select>
                             <label for="perPageFilter">Per Page</label>
                             <select id="perPageFilter" name="per_page" aria-label="Jumlah data per halaman">
-                                <option value="5" @selected(($perPage ?? 20) === 5)>5 / page</option>
-                                <option value="10" @selected(($perPage ?? 20) === 10)>10 / page</option>
-                                <option value="20" @selected(($perPage ?? 20) === 20)>20 / page</option>
-                                <option value="50" @selected(($perPage ?? 20) === 50)>50 / page</option>
+                                <option value="10" @selected(($perPage ?? 20) === 10)>10</option>
+                                <option value="20" @selected(($perPage ?? 20) === 20)>20</option>
+                                <option value="50" @selected(($perPage ?? 20) === 50)>50</option>
                             </select>
                             <label for="aiCategoryFilter">AI Category</label>
                             <select id="aiCategoryFilter" name="ai_category" aria-label="Filter AI category">

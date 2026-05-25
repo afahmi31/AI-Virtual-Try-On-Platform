@@ -32,7 +32,7 @@ class SellerProductController extends Controller
         $aiCategory = trim((string) $request->query('ai_category', 'all'));
         $photoType = trim((string) $request->query('photo_type', 'all'));
         $perPage = (int) $request->query('per_page', 20);
-        $perPage = in_array($perPage, [5, 10, 20, 50], true) ? $perPage : 20;
+        $perPage = in_array($perPage, [10, 20, 50], true) ? $perPage : 20;
 
         $products = Product::query()
             ->with('images')
@@ -41,8 +41,11 @@ class SellerProductController extends Controller
                 $query->where(function ($nested) use ($search) {
                     $nested->where('name', 'like', '%'.$search.'%')
                         ->orWhere('slug', 'like', '%'.$search.'%')
-                        ->orWhere('sku', 'like', '%'.$search.'%')
-                        ->orWhere('id', $search);
+                        ->orWhere('sku', 'like', '%'.$search.'%');
+
+                    if (ctype_digit($search)) {
+                        $nested->orWhere('id', (int) $search);
+                    }
                 });
             })
             ->when(in_array($status, ['active', 'inactive'], true), function ($query) use ($status) {
