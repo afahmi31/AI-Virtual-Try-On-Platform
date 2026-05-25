@@ -38,7 +38,49 @@
     </aside>
 
     <main class="content">
-        <h1>Manage Products</h1>
+        <section class="products-hero">
+            <div>
+                <h1>Kelola Produk</h1>
+                <p class="products-hero-subtitle">Kelola produk dan konfigrasi FASHN AI untuk setiap produk.</p>
+            </div>
+            <div class="products-toolbar">
+                <form method="GET" action="{{ route('seller.products.index') }}" class="products-toolbar-form">
+                    <div class="search-input-wrap">
+                        <svg viewBox="0 0 24 24" aria-hidden="true">
+                            <path d="M21 21l-4.35-4.35"></path>
+                            <circle cx="11" cy="11" r="6"></circle>
+                        </svg>
+                        <input type="text" name="q" value="{{ $search ?? '' }}" placeholder="Cari nama, slug, SKU, atau ID produk...">
+                    </div>
+                    <details class="filter-popover">
+                        <summary class="btn btn-ghost toolbar-btn" aria-label="Filter">
+                            <svg viewBox="0 0 24 24" aria-hidden="true">
+                                <path d="M4 6h16"></path>
+                                <path d="M7 12h10"></path>
+                                <path d="M10 18h4"></path>
+                            </svg>
+                            <span>Filter</span>
+                        </summary>
+                        <div class="filter-popover-panel">
+                            <label for="statusFilter">Status</label>
+                            <select id="statusFilter" name="status" aria-label="Filter status">
+                                <option value="all" @selected(($status ?? 'all') === 'all')>Semua Status</option>
+                                <option value="active" @selected(($status ?? 'all') === 'active')>Active</option>
+                                <option value="inactive" @selected(($status ?? 'all') === 'inactive')>Inactive</option>
+                            </select>
+                            <label for="perPageFilter">Per Page</label>
+                            <select id="perPageFilter" name="per_page" aria-label="Jumlah data per halaman">
+                                <option value="10" @selected(($perPage ?? 20) === 10)>10 / page</option>
+                                <option value="20" @selected(($perPage ?? 20) === 20)>20 / page</option>
+                                <option value="50" @selected(($perPage ?? 20) === 50)>50 / page</option>
+                            </select>
+                            <button class="btn btn-primary filter-apply-btn" type="submit">Apply Filter</button>
+                        </div>
+                    </details>
+                </form>
+                <button class="btn btn-primary toolbar-add-btn" type="button" onclick="openCreateModal()">+ Tambah Produk Baru</button>
+            </div>
+        </section>
 
         @if(session('success'))
             <div class="flash flash-success">{{ session('success') }}</div>
@@ -53,12 +95,6 @@
         @endif
 
         <section class="panel products-panel">
-            <div class="panel-head">
-                <div>
-                    <h2>Product List</h2>
-                </div>
-                <button class="btn btn-primary" type="button" onclick="openCreateModal()">Add New Product</button>
-            </div>
             <div class="table-wrap">
             <table class="product-table">
                 <thead>
@@ -111,6 +147,9 @@
                     @endforelse
                 </tbody>
             </table>
+            </div>
+            <div class="products-footer-meta">
+                Menampilkan {{ $products->firstItem() ?? 0 }}-{{ $products->lastItem() ?? 0 }} dari {{ $products->total() }} produk
             </div>
             <div class="pagination-wrap">{{ $products->links() }}</div>
         </section>

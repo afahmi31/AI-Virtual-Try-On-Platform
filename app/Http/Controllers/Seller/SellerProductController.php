@@ -24,12 +24,33 @@ class SellerProductController extends Controller
         return $this->currentSellerResolver->resolveForUser(auth()->user());
     }
 
-    public function index()
+    public function index(Request $request)
     {
         $seller = $this->seller();
-        $products = Product::query()->with('images')->where('seller_id', $seller->id)->latest()->paginate(20);
+        $search = trim((string) $request->query('q', ''));
+        $status = trim((string) $request->query('status', 'all'));
+        $perPage = (int) $request->query('per_page', 20);
+        $perPage = in_array($perPage, [10, 20, 50], true) ? $perPage : 20;
 
-        return view('seller.products.index', compact('seller', 'products'));
+        $products = Product::query()
+            ->with('images')
+            ->where('seller_id', $seller->id)
+            ->when($search !== '', function ($query) use ($search) {
+                $query->where(function ($nested) use ($search) {
+                    $nested->where('name', 'like', '%'.$search.'%')
+                        ->orWhere('slug', 'like', '%'.$search.'%')
+                        ->orWhere('sku', 'like', '%'.$search.'%')
+                        ->orWhere('id', $search);
+                });
+            })
+            ->when(in_array($status, ['active', 'inactive'], true), function ($query) use ($status) {
+                $query->where('status', $status);
+            })
+            ->latest()
+            ->paginate($perPage)
+            ->withQueryString();
+
+        return view('seller.products.index', compact('seller', 'products', 'search', 'status', 'perPage'));
     }
 
     public function store(Request $request): RedirectResponse

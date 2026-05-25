@@ -514,7 +514,7 @@
     </aside>
     <main class="content">
         <h1>Settings</h1>
-        <p class="page-subtitle">Atur konfigurasi store, kredensial FASHN, SEO, dan limit public generate dalam satu halaman yang lebih terstruktur.</p>
+        <p class="page-subtitle">Konfigurasi store, kredensial FASHN, dan limit generate.</p>
         @if(session('success'))
             <div class="flash">{{ session('success') }}</div>
         @endif
@@ -741,7 +741,6 @@
                     <div class="row">
                         <label>Dummy Model Image URL</label>
                         <input type="url" name="fashn_dummy_model_image_url" value="{{ old('fashn_dummy_model_image_url', $setting?->fashn_dummy_model_image_url ?: '') }}">
-                        <div class="hint">Saat Dummy Mode aktif, URL ini dipakai sebagai model image input dummy.</div>
                     </div>
                 </section>
 
@@ -784,11 +783,11 @@
                         <div class="hint">URL : {{ $storeUrlPreview }}</div>
                     </div>
                     <div class="row">
-                        <label>Nama Toko (SEO Title)</label>
+                        <label>Nama Toko</label>
                         <input type="text" name="seo_title" value="{{ $sellerSeoTitle }}" placeholder="Judul SEO halaman seller">
                     </div>
                     <div class="row">
-                        <label>SEO Description</label>
+                        <label>Description</label>
                         <input type="text" name="seo_description" value="{{ $sellerSeoDescription }}" placeholder="Deskripsi SEO halaman seller">
                     </div>
                 </section>
