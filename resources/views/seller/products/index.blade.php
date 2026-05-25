@@ -9,7 +9,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600;700&family=Inter:wght@500;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="{{ asset('css/seller-theme.css') }}">
 </head>
-<body>
+<body class="products-page">
 <header class="topbar">
     <div class="brand">Try-On Commerce Studio</div>
         <nav class="topnav">
@@ -52,12 +52,15 @@
             </div>
         @endif
 
-        <section class="panel">
+        <section class="panel products-panel">
             <div class="panel-head">
-                <h2>Product List</h2>
+                <div>
+                    <h2>Product List</h2>
+                </div>
                 <button class="btn btn-primary" type="button" onclick="openCreateModal()">Add New Product</button>
             </div>
-            <table>
+            <div class="table-wrap">
+            <table class="product-table">
                 <thead>
                     <tr>
                         <th>ID</th>
@@ -72,25 +75,30 @@
                     @forelse($products as $product)
                         @php $primaryImage = $product->images->firstWhere('is_primary', true) ?? $product->images->first(); @endphp
                         <tr>
-                            <td>{{ $product->id }}</td>
-                            <td>
+                            <td data-label="ID"><span class="cell-id">#{{ $product->id }}</span></td>
+                            <td data-label="Product">
                                 @if($primaryImage)
                                     <img src="{{ $primaryImage->image_url }}" alt="{{ $product->name }}" class="thumb">
                                 @else
                                     <div class="thumb-fallback" aria-label="No image">IMG</div>
                                 @endif
                             </td>
-                            <td>{{ $product->name }}</td>
-                            <td>{{ $product->slug }}</td>
-                            <td>
+                            <td data-label="Name">
+                                <div class="product-name">{{ $product->name }}</div>
+                                @if($product->sku)
+                                    <div class="product-meta">SKU: {{ $product->sku }}</div>
+                                @endif
+                            </td>
+                            <td data-label="Slug"><code class="slug-chip">{{ $product->slug }}</code></td>
+                            <td data-label="Status">
                                 <span class="status-badge {{ $product->status === 'inactive' ? 'status-inactive' : '' }}">
                                     {{ ucfirst($product->status) }}
                                 </span>
                             </td>
-                            <td>
+                            <td data-label="Actions">
                                 <div class="actions">
                                     <button class="btn btn-ghost" type="button" onclick="openEditModal({{ $product->id }}, '{{ addslashes($product->name) }}', '{{ addslashes($product->sku ?? '') }}', '{{ addslashes($product->category ?? '') }}', '{{ $product->status }}', '{{ addslashes($primaryImage?->image_url ?? '') }}', '{{ addslashes($product->ai_prompt ?? '') }}', '{{ addslashes($product->ai_category ?? 'auto') }}', '{{ addslashes($product->ai_garment_photo_type ?? 'auto') }}', '{{ (int) ($product->ai_segmentation_free ?? true) }}')">Edit</button>
-                                    <form method="POST" action="{{ route('seller.products.destroy', $product->id) }}" onsubmit="return confirm('Hapus produk ini?');" style="display:inline;">
+                                    <form method="POST" action="{{ route('seller.products.destroy', $product->id) }}" onsubmit="return openDeleteConfirm(event, this);" style="display:inline;">
                                         @csrf
                                         @method('DELETE')
                                         <button class="btn btn-ghost" type="submit" style="color:var(--danger); border-color: rgba(248,113,113,.4);">Delete</button>
@@ -103,6 +111,7 @@
                     @endforelse
                 </tbody>
             </table>
+            </div>
             <div class="pagination-wrap">{{ $products->links() }}</div>
         </section>
     </main>
@@ -136,42 +145,62 @@
                     <input id="createImageUrl" type="url" name="image_url" placeholder="https://...">
                 </div>
                 <div class="product-right-col">
-                    <div class="field"><label>Product Name</label><input name="name" required></div>
-                    <div class="field"><label>SKU</label><input name="sku"></div>
-                    <div class="field"><label>Category</label><input name="category" placeholder="Select Category..."></div>
-                    <div class="field">
-                        <label>AI Prompt <span class="preview-hint">(Try-On Max)</span></label>
-                        <input name="ai_prompt" placeholder="Opsional, contoh: long modest muslim dress for 12-year-old girl">
-                    </div>
-                    <div class="field">
-                        <label>AI Category <span class="preview-hint">(Try-On v1.6)</span></label>
-                        <select name="ai_category">
-                            <option value="auto" selected>auto</option>
-                            <option value="tops">tops - atasan (kemeja, blouse, t-shirt)</option>
-                            <option value="bottoms">bottoms - bawahan (rok, celana)</option>
-                            <option value="one-pieces">one-pieces - baju terusan (dress, gamis)</option>
-                        </select>
-                        <div class="preview-hint">Pilih sesuai jenis utama pakaian pada foto produk agar hasil try-on lebih pas.</div>
-                    </div>
-                    <div class="field">
-                        <label>Garment Photo Type <span class="preview-hint">(Try-On v1.6)</span></label>
-                        <select name="ai_garment_photo_type">
-                            <option value="auto" selected>auto</option>
-                            <option value="flat-lay">flat-lay - foto produk tanpa dipakai model</option>
-                            <option value="model">model - foto produk sedang dipakai model/manekin</option>
-                        </select>
-                        <div class="preview-hint">Sesuaikan dengan tipe foto garment yang di-upload supaya bentuk baju tidak salah baca.</div>
-                    </div>
-                    <div class="field">
-                        <input type="hidden" name="ai_segmentation_free" value="0">
-                        <label class="status-toggle" style="justify-content:flex-start;">
-                            <span>Segmentation Free <span class="preview-hint">(Try-On v1.6)</span></span>
-                            <input type="checkbox" name="ai_segmentation_free" value="1" checked>
-                            <span class="status-toggle-switch"></span>
-                            <span class="status-toggle-label">enabled</span>
-                        </label>
-                        <div class="preview-hint">Aktifkan untuk membiarkan AI memproses tanpa segmentasi ketat garment, cocok untuk banyak foto katalog umum.</div>
-                    </div>
+                    <section class="form-section product-info-section">
+                        <div class="form-section-head">
+                            <h4>Product Information</h4>
+                            <p>Informasi inti produk untuk katalog toko Anda.</p>
+                        </div>
+                        <div class="field"><label>Product Name</label><input id="createName" name="name" required></div>
+                        <div class="field"><label>SKU</label><input name="sku"></div>
+                        <div class="field"><label>Category</label><input id="createCategory" name="category" placeholder="Select Category..."></div>
+                    </section>
+                    <section class="form-section ai-config-section" id="createAiConfigSection">
+                        <div class="form-section-head">
+                            <div class="section-head-row">
+                                <h4>FASHN AI Configuration</h4>
+                                <button type="button" class="section-toggle-btn" onclick="toggleAiSection('createAiConfigSection', this)">Collapse</button>
+                            </div>
+                            <p>Atur metadata AI dengan tepat agar hasil generated try-on lebih akurat.</p>
+                            <div class="ai-summary" id="createAiSummary">
+                                <span id="createSummaryCategory" class="summary-chip">AI Category: auto</span>
+                                <span id="createSummaryPhotoType" class="summary-chip">Garment Photo Type: auto</span>
+                                <span id="createSummarySegmentation" class="summary-chip">Segmentation: enabled</span>
+                            </div>
+                        </div>
+                        <div class="field">
+                            <label>AI Prompt <span class="preview-hint">(Try-On Max)</span></label>
+                            <input name="ai_prompt" placeholder="Opsional, contoh: long modest muslim dress for 12-year-old girl">
+                        </div>
+                        <div class="field">
+                            <label>AI Category <span class="preview-hint">(Try-On v1.6)</span></label>
+                            <select id="createAiCategory" name="ai_category">
+                                <option value="auto" selected>auto</option>
+                                <option value="tops">tops - atasan (kemeja, blouse, t-shirt)</option>
+                                <option value="bottoms">bottoms - bawahan (rok, celana)</option>
+                                <option value="one-pieces">one-pieces - baju terusan (dress, gamis)</option>
+                            </select>
+                            <div class="preview-hint">Pilih sesuai jenis utama pakaian pada foto produk agar hasil try-on lebih pas.</div>
+                        </div>
+                        <div class="field">
+                            <label>Garment Photo Type <span class="preview-hint">(Try-On v1.6)</span></label>
+                            <select id="createAiGarmentPhotoType" name="ai_garment_photo_type">
+                                <option value="auto" selected>auto</option>
+                                <option value="flat-lay">flat-lay - foto produk tanpa dipakai model</option>
+                                <option value="model">model - foto produk sedang dipakai model/manekin</option>
+                            </select>
+                            <div class="preview-hint">Sesuaikan dengan tipe foto garment yang di-upload supaya bentuk baju tidak salah baca.</div>
+                        </div>
+                        <div class="field">
+                            <input type="hidden" name="ai_segmentation_free" value="0">
+                            <label class="status-toggle" style="justify-content:flex-start;">
+                                <span>Segmentation Free <span class="preview-hint">(Try-On v1.6)</span></span>
+                                <input id="createAiSegmentationFree" type="checkbox" name="ai_segmentation_free" value="1" checked>
+                                <span class="status-toggle-switch"></span>
+                                <span class="status-toggle-label">enabled</span>
+                            </label>
+                            <div class="preview-hint">Aktifkan untuk membiarkan AI memproses tanpa segmentasi ketat garment, cocok untuk banyak foto katalog umum.</div>
+                        </div>
+                    </section>
                 </div>
             </div>
             <div class="modal-bottom-row">
@@ -214,42 +243,62 @@
                     <input id="editImageUrl" type="url" name="image_url" placeholder="https://...">
                 </div>
                 <div class="product-right-col">
-                    <div class="field"><label>Product Name</label><input id="editName" name="name" required></div>
-                    <div class="field"><label>SKU</label><input id="editSku" name="sku"></div>
-                    <div class="field"><label>Category</label><input id="editCategory" name="category"></div>
-                    <div class="field">
-                        <label>AI Prompt <span class="preview-hint">(Try-On Max)</span></label>
-                        <input id="editAiPrompt" name="ai_prompt" placeholder="Opsional, contoh: long modest muslim dress for 12-year-old girl">
-                    </div>
-                    <div class="field">
-                        <label>AI Category <span class="preview-hint">(Try-On v1.6)</span></label>
-                        <select id="editAiCategory" name="ai_category">
-                            <option value="auto">auto</option>
-                            <option value="tops">tops - atasan (kemeja, blouse, t-shirt)</option>
-                            <option value="bottoms">bottoms - bawahan (rok, celana)</option>
-                            <option value="one-pieces">one-pieces - baju terusan (dress, gamis)</option>
-                        </select>
-                        <div class="preview-hint">Pilih sesuai jenis utama pakaian pada foto produk agar hasil try-on lebih pas.</div>
-                    </div>
-                    <div class="field">
-                        <label>Garment Photo Type <span class="preview-hint">(Try-On v1.6)</span></label>
-                        <select id="editAiGarmentPhotoType" name="ai_garment_photo_type">
-                            <option value="auto">auto</option>
-                            <option value="flat-lay">flat-lay - foto produk tanpa dipakai model</option>
-                            <option value="model">model - foto produk sedang dipakai model/manekin</option>
-                        </select>
-                        <div class="preview-hint">Sesuaikan dengan tipe foto garment yang di-upload supaya bentuk baju tidak salah baca.</div>
-                    </div>
-                    <div class="field">
-                        <input type="hidden" name="ai_segmentation_free" value="0">
-                        <label class="status-toggle" style="justify-content:flex-start;">
-                            <span>Segmentation Free <span class="preview-hint">(Try-On v1.6)</span></span>
-                            <input id="editAiSegmentationFree" type="checkbox" name="ai_segmentation_free" value="1" checked>
-                            <span class="status-toggle-switch"></span>
-                            <span id="editAiSegmentationFreeLabel" class="status-toggle-label">enabled</span>
-                        </label>
-                        <div class="preview-hint">Aktifkan untuk membiarkan AI memproses tanpa segmentasi ketat garment, cocok untuk banyak foto katalog umum.</div>
-                    </div>
+                    <section class="form-section product-info-section">
+                        <div class="form-section-head">
+                            <h4>Product Information</h4>
+                            <p>Perbarui informasi utama produk yang tampil di katalog.</p>
+                        </div>
+                        <div class="field"><label>Product Name</label><input id="editName" name="name" required></div>
+                        <div class="field"><label>SKU</label><input id="editSku" name="sku"></div>
+                        <div class="field"><label>Category</label><input id="editCategory" name="category"></div>
+                    </section>
+                    <section class="form-section ai-config-section" id="editAiConfigSection">
+                        <div class="form-section-head">
+                            <div class="section-head-row">
+                                <h4>FASHN AI Configuration</h4>
+                                <button type="button" class="section-toggle-btn" onclick="toggleAiSection('editAiConfigSection', this)">Collapse</button>
+                            </div>
+                            <p>Optimalkan parameter AI agar hasil generated try-on tetap konsisten dan presisi.</p>
+                            <div class="ai-summary" id="editAiSummary">
+                                <span id="editSummaryCategory" class="summary-chip">AI Category: auto</span>
+                                <span id="editSummaryPhotoType" class="summary-chip">Garment Photo Type: auto</span>
+                                <span id="editSummarySegmentation" class="summary-chip">Segmentation: enabled</span>
+                            </div>
+                        </div>
+                        <div class="field">
+                            <label>AI Prompt <span class="preview-hint">(Try-On Max)</span></label>
+                            <input id="editAiPrompt" name="ai_prompt" placeholder="Opsional, contoh: long modest muslim dress for 12-year-old girl">
+                        </div>
+                        <div class="field">
+                            <label>AI Category <span class="preview-hint">(Try-On v1.6)</span></label>
+                            <select id="editAiCategory" name="ai_category">
+                                <option value="auto">auto</option>
+                                <option value="tops">tops - atasan (kemeja, blouse, t-shirt)</option>
+                                <option value="bottoms">bottoms - bawahan (rok, celana)</option>
+                                <option value="one-pieces">one-pieces - baju terusan (dress, gamis)</option>
+                            </select>
+                            <div class="preview-hint">Pilih sesuai jenis utama pakaian pada foto produk agar hasil try-on lebih pas.</div>
+                        </div>
+                        <div class="field">
+                            <label>Garment Photo Type <span class="preview-hint">(Try-On v1.6)</span></label>
+                            <select id="editAiGarmentPhotoType" name="ai_garment_photo_type">
+                                <option value="auto">auto</option>
+                                <option value="flat-lay">flat-lay - foto produk tanpa dipakai model</option>
+                                <option value="model">model - foto produk sedang dipakai model/manekin</option>
+                            </select>
+                            <div class="preview-hint">Sesuaikan dengan tipe foto garment yang di-upload supaya bentuk baju tidak salah baca.</div>
+                        </div>
+                        <div class="field">
+                            <input type="hidden" name="ai_segmentation_free" value="0">
+                            <label class="status-toggle" style="justify-content:flex-start;">
+                                <span>Segmentation Free <span class="preview-hint">(Try-On v1.6)</span></span>
+                                <input id="editAiSegmentationFree" type="checkbox" name="ai_segmentation_free" value="1" checked>
+                                <span class="status-toggle-switch"></span>
+                                <span id="editAiSegmentationFreeLabel" class="status-toggle-label">enabled</span>
+                            </label>
+                            <div class="preview-hint">Aktifkan untuk membiarkan AI memproses tanpa segmentasi ketat garment, cocok untuk banyak foto katalog umum.</div>
+                        </div>
+                    </section>
                 </div>
             </div>
             <div class="modal-bottom-row">
@@ -262,13 +311,29 @@
     </div>
 </div>
 
+<div id="deleteConfirmModal" class="modal delete-confirm-modal" onclick="closeOnBackdrop(event, 'deleteConfirmModal')">
+    <div class="modal-card delete-confirm-card" role="dialog" aria-modal="true" aria-labelledby="deleteConfirmTitle" aria-describedby="deleteConfirmMessage">
+        <div class="delete-confirm-icon" aria-hidden="true">!</div>
+        <h3 id="deleteConfirmTitle">Delete Product</h3>
+        <p id="deleteConfirmMessage">Produk yang dihapus tidak dapat dikembalikan. Lanjutkan hapus produk ini?</p>
+        <div class="delete-confirm-actions">
+            <button id="deleteConfirmCancelBtn" class="btn btn-cancel" type="button" onclick="closeDeleteConfirm()">Cancel</button>
+            <button class="btn btn-danger-solid" type="button" onclick="submitDeleteConfirm()">Delete Product</button>
+        </div>
+    </div>
+</div>
+
 <script>
+    let pendingDeleteForm = null;
+
     function openModal(id) { document.getElementById(id).classList.add('active'); }
     function closeModal(id) { document.getElementById(id).classList.remove('active'); }
     function closeOnBackdrop(event, id) { if (event.target.id === id) closeModal(id); }
     function openCreateModal() {
         resetPreview('createImageFile', 'createImageUrl', 'createImagePreview');
         setCreateStatus('active');
+        expandAiSection('createAiConfigSection');
+        updateAiSummary('create');
         openModal('createModal');
     }
 
@@ -288,6 +353,8 @@
             editSegmentationLabel.textContent = document.getElementById('editAiSegmentationFree').checked ? 'enabled' : 'disabled';
         }
         setEditStatus(status || 'active');
+        expandAiSection('editAiConfigSection');
+        updateAiSummary('edit');
         resetPreview('editImageFile', 'editImageUrl', 'editImagePreview');
         document.getElementById('editImageUrl').value = imageUrl || '';
         setPreviewFromUrl('editImagePreview', imageUrl);
@@ -383,8 +450,69 @@
         preview.style.display = 'block';
     }
 
+    function openDeleteConfirm(event, form) {
+        if (event) event.preventDefault();
+        pendingDeleteForm = form || null;
+        openModal('deleteConfirmModal');
+        const cancelBtn = document.getElementById('deleteConfirmCancelBtn');
+        if (cancelBtn) cancelBtn.focus();
+        return false;
+    }
+
+    function closeDeleteConfirm() {
+        pendingDeleteForm = null;
+        closeModal('deleteConfirmModal');
+    }
+
+    function submitDeleteConfirm() {
+        const form = pendingDeleteForm;
+        pendingDeleteForm = null;
+        closeModal('deleteConfirmModal');
+        if (form) form.submit();
+    }
+
+    function toggleAiSection(sectionId, triggerBtn) {
+        const section = document.getElementById(sectionId);
+        if (!section) return;
+        section.classList.toggle('collapsed');
+        if (triggerBtn) {
+            triggerBtn.textContent = section.classList.contains('collapsed') ? 'Expand' : 'Collapse';
+        }
+    }
+
+    function expandAiSection(sectionId) {
+        const section = document.getElementById(sectionId);
+        if (!section) return;
+        section.classList.remove('collapsed');
+        const btn = section.querySelector('.section-toggle-btn');
+        if (btn) btn.textContent = 'Collapse';
+    }
+    function updateAiSummary(prefix) {
+        const aiCategory = document.getElementById(prefix === 'create' ? 'createAiCategory' : 'editAiCategory');
+        const photoType = document.getElementById(prefix === 'create' ? 'createAiGarmentPhotoType' : 'editAiGarmentPhotoType');
+        const segmentation = document.getElementById(prefix === 'create' ? 'createAiSegmentationFree' : 'editAiSegmentationFree');
+        const summaryCategory = document.getElementById(prefix === 'create' ? 'createSummaryCategory' : 'editSummaryCategory');
+        const summaryPhotoType = document.getElementById(prefix === 'create' ? 'createSummaryPhotoType' : 'editSummaryPhotoType');
+        const summarySegmentation = document.getElementById(prefix === 'create' ? 'createSummarySegmentation' : 'editSummarySegmentation');
+
+        if (summaryCategory && aiCategory) summaryCategory.textContent = `AI Category: ${aiCategory.value || 'auto'}`;
+        if (summaryPhotoType && photoType) summaryPhotoType.textContent = `Garment Photo Type: ${photoType.value || 'auto'}`;
+        if (summarySegmentation && segmentation) summarySegmentation.textContent = `Segmentation: ${segmentation.checked ? 'enabled' : 'disabled'}`;
+    }
+
     bindImagePreview('createImageFile', 'createImageUrl', 'createImagePreview');
     bindImagePreview('editImageFile', 'editImageUrl', 'editImagePreview');
+
+    const createAiCategory = document.getElementById('createAiCategory');
+    const createAiGarmentPhotoType = document.getElementById('createAiGarmentPhotoType');
+    const createAiSegmentationFree = document.getElementById('createAiSegmentationFree');
+    const editAiCategory = document.getElementById('editAiCategory');
+    const editAiGarmentPhotoType = document.getElementById('editAiGarmentPhotoType');
+    if (createAiCategory) createAiCategory.addEventListener('change', function () { updateAiSummary('create'); });
+    if (createAiGarmentPhotoType) createAiGarmentPhotoType.addEventListener('change', function () { updateAiSummary('create'); });
+    if (createAiSegmentationFree) createAiSegmentationFree.addEventListener('change', function () { updateAiSummary('create'); });
+    if (editAiCategory) editAiCategory.addEventListener('change', function () { updateAiSummary('edit'); });
+    if (editAiGarmentPhotoType) editAiGarmentPhotoType.addEventListener('change', function () { updateAiSummary('edit'); });
 
     const editStatusToggle = document.getElementById('editStatusToggle');
     if (editStatusToggle) {
@@ -404,8 +532,18 @@
     if (editAiSegmentationFree && editAiSegmentationFreeLabel) {
         editAiSegmentationFree.addEventListener('change', function () {
             editAiSegmentationFreeLabel.textContent = this.checked ? 'enabled' : 'disabled';
+            updateAiSummary('edit');
         });
     }
+
+    document.addEventListener('keydown', function (event) {
+        if (event.key === 'Escape') {
+            const deleteConfirm = document.getElementById('deleteConfirmModal');
+            if (deleteConfirm && deleteConfirm.classList.contains('active')) {
+                closeDeleteConfirm();
+            }
+        }
+    });
 
     @if($errors->any() && old('edit_product_id'))
         openEditModal(
@@ -424,5 +562,3 @@
 </script>
 </body>
 </html>
-
-
