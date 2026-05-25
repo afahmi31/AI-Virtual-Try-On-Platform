@@ -9,7 +9,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600;700&family=Inter:wght@500;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="{{ asset('css/seller-theme.css') }}">
 </head>
-<body>
+<body class="dashboard-page">
 <header class="topbar">
     <div class="brand">Try-On Commerce Studio</div>
         <nav class="topnav">
@@ -50,14 +50,17 @@
     </aside>
 
     <main class="content">
-        <h1>Dashboard</h1>
+        <header class="dashboard-hero">
+            <h1>Dashboard</h1>
+            <p class="dashboard-subtitle">Ringkasan toko, aktivitas try-on.</p>
+        </header>
 
         <section class="cards">
             <article class="card">
                 <div class="card-label">Total Products</div>
                 <div class="card-value">{{ number_format($stats['total_products']) }}</div>
             </article>
-            <article class="card">
+            <article class="card credits-card">
                 <div class="card-label">FASHN Credits</div>
                 <div class="card-value">{{ number_format($stats['fashn_credits']['total'] ?? 0) }}</div>
                 <div class="credit-breakdown">
@@ -71,12 +74,27 @@
                     </div>
                 </div>
             </article>
-            <article class="card">
+            <article class="card model-card">
                 <div class="card-label">Model</div>
-                <select id="dashboardModelSelect" class="model-select" aria-label="Select model">
-                    <option value="tryon-v1.6" {{ $stats['fashn_model'] === 'tryon-v1.6' ? 'selected' : '' }}>FASHN Virtual Try-On v1.6</option>
-                    <option value="tryon-max" {{ $stats['fashn_model'] === 'tryon-max' ? 'selected' : '' }}>Try-On Max</option>
-                </select>
+                <div class="model-picker" role="group" aria-label="Select model">
+                    <button
+                        type="button"
+                        class="model-choice-btn {{ $stats['fashn_model'] === 'tryon-v1.6' ? 'is-active' : '' }}"
+                        data-model-choice="tryon-v1.6"
+                        aria-pressed="{{ $stats['fashn_model'] === 'tryon-v1.6' ? 'true' : 'false' }}"
+                    >
+                        FASHN Virtual Try-On v1.6
+                    </button>
+                    <button
+                        type="button"
+                        class="model-choice-btn {{ $stats['fashn_model'] === 'tryon-max' ? 'is-active' : '' }}"
+                        data-model-choice="tryon-max"
+                        aria-pressed="{{ $stats['fashn_model'] === 'tryon-max' ? 'true' : 'false' }}"
+                    >
+                        Try-On Max
+                    </button>
+                </div>
+                <input type="hidden" id="dashboardModelSelect" value="{{ $stats['fashn_model'] }}">
                 <div id="dashboardModelStatus" class="model-update-status"></div>
                 <div class="credit-breakdown">
                     <div class="credit-item">
@@ -108,9 +126,10 @@
         </section>
 
         <section class="split">
-            <div class="panel" style="border-color: rgba(53,229,239,.6); box-shadow: inset 0 0 26px rgba(34,211,238,.2), 0 0 28px rgba(34,211,238,.16);">
+            <div class="panel dashboard-panel dashboard-recent-panel">
                 <h2>Recent Try-On</h2>
-                <table>
+                <div class="table-wrap">
+                <table class="dashboard-table">
                     <thead>
                         <tr>
                             <th>Request ID</th>
@@ -195,32 +214,36 @@
                         @endforelse
                     </tbody>
                 </table>
+                </div>
             </div>
         </section>
     </main>
 </div>
 
-<div id="requestModal" class="modal-backdrop" role="dialog" aria-modal="true" aria-hidden="true">
-    <div class="modal-card">
-        <div class="modal-header">
+<div id="requestModal" class="modal-backdrop request-modal-backdrop" role="dialog" aria-modal="true" aria-hidden="true">
+    <div class="modal-card request-modal-card">
+        <div class="modal-header request-modal-header">
             <h3 class="modal-title">Request Details</h3>
-            <button type="button" id="requestModalClose" class="modal-close">&times;</button>
+            <button type="button" id="requestModalClose" class="modal-close request-modal-close" aria-label="Close request details">&times;</button>
         </div>
-        <div class="modal-grid">
-            <div class="modal-kv"><div class="k">Request ID</div><div class="v" id="mRequestId">-</div></div>
-            <div class="modal-kv"><div class="k">Model</div><div class="v" id="mModel">-</div></div>
-            <div class="modal-kv"><div class="k">Status</div><div class="v" id="mStatus">-</div></div>
-            <div class="modal-kv"><div class="k">Credits</div><div class="v" id="mCredits">0</div></div>
-            <div class="modal-kv"><div class="k">Product</div><div class="v" id="mProduct">-</div></div>
-            <div class="modal-kv"><div class="k">IP</div><div class="v" id="mIp">-</div></div>
-            <div class="modal-kv"><div class="k">Created at</div><div class="v" id="mCreated">-</div></div>
-        </div>
-        <div class="modal-tabs">
-            <button type="button" class="tab-btn active" data-tab="tabInput">Input</button>
+        <div class="modal-tabs request-modal-tabs">
+            <button type="button" class="tab-btn active" data-tab="tabRequestInfo">Request Info</button>
+            <button type="button" class="tab-btn" data-tab="tabInput">Input</button>
             <button type="button" class="tab-btn" data-tab="tabOutput">Output</button>
         </div>
-        <section id="tabInput" class="tab-content active">
-            <div class="image-grid">
+        <section id="tabRequestInfo" class="tab-content request-tab-content active">
+            <div class="modal-grid request-modal-grid">
+                <div class="modal-kv"><div class="k">Request ID</div><div class="v" id="mRequestId">-</div></div>
+                <div class="modal-kv"><div class="k">Model</div><div class="v" id="mModel">-</div></div>
+                <div class="modal-kv"><div class="k">Status</div><div class="v" id="mStatus">-</div></div>
+                <div class="modal-kv"><div class="k">Credits</div><div class="v" id="mCredits">0</div></div>
+                <div class="modal-kv"><div class="k">Product</div><div class="v" id="mProduct">-</div></div>
+                <div class="modal-kv"><div class="k">IP</div><div class="v" id="mIp">-</div></div>
+                <div class="modal-kv"><div class="k">Created at</div><div class="v" id="mCreated">-</div></div>
+            </div>
+        </section>
+        <section id="tabInput" class="tab-content request-tab-content">
+            <div class="image-grid request-image-grid">
                 <div class="image-block">
                     <h4>Model</h4>
                     <img id="mModelImage" src="" alt="Model image">
@@ -232,23 +255,24 @@
                     <div id="mProductImageEmpty" class="image-empty" style="display:none;">No image</div>
                 </div>
             </div>
-            <div class="json-box"><pre id="mRequestJson">{}</pre></div>
+            <div class="json-box request-json-box"><pre id="mRequestJson">{}</pre></div>
         </section>
-        <section id="tabOutput" class="tab-content">
-            <div class="image-grid">
+        <section id="tabOutput" class="tab-content request-tab-content">
+            <div class="image-grid request-image-grid">
                 <div class="image-block">
                     <h4>Output</h4>
                     <img id="mOutputImage" src="" alt="Output image">
                     <div id="mOutputImageEmpty" class="image-empty" style="display:none;">No output image</div>
                 </div>
             </div>
-            <div class="json-box"><pre id="mResponseJson">{}</pre></div>
+            <div class="json-box request-json-box"><pre id="mResponseJson">{}</pre></div>
         </section>
     </div>
 </div>
 
 <script>
     const dashboardModelSelect = document.getElementById('dashboardModelSelect');
+    const modelChoiceButtons = document.querySelectorAll('[data-model-choice]');
     const dashboardModelStatus = document.getElementById('dashboardModelStatus');
     const modelMetaLabel2 = document.getElementById('modelMetaLabel2');
     const modelMetaValue1 = document.getElementById('modelMetaValue1');
@@ -271,46 +295,69 @@
         modelMetaValue3.textContent = String((config.format || 'png')).toUpperCase();
     };
 
-    if (dashboardModelSelect) {
-        dashboardModelSelect.addEventListener('change', async () => {
-            const selectedModel = dashboardModelSelect.value;
-            const previousModel = dashboardModelSelect.dataset.current || selectedModel;
-            dashboardModelSelect.disabled = true;
-            dashboardModelStatus.className = 'model-update-status';
-            dashboardModelStatus.textContent = 'Updating model...';
+    const setActiveModelButton = (model) => {
+        modelChoiceButtons.forEach((btn) => {
+            const isActive = btn.dataset.modelChoice === model;
+            btn.classList.toggle('is-active', isActive);
+            btn.setAttribute('aria-pressed', isActive ? 'true' : 'false');
+        });
+    };
 
-            try {
-                const response = await fetch(@json(route('seller.dashboard.model.update')), {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Accept': 'application/json',
-                        'X-CSRF-TOKEN': csrfToken,
-                    },
-                    body: JSON.stringify({
-                        fashn_model: selectedModel,
-                    }),
-                });
+    if (dashboardModelSelect && modelChoiceButtons.length > 0) {
+        dashboardModelSelect.dataset.current = dashboardModelSelect.value;
 
-                const payload = await response.json();
-                if (!response.ok || !payload.ok) {
-                    throw new Error(payload.message || 'Gagal update model.');
+        modelChoiceButtons.forEach((btn) => {
+            btn.addEventListener('click', async () => {
+                const selectedModel = btn.dataset.modelChoice;
+                const previousModel = dashboardModelSelect.dataset.current || dashboardModelSelect.value;
+
+                if (!selectedModel || selectedModel === previousModel) {
+                    return;
                 }
 
-                dashboardModelSelect.dataset.current = payload.model;
-                updateModelMeta(payload.model, payload.config || {});
-                dashboardModelStatus.className = 'model-update-status ok';
-                dashboardModelStatus.textContent = 'Model aktif berhasil diperbarui.';
-            } catch (error) {
-                dashboardModelSelect.value = previousModel;
-                dashboardModelStatus.className = 'model-update-status fail';
-                dashboardModelStatus.textContent = error.message || 'Gagal update model.';
-            } finally {
-                dashboardModelSelect.disabled = false;
-            }
-        });
+                modelChoiceButtons.forEach((item) => {
+                    item.disabled = true;
+                });
+                setActiveModelButton(selectedModel);
+                dashboardModelStatus.className = 'model-update-status';
+                dashboardModelStatus.textContent = 'Updating model...';
 
-        dashboardModelSelect.dataset.current = dashboardModelSelect.value;
+                try {
+                    const response = await fetch(@json(route('seller.dashboard.model.update')), {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Accept': 'application/json',
+                            'X-CSRF-TOKEN': csrfToken,
+                        },
+                        body: JSON.stringify({
+                            fashn_model: selectedModel,
+                        }),
+                    });
+
+                    const payload = await response.json();
+                    if (!response.ok || !payload.ok) {
+                        throw new Error(payload.message || 'Gagal update model.');
+                    }
+
+                    dashboardModelSelect.value = payload.model;
+                    dashboardModelSelect.dataset.current = payload.model;
+                    setActiveModelButton(payload.model);
+                    updateModelMeta(payload.model, payload.config || {});
+                    dashboardModelStatus.className = 'model-update-status ok';
+                    dashboardModelStatus.textContent = 'Model aktif berhasil diperbarui.';
+                } catch (error) {
+                    dashboardModelSelect.value = previousModel;
+                    setActiveModelButton(previousModel);
+                    dashboardModelStatus.className = 'model-update-status fail';
+                    dashboardModelStatus.textContent = error.message || 'Gagal update model.';
+                } finally {
+                    modelChoiceButtons.forEach((item) => {
+                        item.disabled = false;
+                    });
+                }
+            });
+        });
     }
 
     const requestModal = document.getElementById('requestModal');
@@ -370,8 +417,8 @@
 
             tabButtons.forEach((tabBtn) => tabBtn.classList.remove('active'));
             tabContents.forEach((content) => content.classList.remove('active'));
-            document.querySelector('[data-tab="tabInput"]').classList.add('active');
-            document.getElementById('tabInput').classList.add('active');
+            document.querySelector('[data-tab="tabRequestInfo"]').classList.add('active');
+            document.getElementById('tabRequestInfo').classList.add('active');
 
             requestModal.classList.add('open');
             requestModal.setAttribute('aria-hidden', 'false');
@@ -407,5 +454,3 @@
 </script>
 </body>
 </html>
-
-
