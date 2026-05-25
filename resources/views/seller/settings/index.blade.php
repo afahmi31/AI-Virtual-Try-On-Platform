@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Settings - Try-On Commerce Studio</title>
+    <title>{{ __('ui.settings.title') }} - Try-On Commerce Studio</title>
     @php
         $settingsFavicon = trim((string) ($seller->seo_logo_url ?? ''));
         $settingsFaviconVersion = (string) ($seller->updated_at?->timestamp ?? time());
@@ -200,7 +200,29 @@
     }
 
     .settings-page .store-profile-panel {
-        max-width: 520px;
+        width: 100%;
+        max-width: 360px;
+    }
+
+    .settings-page .store-locale-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 360px);
+        gap: 18px;
+        align-items: start;
+        justify-content: start;
+    }
+
+    .settings-page .locale-card-title {
+        margin: 0;
+        font-size: 20px;
+        line-height: 1.15;
+        color: #163a5d;
+    }
+
+    .settings-page .locale-panel {
+        width: 100%;
+        max-width: 360px;
+        justify-self: start;
     }
 
     .settings-page .store-profile-head {
@@ -466,6 +488,10 @@
             font-size: 24px;
         }
 
+        .settings-page .store-locale-grid {
+            grid-template-columns: 1fr;
+        }
+
         .settings-page .submit-wrap {
             position: static;
         }
@@ -505,19 +531,19 @@
         </a>
         <form method="POST" action="{{ route('logout') }}">
             @csrf
-            <button type="submit">Logout</button>
+            <button type="submit">{{ __('ui.common.logout') }}</button>
         </form>
     </nav>
 </header>
 <div class="layout">
     <aside class="sidebar">
-        <a class="menu-item" href="{{ route('seller.dashboard') }}"><span>Dashboard</span></a>
-        <a class="menu-item" href="{{ route('seller.products.index') }}"><span>Products</span></a>
-        <a class="menu-item active" href="{{ route('seller.settings.index') }}"><span>Settings</span></a>
+        <a class="menu-item" href="{{ route('seller.dashboard') }}"><span>{{ __('ui.common.dashboard') }}</span></a>
+        <a class="menu-item" href="{{ route('seller.products.index') }}"><span>{{ __('ui.common.products') }}</span></a>
+        <a class="menu-item active" href="{{ route('seller.settings.index') }}"><span>{{ __('ui.common.settings') }}</span></a>
     </aside>
     <main class="content">
-        <h1>Settings</h1>
-        <p class="page-subtitle">Konfigurasi store, kredensial FASHN, dan limit generate.</p>
+        <h1>{{ __('ui.settings.title') }}</h1>
+        <p class="page-subtitle">{{ __('ui.settings.subtitle') }}</p>
         @if(session('success'))
             <div class="flash">{{ session('success') }}</div>
         @endif
@@ -747,56 +773,76 @@
                     </div>
                 </section>
 
-                <section class="panel store-profile-panel">
+                <div class="store-locale-grid">
                     @php
                         $sellerSlug = old('seller_slug', $seller->slug);
                         $sellerSeoTitle = old('seo_title', $seller->seo_title ?? '');
                         $sellerSeoDescription = old('seo_description', $seller->seo_description ?? '');
                         $sellerSeoLogoUrl = trim((string) ($seller->seo_logo_url ?? ''));
                         $storeUrlPreview = url('/' . $sellerSlug);
+                        $selectedLocale = old('ui_locale', $seller->ui_locale ?? 'id');
                     @endphp
-                    <div class="store-profile-head">
-                        <div class="store-profile-icon" aria-hidden="true">
-                            <svg viewBox="0 0 24 24">
-                                <path d="M3 9l2-4h14l2 4"></path>
-                                <path d="M4 9h16v10a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V9z"></path>
-                                <path d="M9 20v-5h6v5"></path>
-                            </svg>
-                        </div>
-                        <div>
-                            <h2 class="store-profile-title">Profil Toko</h2>
-                        </div>
-                    </div>
-                    <hr class="store-profile-divider">
-                    <label class="store-logo-upload" for="storeLogoFileInput" title="Klik untuk upload logo">
-                        <div class="store-logo-preview" aria-hidden="true">
-                            @if($sellerSeoLogoUrl)
-                                <img id="storeLogoPreviewImage" src="{{ $sellerSeoLogoUrl }}" alt="Store Logo Preview">
-                                <span id="storeLogoPlaceholder" class="store-logo-placeholder" style="display:none;">IMG</span>
-                            @else
-                                <img id="storeLogoPreviewImage" src="" alt="Store Logo Preview" style="display:none;">
-                                <span id="storeLogoPlaceholder" class="store-logo-placeholder">IMG</span>
-                            @endif
-                        </div>
-                    </label>
-                    <input type="file" id="storeLogoFileInput" name="seo_logo_file" accept=".jpg,.jpeg,.png,.webp" style="display:none;">
-                    <div class="row">
-                        <label>URL Store</label>
-                        <input type="text" name="seller_slug" value="{{ $sellerSlug }}" placeholder="contoh: ceriakid" required>
-                        <div class="hint">URL : {{ $storeUrlPreview }}</div>
-                    </div>
-                    <div class="row">
-                        <label>Nama Toko</label>
-                        <input type="text" name="seo_title" value="{{ $sellerSeoTitle }}" placeholder="Judul SEO halaman seller">
-                    </div>
-                    <div class="row">
-                        <label>Description</label>
-                        <input type="text" name="seo_description" value="{{ $sellerSeoDescription }}" placeholder="Deskripsi SEO halaman seller">
-                    </div>
-                </section>
+                        <section class="panel store-profile-panel">
+                            <div class="store-profile-head">
+                                <div class="store-profile-icon" aria-hidden="true">
+                                    <svg viewBox="0 0 24 24">
+                                        <path d="M3 9l2-4h14l2 4"></path>
+                                        <path d="M4 9h16v10a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V9z"></path>
+                                        <path d="M9 20v-5h6v5"></path>
+                                    </svg>
+                                </div>
+                                <div>
+                                    <h2 class="store-profile-title">{{ __('ui.settings.store_profile_title') }}</h2>
+                                </div>
+                            </div>
+                            <hr class="store-profile-divider">
+                            <label class="store-logo-upload" for="storeLogoFileInput" title="Klik untuk upload logo">
+                                <div class="store-logo-preview" aria-hidden="true">
+                                    @if($sellerSeoLogoUrl)
+                                        <img id="storeLogoPreviewImage" src="{{ $sellerSeoLogoUrl }}" alt="Store Logo Preview">
+                                        <span id="storeLogoPlaceholder" class="store-logo-placeholder" style="display:none;">IMG</span>
+                                    @else
+                                        <img id="storeLogoPreviewImage" src="" alt="Store Logo Preview" style="display:none;">
+                                        <span id="storeLogoPlaceholder" class="store-logo-placeholder">IMG</span>
+                                    @endif
+                                </div>
+                            </label>
+                            <input type="file" id="storeLogoFileInput" name="seo_logo_file" accept=".jpg,.jpeg,.png,.webp" style="display:none;">
+                            <div class="row">
+                                <label>URL Store</label>
+                                <input type="text" name="seller_slug" value="{{ $sellerSlug }}" placeholder="contoh: ceriakid" required>
+                                <div class="hint">URL : {{ $storeUrlPreview }}</div>
+                            </div>
+                            <div class="row">
+                                <label>Nama Toko</label>
+                                <input type="text" name="seo_title" value="{{ $sellerSeoTitle }}" placeholder="Judul SEO halaman seller">
+                            </div>
+                            <div class="row">
+                                <label>Description</label>
+                                <input type="text" name="seo_description" value="{{ $sellerSeoDescription }}" placeholder="Deskripsi SEO halaman seller">
+                            </div>
+                        </section>
+
+                        <section class="panel locale-panel">
+                            <h2 class="locale-card-title">{{ __('ui.settings.language') }}</h2>
+                            <div class="hint">{{ __('ui.settings.language_help') }}</div>
+                            <div class="row" style="margin-top: 12px;">
+                                <div class="pill-group" role="radiogroup" aria-label="{{ __('ui.settings.language') }}">
+                                    <label class="pill-option">
+                                        <input type="radio" name="ui_locale" value="id" {{ $selectedLocale === 'id' ? 'checked' : '' }} required>
+                                        <span class="pill-chip">{{ __('ui.settings.language_options.id') }}</span>
+                                    </label>
+                                    <label class="pill-option">
+                                        <input type="radio" name="ui_locale" value="en" {{ $selectedLocale === 'en' ? 'checked' : '' }}>
+                                        <span class="pill-chip">{{ __('ui.settings.language_options.en') }}</span>
+                                    </label>
+                                </div>
+                            </div>
+                        </section>
+                </div>
             </div>
             <div class="submit-wrap">
-                <button type="submit" class="btn btn-save">Save Settings</button>
+                <button type="submit" class="btn btn-save">{{ __('ui.common.save') }} Settings</button>
             </div>
         </form>
     </main>

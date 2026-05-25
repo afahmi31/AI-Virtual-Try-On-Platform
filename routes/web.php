@@ -17,7 +17,7 @@ Route::middleware('guest')->group(function (): void {
 
 Route::post('/logout', [WebAuthController::class, 'logout'])->middleware('auth')->name('logout');
 
-Route::prefix('dashboard')->middleware(['auth', 'role:seller'])->group(function (): void {
+Route::prefix('dashboard')->middleware(['auth', 'seller.locale', 'role:seller'])->group(function (): void {
     Route::get('/', [SellerDashboardController::class, 'index'])->name('seller.dashboard');
     Route::post('/model', [SellerDashboardController::class, 'updateModel'])->name('seller.dashboard.model.update');
     Route::get('/products', [SellerProductController::class, 'index'])->name('seller.products.index');
@@ -30,7 +30,7 @@ Route::prefix('dashboard')->middleware(['auth', 'role:seller'])->group(function 
     Route::post('/products/{productId}/images', [SellerProductController::class, 'addImage'])->name('seller.products.images.store');
 });
 
-Route::prefix('{seller_slug}/try-on')->group(function (): void {
+Route::prefix('{seller_slug}/try-on')->middleware('seller.locale')->group(function (): void {
     Route::post('/sessions', [TryOnPublicController::class, 'store'])
         ->name('public.tryon.sessions.store');
 
@@ -45,7 +45,7 @@ Route::prefix('{seller_slug}/try-on')->group(function (): void {
         ->name('public.tryon.sessions.history');
 });
 
-Route::get('/{seller_slug}/{product_ref?}', [SellerPublicController::class, 'index'])
+Route::get('/{seller_slug}/{product_ref?}', [SellerPublicController::class, 'index'])->middleware('seller.locale')
     ->where('seller_slug', '^(?!admin$|dashboard$|api$|login$|logout$)[A-Za-z0-9\-]+$')
     ->where('product_ref', '[A-Za-z0-9\-]+')
     ->name('public.seller.page');

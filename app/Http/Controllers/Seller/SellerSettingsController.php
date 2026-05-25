@@ -48,6 +48,7 @@ class SellerSettingsController extends Controller
             'seo_title' => ['nullable', 'string', 'max:255'],
             'seo_description' => ['nullable', 'string', 'max:500'],
             'seo_logo_file' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:4096'],
+            'ui_locale' => ['required', 'in:id,en'],
             'fashn_api_key' => ['nullable', 'string', 'max:500'],
             'fashn_model' => ['required', 'in:tryon-v1.6,tryon-max'],
             'fashn_tryon_max_generation_mode' => ['nullable', 'in:balanced,quality'],
@@ -106,6 +107,7 @@ class SellerSettingsController extends Controller
 
             $seller->seo_logo_url = asset('uploads/seller-logos/'.$filename);
         }
+        $seller->ui_locale = (string) $payload['ui_locale'];
         $seller->save();
 
         $setting = SellerAiSetting::query()->firstOrNew(['seller_id' => $seller->id]);
@@ -133,7 +135,7 @@ class SellerSettingsController extends Controller
         $setting->public_limit_per_device_enabled = $limitPerDeviceEnabled;
         $setting->save();
 
-        return redirect()->route('seller.settings.index')->with('success', 'FASHN setting berhasil disimpan.');
+        return redirect()->route('seller.settings.index')->with('success', __('ui.settings.saved'));
     }
 
     public function testApiKey(Request $request): JsonResponse

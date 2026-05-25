@@ -6,8 +6,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     @php
-        $seoTitle = trim((string) ($seller->seo_title ?? '')) ?: ('Katalog Produk '.$seller->store_name);
-        $seoDescription = trim((string) ($seller->seo_description ?? '')) ?: ('Belanja produk terbaik dari '.$seller->store_name.'.');
+        $seoTitle = trim((string) ($seller->seo_title ?? '')) ?: (__('ui.common.products').' '.$seller->store_name);
+        $seoDescription = trim((string) ($seller->seo_description ?? '')) ?: ('Best products from '.$seller->store_name.'.');
         $seoImage = trim((string) ($seller->seo_logo_url ?? ''));
         $canonicalUrl = route('public.seller.page', ['seller_slug' => $seller->slug]);
         $faviconVersion = (string) ($seller->updated_at?->timestamp ?? time());
@@ -986,7 +986,7 @@
     <div class="topbar-wrap">
         <header class="topbar">
             <div class="brand">
-                <span class="brand-label">Katalog Produk</span>
+                <span class="brand-label">{{ __('ui.common.products') }}</span>
             </div>
         </header>
     </div>
@@ -999,9 +999,9 @@
                     type="search"
                     name="q"
                     value="{{ $activeFilters['q'] }}"
-                    placeholder="Cari produk, slug, atau SKU...">
+                    placeholder="{{ __('ui.store.search_placeholder') }}">
                 <select class="catalog-field" name="category">
-                    <option value="">Semua Kategori</option>
+                    <option value="">{{ __('ui.store.all_categories') }}</option>
                     @foreach ($categories as $categoryOption)
                         <option value="{{ $categoryOption }}" {{ $activeFilters['category'] === $categoryOption ? 'selected' : '' }}>
                             {{ $categoryOption }}
@@ -1009,17 +1009,17 @@
                     @endforeach
                 </select>
                 <select class="catalog-field" name="sort">
-                    <option value="latest" {{ $activeFilters['sort'] === 'latest' ? 'selected' : '' }}>Terbaru</option>
-                    <option value="name_asc" {{ $activeFilters['sort'] === 'name_asc' ? 'selected' : '' }}>Nama A-Z</option>
-                    <option value="name_desc" {{ $activeFilters['sort'] === 'name_desc' ? 'selected' : '' }}>Nama Z-A</option>
+                    <option value="latest" {{ $activeFilters['sort'] === 'latest' ? 'selected' : '' }}>{{ __('ui.store.sort_latest') }}</option>
+                    <option value="name_asc" {{ $activeFilters['sort'] === 'name_asc' ? 'selected' : '' }}>{{ __('ui.store.sort_name_asc') }}</option>
+                    <option value="name_desc" {{ $activeFilters['sort'] === 'name_desc' ? 'selected' : '' }}>{{ __('ui.store.sort_name_desc') }}</option>
                 </select>
-                <button class="catalog-btn" type="submit">Terapkan</button>
-                <a class="catalog-btn catalog-btn-ghost" href="{{ route('public.seller.page', ['seller_slug' => $seller->slug]) }}">Reset</a>
+                <button class="catalog-btn" type="submit">{{ __('ui.store.apply') }}</button>
+                <a class="catalog-btn catalog-btn-ghost" href="{{ route('public.seller.page', ['seller_slug' => $seller->slug]) }}">{{ __('ui.store.reset') }}</a>
             </form>
         </div>
 
 @if($products->isEmpty())
-        <div class="empty">Belum ada produk aktif.</div>
+        <div class="empty">{{ __('ui.products_page.no_products') }}</div>
         @else
         <section class="grid" id="productGrid">
             @foreach ($products as $product)
@@ -1053,7 +1053,7 @@
         </section>
         <div class="catalog-footer-row">
             <p class="catalog-meta">
-                Menampilkan {{ $products->count() }} dari total {{ $products->total() }} produk aktif.
+                {{ __('ui.store.showing_summary', ['count' => $products->count(), 'total' => $products->total()]) }}
             </p>
             @if ($products->lastPage() > 1)
             @php
@@ -1086,16 +1086,16 @@
             @endif
         </div>
         @endif
-        <button id="floatingHistoryBtn" type="button" class="floating-history-btn" aria-label="Lihat riwayat try-on">
+        <button id="floatingHistoryBtn" type="button" class="floating-history-btn" aria-label="{{ __('ui.store.history_button_aria') }}">
             &#128340;
         </button>
         <div id="floatingHistoryPanel" class="floating-history-panel" aria-hidden="true">
             <div class="floating-history-header">
-                <p class="floating-history-title">Riwayat Try-On</p>
-                <button id="floatingHistoryClose" type="button" class="floating-history-close" aria-label="Tutup riwayat">&times;</button>
+                <p class="floating-history-title">{{ __('ui.store.history_title') }}</p>
+                <button id="floatingHistoryClose" type="button" class="floating-history-close" aria-label="{{ __('ui.common.close') }}">&times;</button>
             </div>
             <div id="floatingHistoryList" class="history-list"></div>
-            <p id="floatingHistoryEmpty" class="history-empty">Belum ada riwayat generate.</p>
+            <p id="floatingHistoryEmpty" class="history-empty">{{ __('ui.store.no_history') }}</p>
         </div>
     </main>
 
@@ -1103,20 +1103,20 @@
         <div class="modal" role="dialog" aria-modal="true" aria-labelledby="tryOnModalTitle">
             <div class="modal-header">
                 <div class="modal-title-row">
-                    <h2 class="modal-title" id="tryOnModalTitle">Try-On Tool</h2>
+                    <h2 class="modal-title" id="tryOnModalTitle">{{ __('ui.store.tryon_tool_title') }}</h2>
                     @if (($tryOnDummy['enabled'] ?? false) === true)
-                        <span class="dummy-mode-badge">Dummy Mode</span>
+                        <span class="dummy-mode-badge">{{ __('ui.store.dummy_mode') }}</span>
                     @endif
                 </div>
-                <button type="button" class="modal-close" onclick="closeTryOnModal()" aria-label="Tutup">&times;</button>
+                <button type="button" class="modal-close" onclick="closeTryOnModal()" aria-label="{{ __('ui.common.close') }}">&times;</button>
             </div>
 
             <div class="modal-info-grid">
                 <div id="selectedProductInfo" class="selected-product">
-                    Produk: <strong id="selectedProductName">Belum dipilih</strong>
+                    {{ __('ui.common.products') }}: <strong id="selectedProductName">-</strong>
                 </div>
                 <div id="quotaBox" class="quota-box">
-                    Sisa generate hari ini: <strong id="remainingQuotaText">-</strong>
+                    {{ __('ui.store.quota_today_remaining') }}: <strong id="remainingQuotaText">-</strong>
                 </div>
             </div>
 
@@ -1126,29 +1126,29 @@
                 <div class="tryon-left-rail">
                     <div class="field">
                         <div class="tryon-panel-head">
-                            <label class="label">Product Photo</label>
+                            <label class="label">{{ __('ui.store.product_photo') }}</label>
                         </div>
-                        <div class="selected-product-thumb preview-box preview-box-product" aria-label="Preview produk terpilih">
-                            <img id="selectedProductPreview" alt="Produk terpilih" style="display:none;">
-                            <span id="selectedProductPreviewFallback" class="selected-product-thumb-fallback">No Image</span>
+                        <div class="selected-product-thumb preview-box preview-box-product" aria-label="{{ __('ui.store.selected_product_alt') }}">
+                            <img id="selectedProductPreview" alt="{{ __('ui.store.selected_product_alt') }}" style="display:none;">
+                            <span id="selectedProductPreviewFallback" class="selected-product-thumb-fallback">{{ __('ui.store.no_image') }}</span>
                         </div>
                     </div>
 
                     <div class="field">
                         <div class="model-footer-row">
-                            <label class="label">Model Photo</label>
+                            <label class="label">{{ __('ui.store.model_photo') }}</label>
                             <label class="dummy-toggle" id="dummyModelToggleWrap" style="display:none;">
                                 <input type="checkbox" id="useDummyModelToggle">
                                 <span class="dummy-toggle-switch" aria-hidden="true"></span>
-                                <span class="dummy-toggle-text">Use Dummy</span>
+                                <span class="dummy-toggle-text">{{ __('ui.store.use_dummy') }}</span>
                             </label>
                         </div>
                         <div class="preview-box preview-box-model">
                             <img id="customerPreview" alt="Customer preview">
-                            <button id="removePhotoBtn" class="preview-remove" type="button" aria-label="Hapus foto">&times;</button>
+                            <button id="removePhotoBtn" class="preview-remove" type="button" aria-label="{{ __('ui.store.remove_photo_aria') }}">&times;</button>
                             <div id="customerPlaceholder" class="preview-placeholder">
-                                <p>Upload foto</p>
-                                <button type="button" class="upload-trigger" onclick="document.getElementById('customerPhoto').click()">Pilih File</button>
+                                <p>{{ __('ui.store.upload_photo') }}</p>
+                                <button type="button" class="upload-trigger" onclick="document.getElementById('customerPhoto').click()">{{ __('ui.store.choose_file') }}</button>
                             </div>
                         </div>
                     </div>
@@ -1156,8 +1156,8 @@
 
                 <div class="field tryon-generated-field">
                     <div class="tryon-panel-head">
-                        <label class="label">Try-On Generated</label>
-                        <span class="ready-badge">Ready</span>
+                        <label class="label">{{ __('ui.store.tryon_generated') }}</label>
+                        <span class="ready-badge">{{ __('ui.store.ready') }}</span>
                     </div>
                     <div class="preview-box preview-box-result">
                         <img id="resultPreview" alt="Try-on result">
@@ -1167,11 +1167,27 @@
                 </div>
             </div>
 
-            <button id="generateBtn" class="generate-btn" type="button" onclick="submitTryOn()">Try-On</button>
+            <button id="generateBtn" class="generate-btn" type="button" onclick="submitTryOn()">{{ __('ui.store.tryon_action') }}</button>
         </div>
     </div>
 
     <script>
+        const I18N = {
+            selectProductFirst: @json(__('ui.store.select_product_first')),
+            generateDone: @json(__('ui.store.generate_done')),
+            uploadModelFirst: @json(__('ui.store.upload_model_first')),
+            dailyLimitReached: @json(__('ui.store.daily_limit_reached')),
+            failedCreateSession: @json(__('ui.store.failed_create_session')),
+            failedCheckStatus: @json(__('ui.store.failed_check_status')),
+            failedPolling: @json(__('ui.store.failed_polling')),
+            historyResultShown: @json(__('ui.store.history_result_shown')),
+            historyItemAria: @json(__('ui.store.history_button_aria')),
+            historyImageAlt: @json(__('ui.store.tryon_generated')),
+            dummyModelUrlMissing: @json(__('ui.store.dummy_model_url_missing')),
+            dummyResultUrlMissing: @json(__('ui.store.dummy_result_url_missing')),
+            processingRetryLater: @json(__('ui.store.processing_retry_later')),
+        };
+
         let selectedProductId = @json(optional($selectedProduct)->id);
         let pollTimer = null;
         const TRYON_DEVICE_KEY = 'tryon_device_id_v1';
@@ -1203,7 +1219,7 @@
             cards.forEach((card) => card.classList.remove('selected'));
             el.classList.add('selected');
 
-            const productName = el.getAttribute('data-product-name') || 'Belum dipilih';
+            const productName = el.getAttribute('data-product-name') || '-';
             const productImage = el.getAttribute('data-product-image') || '';
             selectedProductId = Number(el.getAttribute('data-product-id')) || null;
             const productSlug = el.getAttribute('data-product-slug');
@@ -1367,7 +1383,7 @@
             resultPreview.src = url;
             resultPreview.style.display = 'block';
             resultPlaceholder.style.display = 'none';
-            setStatus('Menampilkan hasil dari riwayat.', 'success');
+            setStatus(I18N.historyResultShown, 'success');
         }
 
         function renderHistory(items) {
@@ -1393,11 +1409,11 @@
                 const btn = document.createElement('button');
                 btn.type = 'button';
                 btn.className = 'history-item';
-                btn.setAttribute('aria-label', 'Lihat hasil riwayat');
+                btn.setAttribute('aria-label', I18N.historyItemAria);
 
                 const img = document.createElement('img');
                 img.src = item.result_url;
-                img.alt = 'Riwayat hasil try-on';
+                img.alt = I18N.historyImageAlt;
 
                 const time = document.createElement('span');
                 time.className = 'history-item-time';
@@ -1435,11 +1451,11 @@
                 const btn = document.createElement('button');
                 btn.type = 'button';
                 btn.className = 'history-item';
-                btn.setAttribute('aria-label', 'Lihat hasil riwayat');
+                btn.setAttribute('aria-label', I18N.historyItemAria);
 
                 const img = document.createElement('img');
                 img.src = item.result_url;
-                img.alt = 'Riwayat hasil try-on';
+                img.alt = I18N.historyImageAlt;
 
                 const time = document.createElement('span');
                 time.className = 'history-item-time';
@@ -1511,7 +1527,7 @@
             el.textContent = `${remaining} / ${limit}`;
 
             if (remaining <= 0) {
-                setStatus('Batas generate harian sudah habis (0).', 'error');
+                setStatus(I18N.dailyLimitReached, 'error');
             }
 
             const btn = document.getElementById('generateBtn');
@@ -1627,26 +1643,26 @@
             const csrf = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
 
             if (!selectedProductId) {
-                setStatus('Pilih produk terlebih dahulu.', 'error');
+                setStatus(I18N.selectProductFirst, 'error');
                 return;
             }
 
             if (TRYON_DUMMY.enabled) {
                 if (!TRYON_DUMMY.model_image_url) {
-                    setStatus('Dummy aktif, tetapi Dummy Model Image URL belum diisi.', 'error');
-                    showResultPlaceholderMessage('Dummy Model Image URL belum diisi.', 'error');
+                    setStatus(I18N.dummyModelUrlMissing, 'error');
+                    showResultPlaceholderMessage(I18N.dummyModelUrlMissing, 'error');
                     return;
                 }
 
                 if (!TRYON_DUMMY.result_url) {
-                    setStatus('Dummy aktif, tetapi Dummy Result URL belum diisi.', 'error');
-                    showResultPlaceholderMessage('Dummy Result URL belum diisi.', 'error');
+                    setStatus(I18N.dummyResultUrlMissing, 'error');
+                    showResultPlaceholderMessage(I18N.dummyResultUrlMissing, 'error');
                     return;
                 }
 
                 if (remainingDailyQuota !== null && remainingDailyQuota <= 0) {
-                    setStatus('Batas generate harian sudah habis (0).', 'error');
-                    showResultPlaceholderMessage('Batas generate harian sudah habis.', 'error');
+                    setStatus(I18N.dailyLimitReached, 'error');
+                    showResultPlaceholderMessage(I18N.dailyLimitReached, 'error');
                     setLoading(false);
                     return;
                 }
@@ -1663,7 +1679,7 @@
                 resultPreview.style.display = 'block';
                 resultPlaceholder.style.display = 'none';
                 consumeDummyQuotaUI();
-                setStatus('Generate selesai.', 'success');
+                setStatus(I18N.generateDone, 'success');
                 setLoading(false);
                 refreshHistory();
                 return;
@@ -1672,14 +1688,14 @@
             const useDummyModelImage = Boolean(TRYON_DUMMY.model_image_url) && useDummyModelForRealGenerate;
             const file = customerPhotoInput.files && customerPhotoInput.files[0] ? customerPhotoInput.files[0] : null;
             if (!useDummyModelImage && (!file || !customerPreview.getAttribute('src'))) {
-                setStatus('Upload foto model terlebih dahulu.', 'error');
-                showResultPlaceholderMessage('Upload foto model terlebih dahulu.', 'error');
+                setStatus(I18N.uploadModelFirst, 'error');
+                showResultPlaceholderMessage(I18N.uploadModelFirst, 'error');
                 return;
             }
 
             if (remainingDailyQuota !== null && remainingDailyQuota <= 0) {
-                setStatus('Batas generate harian sudah habis (0).', 'error');
-                showResultPlaceholderMessage('Batas generate harian sudah habis.', 'error');
+                setStatus(I18N.dailyLimitReached, 'error');
+                showResultPlaceholderMessage(I18N.dailyLimitReached, 'error');
                 setLoading(false);
                 return;
             }
@@ -1713,7 +1729,7 @@
                     if (createPayload.quota) {
                         updateQuotaUI(createPayload.quota);
                     }
-                    throw new Error(createPayload.message || 'Gagal membuat session try-on.');
+                    throw new Error(createPayload.message || I18N.failedCreateSession);
                 }
 
                 if (createPayload.quota) {
@@ -1752,7 +1768,7 @@
 
                     const payload = await response.json();
                     if (!response.ok) {
-                        throw new Error(payload.message || 'Gagal cek status try-on.');
+                        throw new Error(payload.message || I18N.failedCheckStatus);
                     }
 
                     if (payload.status === 'completed') {
@@ -1765,7 +1781,7 @@
                             resultPlaceholder.style.display = 'none';
                         }
 
-                        setStatus('Generate selesai.', 'success');
+                        setStatus(I18N.generateDone, 'success');
                         setLoading(false);
                         refreshHistory();
                         return;
@@ -1784,7 +1800,7 @@
                     if (attempts >= maxAttempts) {
                         clearInterval(pollTimer);
                         pollTimer = null;
-                        const timeoutMessage = 'Proses masih berjalan. Silakan coba lagi sebentar.';
+                        const timeoutMessage = I18N.processingRetryLater;
                         setStatus(timeoutMessage, 'error');
                         showResultPlaceholderMessage(timeoutMessage, 'error');
                         setLoading(false);
@@ -1792,7 +1808,7 @@
                 } catch (error) {
                     clearInterval(pollTimer);
                     pollTimer = null;
-                    const pollingErrorMessage = error.message || 'Gagal polling status try-on.';
+                    const pollingErrorMessage = error.message || I18N.failedPolling;
                     setStatus(pollingErrorMessage, 'error');
                     showResultPlaceholderMessage(pollingErrorMessage, 'error');
                     setLoading(false);

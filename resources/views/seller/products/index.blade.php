@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Manage Products - Try-On Commerce Studio</title>
+    <title>{{ __('ui.products_page.title') }} - Try-On Commerce Studio</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600;700&family=Inter:wght@500;600&display=swap" rel="stylesheet">
@@ -25,23 +25,23 @@
         </a>
         <form method="POST" action="{{ route('logout') }}">
             @csrf
-            <button type="submit">Logout</button>
+            <button type="submit">{{ __('ui.common.logout') }}</button>
         </form>
     </nav>
 </header>
 
 <div class="layout">
     <aside class="sidebar">
-        <a class="menu-item" href="{{ route('seller.dashboard') }}"><span>Dashboard</span></a>
-        <a class="menu-item active" href="{{ route('seller.products.index') }}"><span>Products</span></a>
-        <a class="menu-item" href="{{ route('seller.settings.index') }}"><span>Settings</span></a>
+        <a class="menu-item" href="{{ route('seller.dashboard') }}"><span>{{ __('ui.common.dashboard') }}</span></a>
+        <a class="menu-item active" href="{{ route('seller.products.index') }}"><span>{{ __('ui.common.products') }}</span></a>
+        <a class="menu-item" href="{{ route('seller.settings.index') }}"><span>{{ __('ui.common.settings') }}</span></a>
     </aside>
 
     <main class="content">
         <section class="products-hero">
             <div>
-                <h1>Kelola Produk</h1>
-                <p class="products-hero-subtitle">Kelola produk dan konfigrasi FASHN AI untuk setiap produk.</p>
+                <h1>{{ __('ui.products_page.title') }}</h1>
+                <p class="products-hero-subtitle">{{ __('ui.products_page.subtitle') }}</p>
             </div>
             <div class="products-toolbar">
                 <form method="GET" action="{{ route('seller.products.index') }}" class="products-toolbar-form">
@@ -50,7 +50,7 @@
                             <path d="M21 21l-4.35-4.35"></path>
                             <circle cx="11" cy="11" r="6"></circle>
                         </svg>
-                        <input type="text" name="q" value="{{ $search ?? '' }}" placeholder="Cari nama, slug, SKU, atau ID produk...">
+                        <input type="text" name="q" value="{{ $search ?? '' }}" placeholder="{{ __('ui.products_page.search_placeholder') }}">
                     </div>
                     <details class="filter-popover">
                         <summary class="btn btn-ghost toolbar-btn" aria-label="Filter">
@@ -93,7 +93,7 @@
                         </div>
                     </details>
                 </form>
-                <button class="btn btn-primary toolbar-add-btn" type="button" onclick="openCreateModal()">+ Tambah Produk Baru</button>
+                <button class="btn btn-primary toolbar-add-btn" type="button" onclick="openCreateModal()">+ {{ __('ui.products_page.add') }}</button>
             </div>
         </section>
 
@@ -181,7 +181,7 @@
                             </td>
                         </tr>
                     @empty
-                        <tr><td colspan="7">Belum ada produk.</td></tr>
+                        <tr><td colspan="7">{{ __('ui.products_page.no_products') }}</td></tr>
                     @endforelse
                 </tbody>
             </table>
@@ -199,15 +199,15 @@
 <div id="createModal" class="modal" onclick="closeOnBackdrop(event, 'createModal')">
     <div class="modal-card">
         <div class="modal-head">
-            <h3 class="modal-title">Create New Product</h3>
+            <h3 class="modal-title">{{ __('ui.products_page.create_title') }}</h3>
             <div class="modal-head-right">
                 <label class="status-toggle">
-                    <span>Status</span>
+                    <span>{{ __('ui.products_page.status') }}</span>
                     <input id="createStatusToggle" type="checkbox" checked>
                     <span class="status-toggle-switch"></span>
-                    <span id="createStatusLabel" class="status-toggle-label">active</span>
+                    <span id="createStatusLabel" class="status-toggle-label">{{ __('ui.common.active') }}</span>
                 </label>
-                <button class="close-btn" type="button" onclick="closeModal('createModal')">Close</button>
+                <button class="close-btn" type="button" onclick="closeModal('createModal')">{{ __('ui.common.close') }}</button>
             </div>
         </div>
         <form method="POST" action="{{ route('seller.products.store') }}" enctype="multipart/form-data">
@@ -217,29 +217,29 @@
                 <div class="product-left-col">
                     <div class="preview-wrap">
                         <img id="createImagePreview" class="preview-img" alt="Create preview">
-                        <button class="preview-change-overlay" type="button" onclick="document.getElementById('createImageFile').click()">Change Image</button>
+                        <button class="preview-change-overlay" type="button" onclick="document.getElementById('createImageFile').click()">{{ __('ui.products_page.change_image') }}</button>
                     </div>
                     <input id="createImageFile" type="file" name="image" accept="image/*" style="display:none;">
-                    <div class="url-label">Or Replace with Public URL</div>
+                    <div class="url-label">{{ __('ui.products_page.replace_public_url') }}</div>
                     <input id="createImageUrl" type="url" name="image_url" placeholder="https://...">
                 </div>
                 <div class="product-right-col">
                     <section class="form-section product-info-section">
                         <div class="form-section-head">
-                            <h4>Product Information</h4>
-                            <p>Informasi inti produk untuk katalog toko Anda.</p>
+                            <h4>{{ __('ui.products_page.product_info_title') }}</h4>
+                            <p>{{ __('ui.products_page.product_info_create_help') }}</p>
                         </div>
-                        <div class="field"><label>Product Name</label><input id="createName" name="name" required></div>
+                        <div class="field"><label>{{ __('ui.products_page.product_name') }}</label><input id="createName" name="name" required></div>
                         <div class="field"><label>SKU</label><input name="sku"></div>
-                        <div class="field"><label>Category</label><input id="createCategory" name="category" placeholder="Select Category..."></div>
+                        <div class="field"><label>{{ __('ui.products_page.category') }}</label><input id="createCategory" name="category" placeholder="{{ __('ui.products_page.category_placeholder') }}"></div>
                     </section>
                     <section class="form-section ai-config-section" id="createAiConfigSection">
                         <div class="form-section-head">
                             <div class="section-head-row">
-                                <h4>FASHN AI Configuration</h4>
-                                <button type="button" class="section-toggle-btn" onclick="toggleAiSection('createAiConfigSection', this)">Collapse</button>
+                                <h4>{{ __('ui.products_page.ai_config_title') }}</h4>
+                                <button type="button" class="section-toggle-btn" onclick="toggleAiSection('createAiConfigSection', this)">{{ __('ui.common.collapse') }}</button>
                             </div>
-                            <p>Atur metadata AI dengan tepat agar hasil generated try-on lebih akurat.</p>
+                            <p>{{ __('ui.products_page.ai_config_create_help') }}</p>
                             <div class="ai-summary" id="createAiSummary">
                                 <span id="createSummaryCategory" class="summary-chip">AI Category: auto</span>
                                 <span id="createSummaryPhotoType" class="summary-chip">Garment Photo Type: auto</span>
@@ -248,7 +248,7 @@
                         </div>
                         <div class="field">
                             <label>AI Prompt <span class="preview-hint">(Try-On Max)</span></label>
-                            <input name="ai_prompt" placeholder="Opsional, contoh: long modest muslim dress for 12-year-old girl">
+                            <input name="ai_prompt" placeholder="{{ __('ui.products_page.ai_prompt_placeholder') }}">
                         </div>
                         <div class="field">
                             <label>AI Category <span class="preview-hint">(Try-On v1.6)</span></label>
@@ -259,7 +259,7 @@
                                 <button type="button" class="pill-option" data-value="bottoms" onclick="setAiOption('create', 'category', 'bottoms')">bottoms</button>
                                 <button type="button" class="pill-option" data-value="one-pieces" onclick="setAiOption('create', 'category', 'one-pieces')">one-pieces</button>
                             </div>
-                            <div class="preview-hint">Pilih sesuai jenis utama pakaian pada foto produk agar hasil try-on lebih pas.</div>
+                            <div class="preview-hint">{{ __('ui.products_page.ai_category_hint') }}</div>
                         </div>
                         <div class="field">
                             <label>Garment Photo Type <span class="preview-hint">(Try-On v1.6)</span></label>
@@ -269,7 +269,7 @@
                                 <button type="button" class="pill-option" data-value="flat-lay" onclick="setAiOption('create', 'photoType', 'flat-lay')">flat-lay</button>
                                 <button type="button" class="pill-option" data-value="model" onclick="setAiOption('create', 'photoType', 'model')">model</button>
                             </div>
-                            <div class="preview-hint">Sesuaikan dengan tipe foto garment yang di-upload supaya bentuk baju tidak salah baca.</div>
+                            <div class="preview-hint">{{ __('ui.products_page.photo_type_hint') }}</div>
                         </div>
                         <div class="field">
                             <input type="hidden" name="ai_segmentation_free" value="0">
@@ -277,17 +277,17 @@
                                 <span>Segmentation Free <span class="preview-hint">(Try-On v1.6)</span></span>
                                 <input id="createAiSegmentationFree" type="checkbox" name="ai_segmentation_free" value="1" checked>
                                 <span class="status-toggle-switch"></span>
-                                <span class="status-toggle-label">enabled</span>
+                                <span class="status-toggle-label">{{ __('ui.common.enabled') }}</span>
                             </label>
-                            <div class="preview-hint">Aktifkan untuk membiarkan AI memproses tanpa segmentasi ketat garment, cocok untuk banyak foto katalog umum.</div>
+                            <div class="preview-hint">{{ __('ui.products_page.segmentation_hint') }}</div>
                         </div>
                     </section>
                 </div>
             </div>
             <div class="modal-bottom-row">
                 <div class="modal-actions" style="margin-top:0; margin-left:auto;">
-                    <button class="btn btn-cancel" type="button" onclick="closeModal('createModal')">Cancel</button>
-                    <button class="btn btn-primary" type="submit">Create Product</button>
+                    <button class="btn btn-cancel" type="button" onclick="closeModal('createModal')">{{ __('ui.common.cancel') }}</button>
+                    <button class="btn btn-primary" type="submit">{{ __('ui.products_page.create_action') }}</button>
                 </div>
             </div>
         </form>
@@ -297,15 +297,15 @@
 <div id="editModal" class="modal" onclick="closeOnBackdrop(event, 'editModal')">
     <div class="modal-card">
         <div class="modal-head">
-            <h3 class="modal-title">Edit Product</h3>
+            <h3 class="modal-title">{{ __('ui.products_page.edit_title') }}</h3>
             <div class="modal-head-right">
                 <label class="status-toggle">
-                    <span>Status</span>
+                    <span>{{ __('ui.products_page.status') }}</span>
                     <input id="editStatusToggle" type="checkbox" checked>
                     <span class="status-toggle-switch"></span>
-                    <span id="editStatusLabel" class="status-toggle-label">active</span>
+                    <span id="editStatusLabel" class="status-toggle-label">{{ __('ui.common.active') }}</span>
                 </label>
-                <button class="close-btn" type="button" onclick="closeModal('editModal')">Close</button>
+                <button class="close-btn" type="button" onclick="closeModal('editModal')">{{ __('ui.common.close') }}</button>
             </div>
         </div>
         <form id="editForm" method="POST" action="" enctype="multipart/form-data">
@@ -317,29 +317,29 @@
                 <div class="product-left-col">
                     <div class="preview-wrap">
                         <img id="editImagePreview" class="preview-img" alt="Edit preview">
-                        <button class="preview-change-overlay" type="button" onclick="document.getElementById('editImageFile').click()">Change Image</button>
+                        <button class="preview-change-overlay" type="button" onclick="document.getElementById('editImageFile').click()">{{ __('ui.products_page.change_image') }}</button>
                     </div>
                     <input id="editImageFile" type="file" name="image" accept="image/*" style="display:none;">
-                    <div class="url-label">Or Replace with Public URL</div>
+                    <div class="url-label">{{ __('ui.products_page.replace_public_url') }}</div>
                     <input id="editImageUrl" type="url" name="image_url" placeholder="https://...">
                 </div>
                 <div class="product-right-col">
                     <section class="form-section product-info-section">
                         <div class="form-section-head">
-                            <h4>Product Information</h4>
-                            <p>Perbarui informasi utama produk yang tampil di katalog.</p>
+                            <h4>{{ __('ui.products_page.product_info_title') }}</h4>
+                            <p>{{ __('ui.products_page.product_info_edit_help') }}</p>
                         </div>
-                        <div class="field"><label>Product Name</label><input id="editName" name="name" required></div>
+                        <div class="field"><label>{{ __('ui.products_page.product_name') }}</label><input id="editName" name="name" required></div>
                         <div class="field"><label>SKU</label><input id="editSku" name="sku"></div>
-                        <div class="field"><label>Category</label><input id="editCategory" name="category"></div>
+                        <div class="field"><label>{{ __('ui.products_page.category') }}</label><input id="editCategory" name="category"></div>
                     </section>
                     <section class="form-section ai-config-section" id="editAiConfigSection">
                         <div class="form-section-head">
                             <div class="section-head-row">
-                                <h4>FASHN AI Configuration</h4>
-                                <button type="button" class="section-toggle-btn" onclick="toggleAiSection('editAiConfigSection', this)">Collapse</button>
+                                <h4>{{ __('ui.products_page.ai_config_title') }}</h4>
+                                <button type="button" class="section-toggle-btn" onclick="toggleAiSection('editAiConfigSection', this)">{{ __('ui.common.collapse') }}</button>
                             </div>
-                            <p>Optimalkan parameter AI saat generated try-on.</p>
+                            <p>{{ __('ui.products_page.ai_config_edit_help') }}</p>
                             <div class="ai-summary" id="editAiSummary">
                                 <span id="editSummaryCategory" class="summary-chip">AI Category: auto</span>
                                 <span id="editSummaryPhotoType" class="summary-chip">Garment Photo Type: auto</span>
@@ -348,7 +348,7 @@
                         </div>
                         <div class="field">
                             <label>AI Prompt <span class="preview-hint">(Try-On Max)</span></label>
-                            <input id="editAiPrompt" name="ai_prompt" placeholder="Opsional, contoh: long modest muslim dress for 12-year-old girl">
+                            <input id="editAiPrompt" name="ai_prompt" placeholder="{{ __('ui.products_page.ai_prompt_placeholder') }}">
                         </div>
                         <div class="field">
                             <label>AI Category <span class="preview-hint">(Try-On v1.6)</span></label>
@@ -359,7 +359,7 @@
                                 <button type="button" class="pill-option" data-value="bottoms" onclick="setAiOption('edit', 'category', 'bottoms')">bottoms</button>
                                 <button type="button" class="pill-option" data-value="one-pieces" onclick="setAiOption('edit', 'category', 'one-pieces')">one-pieces</button>
                             </div>
-                            <div class="preview-hint">Pilih sesuai jenis utama pakaian pada foto produk agar hasil try-on lebih pas.</div>
+                            <div class="preview-hint">{{ __('ui.products_page.ai_category_hint') }}</div>
                         </div>
                         <div class="field">
                             <label>Garment Photo Type <span class="preview-hint">(Try-On v1.6)</span></label>
@@ -369,7 +369,7 @@
                                 <button type="button" class="pill-option" data-value="flat-lay" onclick="setAiOption('edit', 'photoType', 'flat-lay')">flat-lay</button>
                                 <button type="button" class="pill-option" data-value="model" onclick="setAiOption('edit', 'photoType', 'model')">model</button>
                             </div>
-                            <div class="preview-hint">Sesuaikan dengan tipe foto garment yang di-upload supaya bentuk baju tidak salah baca.</div>
+                            <div class="preview-hint">{{ __('ui.products_page.photo_type_hint') }}</div>
                         </div>
                         <div class="field">
                             <input type="hidden" name="ai_segmentation_free" value="0">
@@ -377,17 +377,17 @@
                                 <span>Segmentation Free <span class="preview-hint">(Try-On v1.6)</span></span>
                                 <input id="editAiSegmentationFree" type="checkbox" name="ai_segmentation_free" value="1" checked>
                                 <span class="status-toggle-switch"></span>
-                                <span id="editAiSegmentationFreeLabel" class="status-toggle-label">enabled</span>
+                                <span id="editAiSegmentationFreeLabel" class="status-toggle-label">{{ __('ui.common.enabled') }}</span>
                             </label>
-                            <div class="preview-hint">Aktifkan untuk membiarkan AI memproses tanpa segmentasi ketat garment, cocok untuk banyak foto katalog umum.</div>
+                            <div class="preview-hint">{{ __('ui.products_page.segmentation_hint') }}</div>
                         </div>
                     </section>
                 </div>
             </div>
             <div class="modal-bottom-row">
                 <div class="modal-actions" style="margin-top:0; margin-left:auto;">
-                    <button class="btn btn-cancel" type="button" onclick="closeModal('editModal')">Cancel</button>
-                    <button class="btn btn-primary" type="submit">Save</button>
+                    <button class="btn btn-cancel" type="button" onclick="closeModal('editModal')">{{ __('ui.common.cancel') }}</button>
+                    <button class="btn btn-primary" type="submit">{{ __('ui.products_page.save_action') }}</button>
                 </div>
             </div>
         </form>
@@ -397,16 +397,28 @@
 <div id="deleteConfirmModal" class="modal delete-confirm-modal" onclick="closeOnBackdrop(event, 'deleteConfirmModal')">
     <div class="modal-card delete-confirm-card" role="dialog" aria-modal="true" aria-labelledby="deleteConfirmTitle" aria-describedby="deleteConfirmMessage">
         <div class="delete-confirm-icon" aria-hidden="true">!</div>
-        <h3 id="deleteConfirmTitle">Delete Product</h3>
-        <p id="deleteConfirmMessage">Produk yang dihapus tidak dapat dikembalikan. Lanjutkan hapus produk ini?</p>
+        <h3 id="deleteConfirmTitle">{{ __('ui.products_page.delete_title') }}</h3>
+        <p id="deleteConfirmMessage">{{ __('ui.products_page.delete_message') }}</p>
         <div class="delete-confirm-actions">
-            <button id="deleteConfirmCancelBtn" class="btn btn-cancel" type="button" onclick="closeDeleteConfirm()">Cancel</button>
-            <button class="btn btn-danger-solid" type="button" onclick="submitDeleteConfirm()">Delete Product</button>
+            <button id="deleteConfirmCancelBtn" class="btn btn-cancel" type="button" onclick="closeDeleteConfirm()">{{ __('ui.common.cancel') }}</button>
+            <button class="btn btn-danger-solid" type="button" onclick="submitDeleteConfirm()">{{ __('ui.products_page.delete_action') }}</button>
         </div>
     </div>
 </div>
 
 <script>
+    const I18N_PRODUCTS = {
+        active: @json(__('ui.common.active')),
+        inactive: @json(__('ui.common.inactive')),
+        collapse: @json(__('ui.common.collapse')),
+        expand: @json(__('ui.common.expand')),
+        enabled: @json(__('ui.common.enabled')),
+        disabled: @json(__('ui.common.disabled')),
+        summaryAiCategory: @json(__('ui.products_page.summary_ai_category')),
+        summaryPhotoType: @json(__('ui.products_page.summary_photo_type')),
+        summarySegmentation: @json(__('ui.products_page.summary_segmentation')),
+    };
+
     let pendingDeleteForm = null;
 
     function openModal(id) { document.getElementById(id).classList.add('active'); }
@@ -433,7 +445,7 @@
         document.getElementById('editAiSegmentationFree').checked = String(aiSegmentationFree) !== '0';
         const editSegmentationLabel = document.getElementById('editAiSegmentationFreeLabel');
         if (editSegmentationLabel) {
-            editSegmentationLabel.textContent = document.getElementById('editAiSegmentationFree').checked ? 'enabled' : 'disabled';
+            editSegmentationLabel.textContent = document.getElementById('editAiSegmentationFree').checked ? I18N_PRODUCTS.enabled : I18N_PRODUCTS.disabled;
         }
         setEditStatus(status || 'active');
         expandAiSection('editAiConfigSection');
@@ -455,7 +467,7 @@
 
         statusInput.value = normalizedStatus;
         if (statusToggle) statusToggle.checked = normalizedStatus === 'active';
-        if (statusLabel) statusLabel.textContent = normalizedStatus;
+        if (statusLabel) statusLabel.textContent = normalizedStatus === 'active' ? I18N_PRODUCTS.active : I18N_PRODUCTS.inactive;
     }
 
     function setCreateStatus(status) {
@@ -469,7 +481,7 @@
 
         statusInput.value = normalizedStatus;
         if (statusToggle) statusToggle.checked = normalizedStatus === 'active';
-        if (statusLabel) statusLabel.textContent = normalizedStatus;
+        if (statusLabel) statusLabel.textContent = normalizedStatus === 'active' ? I18N_PRODUCTS.active : I18N_PRODUCTS.inactive;
     }
 
     function resetPreview(fileInputId, urlInputId, previewId) {
@@ -559,7 +571,7 @@
         if (!section) return;
         section.classList.toggle('collapsed');
         if (triggerBtn) {
-            triggerBtn.textContent = section.classList.contains('collapsed') ? 'Expand' : 'Collapse';
+            triggerBtn.textContent = section.classList.contains('collapsed') ? I18N_PRODUCTS.expand : I18N_PRODUCTS.collapse;
         }
     }
 
@@ -568,7 +580,7 @@
         if (!section) return;
         section.classList.remove('collapsed');
         const btn = section.querySelector('.section-toggle-btn');
-        if (btn) btn.textContent = 'Collapse';
+        if (btn) btn.textContent = I18N_PRODUCTS.collapse;
     }
     function updateAiSummary(prefix) {
         const aiCategory = document.getElementById(prefix === 'create' ? 'createAiCategory' : 'editAiCategory');
@@ -578,9 +590,9 @@
         const summaryPhotoType = document.getElementById(prefix === 'create' ? 'createSummaryPhotoType' : 'editSummaryPhotoType');
         const summarySegmentation = document.getElementById(prefix === 'create' ? 'createSummarySegmentation' : 'editSummarySegmentation');
 
-        if (summaryCategory && aiCategory) summaryCategory.textContent = `AI Category: ${aiCategory.value || 'auto'}`;
-        if (summaryPhotoType && photoType) summaryPhotoType.textContent = `Garment Photo Type: ${photoType.value || 'auto'}`;
-        if (summarySegmentation && segmentation) summarySegmentation.textContent = `Segmentation: ${segmentation.checked ? 'enabled' : 'disabled'}`;
+        if (summaryCategory && aiCategory) summaryCategory.textContent = `${I18N_PRODUCTS.summaryAiCategory}: ${aiCategory.value || 'auto'}`;
+        if (summaryPhotoType && photoType) summaryPhotoType.textContent = `${I18N_PRODUCTS.summaryPhotoType}: ${photoType.value || 'auto'}`;
+        if (summarySegmentation && segmentation) summarySegmentation.textContent = `${I18N_PRODUCTS.summarySegmentation}: ${segmentation.checked ? I18N_PRODUCTS.enabled : I18N_PRODUCTS.disabled}`;
     }
 
     function setAiOption(prefix, field, value) {
@@ -635,7 +647,7 @@
     const editAiSegmentationFreeLabel = document.getElementById('editAiSegmentationFreeLabel');
     if (editAiSegmentationFree && editAiSegmentationFreeLabel) {
         editAiSegmentationFree.addEventListener('change', function () {
-            editAiSegmentationFreeLabel.textContent = this.checked ? 'enabled' : 'disabled';
+            editAiSegmentationFreeLabel.textContent = this.checked ? I18N_PRODUCTS.enabled : I18N_PRODUCTS.disabled;
             updateAiSummary('edit');
         });
     }

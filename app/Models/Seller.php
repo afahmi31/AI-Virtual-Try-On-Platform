@@ -17,6 +17,7 @@ class Seller extends Model
         'seo_description',
         'seo_logo_url',
         'status',
+        'ui_locale',
     ];
 
     public function owner(): BelongsTo

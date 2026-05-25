@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard - Try-On Commerce Studio</title>
+    <title>{{ __('ui.common.dashboard') }} - Try-On Commerce Studio</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600;700&family=Inter:wght@500;600&display=swap" rel="stylesheet">
@@ -25,7 +25,7 @@
         </a>
         <form method="POST" action="{{ route('logout') }}">
             @csrf
-            <button type="submit">Logout</button>
+            <button type="submit">{{ __('ui.common.logout') }}</button>
         </form>
     </nav>
 </header>
@@ -44,15 +44,15 @@
 
 <div class="layout">
     <aside class="sidebar">
-        <a class="menu-item active" href="{{ route('seller.dashboard') }}"><span>Dashboard</span></a>
-        <a class="menu-item" href="{{ route('seller.products.index') }}"><span>Products</span></a>
-        <a class="menu-item" href="{{ route('seller.settings.index') }}"><span>Settings</span></a>
+        <a class="menu-item active" href="{{ route('seller.dashboard') }}"><span>{{ __('ui.common.dashboard') }}</span></a>
+        <a class="menu-item" href="{{ route('seller.products.index') }}"><span>{{ __('ui.common.products') }}</span></a>
+        <a class="menu-item" href="{{ route('seller.settings.index') }}"><span>{{ __('ui.common.settings') }}</span></a>
     </aside>
 
     <main class="content">
         <header class="dashboard-hero">
-            <h1>Dashboard</h1>
-            <p class="dashboard-subtitle">Ringkasan toko, aktivitas try-on.</p>
+            <h1>{{ __('ui.common.dashboard') }}</h1>
+            <p class="dashboard-subtitle">{{ __('ui.dashboard.subtitle') }}</p>
         </header>
 
         <section class="cards">
@@ -127,7 +127,7 @@
 
         <section class="split">
             <div class="panel dashboard-panel dashboard-recent-panel">
-                <h2>Recent Try-On</h2>
+                <h2>{{ __('ui.dashboard.recent_tryon') }}</h2>
                 <div class="table-wrap">
                 <table class="dashboard-table">
                     <thead>
@@ -205,12 +205,12 @@
                                         data-request-json='@json($requestPayload)'
                                         data-response-json='@json($responsePayload)'
                                     >
-                                        Details
+                                        {{ __('ui.dashboard.details') }}
                                     </button>
                                 </td>
                             </tr>
                         @empty
-                            <tr><td colspan="8">Belum ada request.</td></tr>
+                            <tr><td colspan="8">{{ __('ui.dashboard.no_requests') }}</td></tr>
                         @endforelse
                     </tbody>
                 </table>
@@ -223,7 +223,7 @@
 <div id="requestModal" class="modal-backdrop request-modal-backdrop" role="dialog" aria-modal="true" aria-hidden="true">
     <div class="modal-card request-modal-card">
         <div class="modal-header request-modal-header">
-            <h3 class="modal-title">Request Details</h3>
+            <h3 class="modal-title">{{ __('ui.dashboard.request_details') }}</h3>
             <button type="button" id="requestModalClose" class="modal-close request-modal-close" aria-label="Close request details">&times;</button>
         </div>
         <div class="modal-tabs request-modal-tabs">
