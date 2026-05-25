@@ -394,11 +394,6 @@ class ProcessTryOnSessionJob implements ShouldQueue
             return $sellerDummyUrl;
         }
 
-        $dummyUrl = trim((string) config('tryon.dummy_model_image_url'));
-        if ($dummyUrl !== '') {
-            return $dummyUrl;
-        }
-
         if (! is_string($customerPhotoPath) || $customerPhotoPath === '') {
             return null;
         }

@@ -132,21 +132,16 @@ Queue mode notes:
 - Recommended: Redis queue worker in server/staging.
 - Local fallback: if `QUEUE_CONNECTION=sync`, polling runs in-request (blocking behavior).
 
-### 7) Media Retention Cleanup
+### 7) Media Retention
 
-Cleanup job available:
+Current behavior:
 
-- `App\Jobs\CleanupExpiredMediaJob`
-
-What it does:
-
-- Finds expired completed/failed sessions
-- Deletes local stored media paths
-- Marks session as `expired`
+- Each try-on session stores `expires_at` based on `TRYON_RETENTION_MINUTES`.
+- Expiration timestamp is available for downstream cleanup policy (cron/job external).
 
 Note:
 
-- Cleanup scheduling is not wired in `routes/console.php` yet; run/dispatch this job from your own scheduler setup.
+- No built-in cleanup scheduler/job is registered in this repository.
 
 ## Active Route Summary
 

@@ -4,6 +4,15 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Settings - Try-On Commerce Studio</title>
+    @php
+        $settingsFavicon = trim((string) ($seller->seo_logo_url ?? ''));
+        $settingsFaviconVersion = (string) ($seller->updated_at?->timestamp ?? time());
+    @endphp
+    @if($settingsFavicon !== '')
+        <link rel="icon" type="image/png" href="{{ $settingsFavicon }}?v={{ urlencode($settingsFaviconVersion) }}">
+        <link rel="shortcut icon" href="{{ $settingsFavicon }}?v={{ urlencode($settingsFaviconVersion) }}">
+        <link rel="apple-touch-icon" href="{{ $settingsFavicon }}?v={{ urlencode($settingsFaviconVersion) }}">
+    @endif
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600;700&family=Inter:wght@500;600&display=swap" rel="stylesheet">
@@ -225,12 +234,6 @@
         font-size: 20px;
         line-height: 1.15;
         color: #163a5d;
-    }
-
-    .settings-page .store-profile-subtitle {
-        margin: 2px 0 0;
-        font-size: 14px;
-        color: #4f6378;
     }
 
     .settings-page .store-profile-divider {
@@ -749,7 +752,7 @@
                         $sellerSlug = old('seller_slug', $seller->slug);
                         $sellerSeoTitle = old('seo_title', $seller->seo_title ?? '');
                         $sellerSeoDescription = old('seo_description', $seller->seo_description ?? '');
-                        $sellerSeoLogoUrl = old('seo_logo_url', $seller->seo_logo_url ?? '');
+                        $sellerSeoLogoUrl = trim((string) ($seller->seo_logo_url ?? ''));
                         $storeUrlPreview = url('/' . $sellerSlug);
                     @endphp
                     <div class="store-profile-head">

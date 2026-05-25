@@ -10,6 +10,7 @@
         $seoDescription = trim((string) ($seller->seo_description ?? '')) ?: ('Belanja produk terbaik dari '.$seller->store_name.'.');
         $seoImage = trim((string) ($seller->seo_logo_url ?? ''));
         $canonicalUrl = route('public.seller.page', ['seller_slug' => $seller->slug]);
+        $faviconVersion = (string) ($seller->updated_at?->timestamp ?? time());
     @endphp
     <title>{{ $seoTitle }}</title>
     <meta name="description" content="{{ $seoDescription }}">
@@ -27,6 +28,11 @@
     @endif
     <meta name="twitter:title" content="{{ $seoTitle }}">
     <meta name="twitter:description" content="{{ $seoDescription }}">
+    @if($seoImage !== '')
+    <link rel="icon" type="image/png" href="{{ $seoImage }}?v={{ urlencode($faviconVersion) }}">
+    <link rel="shortcut icon" href="{{ $seoImage }}?v={{ urlencode($faviconVersion) }}">
+    <link rel="apple-touch-icon" href="{{ $seoImage }}?v={{ urlencode($faviconVersion) }}">
+    @endif
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600;700;800&family=Inter:wght@500;600&display=swap" rel="stylesheet">

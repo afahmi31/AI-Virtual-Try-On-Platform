@@ -1,7 +1,6 @@
 <?php
 
 return [
-    'default_provider' => env('TRYON_PROVIDER', 'fashn'),
     'providers' => [
         'fashn' => [
             'base_url' => env('FASHN_BASE_URL'),

@@ -12,7 +12,6 @@ use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Carbon;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\ValidationException;
 
 class SellerSettingsController extends Controller
@@ -83,8 +82,29 @@ class SellerSettingsController extends Controller
             : null;
         if ($request->hasFile('seo_logo_file')) {
             $file = $request->file('seo_logo_file');
-            $path = $file->store('seller-logos', 'public');
-            $seller->seo_logo_url = Storage::disk('public')->url($path);
+
+            $targetDir = public_path('uploads/seller-logos');
+            if (! is_dir($targetDir)) {
+                mkdir($targetDir, 0755, true);
+            }
+
+            $extension = strtolower((string) $file->getClientOriginalExtension());
+            $filename = 'seller_'.$seller->id.'_'.time().'.'.$extension;
+            $file->move($targetDir, $filename);
+
+            // Cleanup old logo file if it was previously uploaded in the same folder.
+            $oldLogoUrl = (string) ($seller->seo_logo_url ?? '');
+            if ($oldLogoUrl !== '' && str_contains($oldLogoUrl, '/uploads/seller-logos/')) {
+                $oldPath = parse_url($oldLogoUrl, PHP_URL_PATH);
+                if (is_string($oldPath) && $oldPath !== '') {
+                    $oldFullPath = public_path(ltrim($oldPath, '/'));
+                    if (is_file($oldFullPath)) {
+                        @unlink($oldFullPath);
+                    }
+                }
+            }
+
+            $seller->seo_logo_url = asset('uploads/seller-logos/'.$filename);
         }
         $seller->save();
 

@@ -2,9 +2,6 @@
 
 return [
     'retention_minutes' => (int) env('TRYON_RETENTION_MINUTES', 30),
-    // Seller-level dummy model URL is stored in DB settings.
-    // Keep null fallback only for backward compatibility.
-    'dummy_model_image_url' => null,
     'polling' => [
         'max_attempts' => (int) env('TRYON_PROVIDER_MAX_ATTEMPTS', 90),
         'release_seconds' => (int) env('TRYON_PROVIDER_RELEASE_SECONDS', 2),

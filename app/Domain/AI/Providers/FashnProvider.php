@@ -102,7 +102,7 @@ class FashnProvider implements TryOnProviderContract
     {
         $providerConfig = $this->mergeProviderConfig($context);
         if ($this->isDummyMode($providerConfig)) {
-            $dummyResultUrl = trim((string) ($providerConfig['dummy_result_url'] ?? config('ai.providers.fashn.dummy_result_url')));
+            $dummyResultUrl = trim((string) ($providerConfig['dummy_result_url'] ?? ''));
             if ($dummyResultUrl === '') {
                 throw new RuntimeException('Dummy result URL is required when seller dummy mode is enabled.');
             }
