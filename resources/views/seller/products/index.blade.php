@@ -252,21 +252,23 @@
                         </div>
                         <div class="field">
                             <label>AI Category <span class="preview-hint">(Try-On v1.6)</span></label>
-                            <select id="createAiCategory" name="ai_category">
-                                <option value="auto" selected>auto</option>
-                                <option value="tops">tops - atasan (kemeja, blouse, t-shirt)</option>
-                                <option value="bottoms">bottoms - bawahan (rok, celana)</option>
-                                <option value="one-pieces">one-pieces - baju terusan (dress, gamis)</option>
-                            </select>
+                            <input id="createAiCategory" type="hidden" name="ai_category" value="auto">
+                            <div class="pill-group" role="radiogroup" aria-label="AI Category">
+                                <button type="button" class="pill-option active" data-value="auto" onclick="setAiOption('create', 'category', 'auto')">auto</button>
+                                <button type="button" class="pill-option" data-value="tops" onclick="setAiOption('create', 'category', 'tops')">tops</button>
+                                <button type="button" class="pill-option" data-value="bottoms" onclick="setAiOption('create', 'category', 'bottoms')">bottoms</button>
+                                <button type="button" class="pill-option" data-value="one-pieces" onclick="setAiOption('create', 'category', 'one-pieces')">one-pieces</button>
+                            </div>
                             <div class="preview-hint">Pilih sesuai jenis utama pakaian pada foto produk agar hasil try-on lebih pas.</div>
                         </div>
                         <div class="field">
                             <label>Garment Photo Type <span class="preview-hint">(Try-On v1.6)</span></label>
-                            <select id="createAiGarmentPhotoType" name="ai_garment_photo_type">
-                                <option value="auto" selected>auto</option>
-                                <option value="flat-lay">flat-lay - foto produk tanpa dipakai model</option>
-                                <option value="model">model - foto produk sedang dipakai model/manekin</option>
-                            </select>
+                            <input id="createAiGarmentPhotoType" type="hidden" name="ai_garment_photo_type" value="auto">
+                            <div class="pill-group" role="radiogroup" aria-label="Photo Type">
+                                <button type="button" class="pill-option active" data-value="auto" onclick="setAiOption('create', 'photoType', 'auto')">auto</button>
+                                <button type="button" class="pill-option" data-value="flat-lay" onclick="setAiOption('create', 'photoType', 'flat-lay')">flat-lay</button>
+                                <button type="button" class="pill-option" data-value="model" onclick="setAiOption('create', 'photoType', 'model')">model</button>
+                            </div>
                             <div class="preview-hint">Sesuaikan dengan tipe foto garment yang di-upload supaya bentuk baju tidak salah baca.</div>
                         </div>
                         <div class="field">
@@ -350,21 +352,23 @@
                         </div>
                         <div class="field">
                             <label>AI Category <span class="preview-hint">(Try-On v1.6)</span></label>
-                            <select id="editAiCategory" name="ai_category">
-                                <option value="auto">auto</option>
-                                <option value="tops">tops - atasan (kemeja, blouse, t-shirt)</option>
-                                <option value="bottoms">bottoms - bawahan (rok, celana)</option>
-                                <option value="one-pieces">one-pieces - baju terusan (dress, gamis)</option>
-                            </select>
+                            <input id="editAiCategory" type="hidden" name="ai_category" value="auto">
+                            <div class="pill-group" role="radiogroup" aria-label="AI Category">
+                                <button type="button" class="pill-option active" data-value="auto" onclick="setAiOption('edit', 'category', 'auto')">auto</button>
+                                <button type="button" class="pill-option" data-value="tops" onclick="setAiOption('edit', 'category', 'tops')">tops</button>
+                                <button type="button" class="pill-option" data-value="bottoms" onclick="setAiOption('edit', 'category', 'bottoms')">bottoms</button>
+                                <button type="button" class="pill-option" data-value="one-pieces" onclick="setAiOption('edit', 'category', 'one-pieces')">one-pieces</button>
+                            </div>
                             <div class="preview-hint">Pilih sesuai jenis utama pakaian pada foto produk agar hasil try-on lebih pas.</div>
                         </div>
                         <div class="field">
                             <label>Garment Photo Type <span class="preview-hint">(Try-On v1.6)</span></label>
-                            <select id="editAiGarmentPhotoType" name="ai_garment_photo_type">
-                                <option value="auto">auto</option>
-                                <option value="flat-lay">flat-lay - foto produk tanpa dipakai model</option>
-                                <option value="model">model - foto produk sedang dipakai model/manekin</option>
-                            </select>
+                            <input id="editAiGarmentPhotoType" type="hidden" name="ai_garment_photo_type" value="auto">
+                            <div class="pill-group" role="radiogroup" aria-label="Photo Type">
+                                <button type="button" class="pill-option active" data-value="auto" onclick="setAiOption('edit', 'photoType', 'auto')">auto</button>
+                                <button type="button" class="pill-option" data-value="flat-lay" onclick="setAiOption('edit', 'photoType', 'flat-lay')">flat-lay</button>
+                                <button type="button" class="pill-option" data-value="model" onclick="setAiOption('edit', 'photoType', 'model')">model</button>
+                            </div>
                             <div class="preview-hint">Sesuaikan dengan tipe foto garment yang di-upload supaya bentuk baju tidak salah baca.</div>
                         </div>
                         <div class="field">
@@ -424,8 +428,8 @@
         document.getElementById('editSku').value = sku;
         document.getElementById('editCategory').value = category;
         document.getElementById('editAiPrompt').value = aiPrompt || '';
-        document.getElementById('editAiCategory').value = aiCategory || 'auto';
-        document.getElementById('editAiGarmentPhotoType').value = aiGarmentPhotoType || 'auto';
+        setAiOption('edit', 'category', aiCategory || 'auto');
+        setAiOption('edit', 'photoType', aiGarmentPhotoType || 'auto');
         document.getElementById('editAiSegmentationFree').checked = String(aiSegmentationFree) !== '0';
         const editSegmentationLabel = document.getElementById('editAiSegmentationFreeLabel');
         if (editSegmentationLabel) {
@@ -579,6 +583,28 @@
         if (summarySegmentation && segmentation) summarySegmentation.textContent = `Segmentation: ${segmentation.checked ? 'enabled' : 'disabled'}`;
     }
 
+    function setAiOption(prefix, field, value) {
+        const isCategory = field === 'category';
+        const inputId = prefix === 'create'
+            ? (isCategory ? 'createAiCategory' : 'createAiGarmentPhotoType')
+            : (isCategory ? 'editAiCategory' : 'editAiGarmentPhotoType');
+        const input = document.getElementById(inputId);
+        if (!input) return;
+
+        input.value = value;
+
+        const fieldWrap = input.closest('.field');
+        if (fieldWrap) {
+            fieldWrap.querySelectorAll('.pill-option').forEach(function (btn) {
+                const active = btn.getAttribute('data-value') === value;
+                btn.classList.toggle('active', active);
+                btn.setAttribute('aria-pressed', active ? 'true' : 'false');
+            });
+        }
+
+        updateAiSummary(prefix);
+    }
+
     bindImagePreview('createImageFile', 'createImageUrl', 'createImagePreview');
     bindImagePreview('editImageFile', 'editImageUrl', 'editImagePreview');
 
@@ -587,11 +613,10 @@
     const createAiSegmentationFree = document.getElementById('createAiSegmentationFree');
     const editAiCategory = document.getElementById('editAiCategory');
     const editAiGarmentPhotoType = document.getElementById('editAiGarmentPhotoType');
-    if (createAiCategory) createAiCategory.addEventListener('change', function () { updateAiSummary('create'); });
-    if (createAiGarmentPhotoType) createAiGarmentPhotoType.addEventListener('change', function () { updateAiSummary('create'); });
     if (createAiSegmentationFree) createAiSegmentationFree.addEventListener('change', function () { updateAiSummary('create'); });
-    if (editAiCategory) editAiCategory.addEventListener('change', function () { updateAiSummary('edit'); });
-    if (editAiGarmentPhotoType) editAiGarmentPhotoType.addEventListener('change', function () { updateAiSummary('edit'); });
+
+    setAiOption('create', 'category', createAiCategory ? createAiCategory.value : 'auto');
+    setAiOption('create', 'photoType', createAiGarmentPhotoType ? createAiGarmentPhotoType.value : 'auto');
 
     const editStatusToggle = document.getElementById('editStatusToggle');
     if (editStatusToggle) {
