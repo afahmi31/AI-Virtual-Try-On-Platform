@@ -86,7 +86,9 @@ class SellerPublicController extends Controller
             'sort' => $sort,
         ];
 
-        $dummyEnabled = (bool) ($seller->aiSetting?->fashn_dummy_enabled ?? false);
+        $rawDummyEnabled = $seller->aiSetting?->fashn_dummy_enabled;
+        $parsedDummyEnabled = filter_var($rawDummyEnabled, FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE);
+        $dummyEnabled = $parsedDummyEnabled ?? ((string) $rawDummyEnabled === '1' || (int) $rawDummyEnabled === 1);
         $dummyModelImageUrl = is_string($seller->aiSetting?->fashn_dummy_model_image_url)
             ? trim($seller->aiSetting->fashn_dummy_model_image_url)
             : '';

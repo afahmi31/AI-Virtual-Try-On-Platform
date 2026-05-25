@@ -338,7 +338,7 @@
         }
 
         .modal {
-            width: min(1040px, 100%);
+            width: min(700px, 100%);
             max-height: calc(100vh - 28px);
             overflow: auto;
             background: linear-gradient(180deg, #ffffff, #f7fbff);
@@ -407,9 +407,14 @@
 
         .modal-info-grid {
             display: grid;
-            grid-template-columns: minmax(0, 1.6fr) minmax(220px, 0.8fr);
+            grid-template-columns: minmax(0, 1fr) auto;
             gap: 12px;
             margin-bottom: 8px;
+            align-items: center;
+            padding: 10px 12px;
+            border: 1px solid #d7e3ef;
+            border-radius: 10px;
+            background: #f7fbff;
         }
 
         .selected-product {
@@ -516,6 +521,34 @@
             line-height: 1;
         }
 
+        .model-footer-row {
+            margin-top: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            flex-wrap: nowrap;
+        }
+
+        .model-footer-row .label {
+            margin: 0;
+            margin-bottom: 0;
+            font-size: 14px;
+            white-space: nowrap;
+        }
+
+        .model-footer-row .dummy-toggle {
+            font-size: 11px;
+            gap: 6px;
+            white-space: nowrap;
+            flex: 0 0 auto;
+        }
+
+        .model-footer-row .dummy-toggle-text {
+            font-size: 11px;
+            font-weight: 600;
+        }
+
         .input-file {
             display: none;
         }
@@ -550,18 +583,64 @@
         }
 
         .modal-preview-grid {
+            display: none;
+        }
+
+        .tryon-main-grid {
             display: grid;
-            grid-template-columns: 1fr 1fr;
+            grid-template-columns: 250px minmax(0, 1fr);
             gap: 10px;
             margin-bottom: 10px;
+            width: 100%;
+            align-items: stretch;
+            height: auto;
+        }
+
+        .tryon-left-rail {
+            display: grid;
+            grid-template-rows: auto auto;
+            gap: 10px;
+            min-width: 0;
+        }
+
+        .tryon-main-grid > .field {
+            min-width: 0;
+        }
+
+        .tryon-generated-field {
+            width: 100%;
+        }
+
+        .tryon-panel-head {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 8px;
+            margin-bottom: 8px;
+        }
+
+        .ready-badge {
+            display: inline-flex;
+            align-items: center;
+            height: 20px;
+            padding: 0 8px;
+            border-radius: 999px;
+            border: 1px solid #c9dff1;
+            background: #eef8ff;
+            color: #3374a1;
+            font-family: Inter, "Segoe UI", sans-serif;
+            font-size: 10px;
+            font-weight: 700;
+            letter-spacing: .02em;
+            text-transform: capitalize;
         }
 
         .preview-box {
             position: relative;
             width: 100%;
-            height: clamp(320px, 48vh, 520px);
+            height: auto;
             border-radius: var(--radius-md);
-            border: 1px solid #d5e2ef;
+            border: none;
             background: #fff;
             overflow: hidden;
             display: flex;
@@ -574,6 +653,48 @@
             height: 100%;
             object-fit: contain;
             display: none;
+        }
+
+        .preview-box-product {
+            height: 180px;
+            aspect-ratio: auto;
+        }
+
+        .preview-box-model {
+            height: 180px;
+            aspect-ratio: auto;
+        }
+
+        .preview-box-result {
+            width: 100%;
+            height: 340px;
+            aspect-ratio: auto;
+        }
+
+        .selected-product-thumb {
+            width: 100%;
+            border-radius: 10px;
+            background: #f7fbff;
+            overflow: hidden;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .selected-product-thumb img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            display: block;
+        }
+
+        .selected-product-thumb-fallback {
+            font-family: Inter, "Segoe UI", sans-serif;
+            font-size: 10px;
+            font-weight: 600;
+            color: #55708c;
+            text-transform: uppercase;
+            letter-spacing: .03em;
         }
 
         .preview-placeholder {
@@ -728,6 +849,19 @@
             padding: 8px;
         }
 
+        .tryon-generated-field .history-wrap {
+            margin: 8px 0 0;
+        }
+
+        .tryon-generated-field .history-list {
+            grid-template-columns: repeat(auto-fill, minmax(72px, 1fr));
+            gap: 6px;
+        }
+
+        .tryon-generated-field .history-item {
+            min-height: 96px;
+        }
+
         .history-title {
             margin: 0 0 8px;
             font-size: 13px;
@@ -800,6 +934,23 @@
 
             .modal-info-grid {
                 grid-template-columns: 1fr;
+            }
+
+            .tryon-main-grid {
+                grid-template-columns: 1fr;
+                height: auto;
+            }
+
+            .preview-box-product {
+                height: 180px;
+            }
+
+            .preview-box-model {
+                height: 240px;
+            }
+
+            .preview-box-result {
+                height: 320px;
             }
 
             .catalog-footer-row {
@@ -958,7 +1109,6 @@
                 <div id="selectedProductInfo" class="selected-product">
                     Produk: <strong id="selectedProductName">Belum dipilih</strong>
                 </div>
-
                 <div id="quotaBox" class="quota-box">
                     Sisa generate hari ini: <strong id="remainingQuotaText">-</strong>
                 </div>
@@ -966,40 +1116,49 @@
 
             <input class="input-file" id="customerPhoto" type="file" accept="image/*">
 
-            <div class="modal-preview-grid">
-                <div class="field">
-                    <div class="label-row">
-                        <label class="label">Foto</label>
-                        <label class="dummy-toggle" id="dummyModelToggleWrap" style="display:none;">
-                            <input type="checkbox" id="useDummyModelToggle">
-                            <span class="dummy-toggle-switch" aria-hidden="true"></span>
-                            <span class="dummy-toggle-text">Use Dummy Model</span>
-                        </label>
+            <div class="tryon-main-grid">
+                <div class="tryon-left-rail">
+                    <div class="field">
+                        <div class="tryon-panel-head">
+                            <label class="label">Product Photo</label>
+                        </div>
+                        <div class="selected-product-thumb preview-box preview-box-product" aria-label="Preview produk terpilih">
+                            <img id="selectedProductPreview" alt="Produk terpilih" style="display:none;">
+                            <span id="selectedProductPreviewFallback" class="selected-product-thumb-fallback">No Image</span>
+                        </div>
                     </div>
-                    <div class="preview-box">
-                        <img id="customerPreview" alt="Customer preview">
-                        <button id="removePhotoBtn" class="preview-remove" type="button" aria-label="Hapus foto">&times;</button>
-                        <div id="customerPlaceholder" class="preview-placeholder">
-                            <p>Upload foto</p>
-                            <button type="button" class="upload-trigger" onclick="document.getElementById('customerPhoto').click()">Pilih File</button>
+
+                    <div class="field">
+                        <div class="model-footer-row">
+                            <label class="label">Model Photo</label>
+                            <label class="dummy-toggle" id="dummyModelToggleWrap" style="display:none;">
+                                <input type="checkbox" id="useDummyModelToggle">
+                                <span class="dummy-toggle-switch" aria-hidden="true"></span>
+                                <span class="dummy-toggle-text">Use Dummy</span>
+                            </label>
+                        </div>
+                        <div class="preview-box preview-box-model">
+                            <img id="customerPreview" alt="Customer preview">
+                            <button id="removePhotoBtn" class="preview-remove" type="button" aria-label="Hapus foto">&times;</button>
+                            <div id="customerPlaceholder" class="preview-placeholder">
+                                <p>Upload foto</p>
+                                <button type="button" class="upload-trigger" onclick="document.getElementById('customerPhoto').click()">Pilih File</button>
+                            </div>
                         </div>
                     </div>
                 </div>
 
-                <div class="field">
-                    <label class="label">Try-On Generated</label>
-                    <div class="preview-box">
+                <div class="field tryon-generated-field">
+                    <div class="tryon-panel-head">
+                        <label class="label">Try-On Generated</label>
+                        <span class="ready-badge">Ready</span>
+                    </div>
+                    <div class="preview-box preview-box-result">
                         <img id="resultPreview" alt="Try-on result">
                         <div id="resultPlaceholder" class="preview-placeholder"></div>
                     </div>
                     <div id="statusNote" class="status-note" role="status" aria-live="polite"></div>
                 </div>
-            </div>
-
-            <div class="history-wrap">
-                <p class="history-title">Riwayat Generate</p>
-                <div id="historyList" class="history-list"></div>
-                <p id="historyEmpty" class="history-empty">Belum ada riwayat generate.</p>
             </div>
 
             <button id="generateBtn" class="generate-btn" type="button" onclick="submitTryOn()">Try-On</button>
@@ -1039,10 +1198,24 @@
             el.classList.add('selected');
 
             const productName = el.getAttribute('data-product-name') || 'Belum dipilih';
+            const productImage = el.getAttribute('data-product-image') || '';
             selectedProductId = Number(el.getAttribute('data-product-id')) || null;
             const productSlug = el.getAttribute('data-product-slug');
             const productSku = el.getAttribute('data-product-sku');
             document.getElementById('selectedProductName').textContent = productName;
+            const selectedProductPreview = document.getElementById('selectedProductPreview');
+            const selectedProductPreviewFallback = document.getElementById('selectedProductPreviewFallback');
+            if (selectedProductPreview && selectedProductPreviewFallback) {
+                if (productImage) {
+                    selectedProductPreview.src = productImage;
+                    selectedProductPreview.style.display = 'block';
+                    selectedProductPreviewFallback.style.display = 'none';
+                } else {
+                    selectedProductPreview.removeAttribute('src');
+                    selectedProductPreview.style.display = 'none';
+                    selectedProductPreviewFallback.style.display = 'inline';
+                }
+            }
 
             const productRef = productSku || productSlug;
             if (productRef) {
