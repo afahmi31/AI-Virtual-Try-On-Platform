@@ -1086,6 +1086,23 @@
             @endif
         </div>
         @endif
+        @if(!empty($selectedProduct))
+            @php
+                $selectedProductImage = $selectedProduct->images->firstWhere('is_primary', true) ?? $selectedProduct->images->first();
+            @endphp
+            <button
+                id="autoOpenTryOnTrigger"
+                type="button"
+                style="display:none"
+                aria-hidden="true"
+                data-product-id="{{ $selectedProduct->id }}"
+                data-product-name="{{ $selectedProduct->name }}"
+                data-product-slug="{{ $selectedProduct->slug }}"
+                data-product-sku="{{ $selectedProduct->sku }}"
+                data-product-category="{{ $selectedProduct->category }}"
+                data-product-image="{{ $selectedProductImage?->image_url ?? '' }}">
+            </button>
+        @endif
         <button id="floatingHistoryBtn" type="button" class="floating-history-btn" aria-label="{{ __('ui.store.history_button_aria') }}">
             &#128340;
         </button>
@@ -1820,6 +1837,11 @@
             const current = document.querySelector('#productGrid .card.selected');
             if (current) {
                 selectProduct(current);
+            }
+
+            const autoOpenTrigger = document.getElementById('autoOpenTryOnTrigger');
+            if (autoOpenTrigger) {
+                openTryOnModal(autoOpenTrigger);
             }
 
             const floatingBtn = document.getElementById('floatingHistoryBtn');

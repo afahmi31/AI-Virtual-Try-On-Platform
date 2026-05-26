@@ -74,10 +74,6 @@ class SellerPublicController extends Controller
             if (! $selectedProduct) {
                 abort(404);
             }
-
-            $selectedProduct = $products->getCollection()->first(function ($product) use ($selectedProduct): bool {
-                return (int) $product->id === (int) $selectedProduct->id;
-            });
         }
 
         $activeFilters = [

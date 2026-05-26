@@ -4,6 +4,15 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{{ __('ui.common.dashboard') }} - Try-On Commerce Studio</title>
+    @php
+        $dashboardFavicon = trim((string) ($seller->seo_logo_url ?? ''));
+        $dashboardFaviconVersion = (string) ($seller->updated_at?->timestamp ?? time());
+    @endphp
+    @if($dashboardFavicon !== '')
+        <link rel="icon" type="image/png" href="{{ $dashboardFavicon }}?v={{ urlencode($dashboardFaviconVersion) }}">
+        <link rel="shortcut icon" href="{{ $dashboardFavicon }}?v={{ urlencode($dashboardFaviconVersion) }}">
+        <link rel="apple-touch-icon" href="{{ $dashboardFavicon }}?v={{ urlencode($dashboardFaviconVersion) }}">
+    @endif
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600;700&family=Inter:wght@500;600&display=swap" rel="stylesheet">
