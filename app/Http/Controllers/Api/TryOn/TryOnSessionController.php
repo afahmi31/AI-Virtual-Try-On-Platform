@@ -35,12 +35,6 @@ class TryOnSessionController extends Controller
             return response()->json(['message' => 'Product not found for this seller.'], 422);
         }
 
-        $usage = $seller->usageBalance;
-
-        if (! $usage || $usage->token_available < 1) {
-            return response()->json(['message' => 'Token not available.'], 422);
-        }
-
         $apiKey = trim((string) ($seller->aiSetting?->fashn_api_key ?? ''));
         $dummyEnabled = (bool) ($seller->aiSetting?->fashn_dummy_enabled ?? false);
         if ($apiKey === '' && ! $dummyEnabled) {

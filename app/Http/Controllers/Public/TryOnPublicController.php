@@ -7,7 +7,6 @@ use App\Http\Controllers\Controller;
 use App\Jobs\ProcessTryOnSessionJob;
 use App\Models\AuditLog;
 use App\Models\Seller;
-use App\Models\SellerUsageBalance;
 use App\Models\TryOnSession;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
@@ -81,11 +80,6 @@ class TryOnPublicController extends Controller
 
         if (! $product) {
             return response()->json(['message' => 'Produk tidak valid untuk seller ini.'], 422);
-        }
-
-        $usage = $seller->usageBalance;
-        if (! $usage || $usage->token_available < 1) {
-            return response()->json(['message' => 'Token seller tidak tersedia.'], 422);
         }
 
         $providerConfig = $this->resolveProviderConfig($seller);
@@ -221,11 +215,10 @@ class TryOnPublicController extends Controller
                 ]);
 
                 if ((int) $session->token_cost === 0) {
-                    $usage = SellerUsageBalance::query()->where('seller_id', $session->seller_id)->first();
+                    $usage = $session->seller?->usageBalance;
                     if ($usage) {
                         $usage->incrementEach([
                             'token_used' => $cost,
-                            'token_available' => -$cost,
                             'success_count' => 1,
                         ]);
                     }

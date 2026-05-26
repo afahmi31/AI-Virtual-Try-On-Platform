@@ -4,7 +4,6 @@ namespace App\Jobs;
 
 use App\Domain\AI\ProviderRouter;
 use App\Models\AuditLog;
-use App\Models\SellerUsageBalance;
 use App\Models\TryOnSession;
 use Carbon\Carbon;
 use Illuminate\Contracts\Queue\Job as QueueJobContract;
@@ -33,16 +32,8 @@ class ProcessTryOnSessionJob implements ShouldQueue
             return;
         }
 
-        $usage = SellerUsageBalance::query()->where('seller_id', $session->seller_id)->lockForUpdate()->first();
-
-        if (! $usage || $usage->token_available < 1) {
-            $session->update([
-                'status' => 'failed',
-                'error_message' => 'Seller token tidak mencukupi.',
-            ]);
-
-            return;
-        }
+        $session->loadMissing('seller.usageBalance');
+        $usage = $session->seller?->usageBalance;
 
         $provider = $providerRouter->resolve($session->provider_name);
         $session->loadMissing('product.images', 'seller.aiSetting');
@@ -52,7 +43,9 @@ class ProcessTryOnSessionJob implements ShouldQueue
 
         if ($productImageUrl === null || $modelImageUrl === null) {
             $this->failSession($session, null, 'Gambar produk atau foto customer tidak valid untuk dikirim ke provider.');
-            $usage->increment('failed_count');
+            if ($usage) {
+                $usage->increment('failed_count');
+            }
 
             return;
         }
@@ -114,7 +107,9 @@ class ProcessTryOnSessionJob implements ShouldQueue
             );
 
             $this->failSession($session, null, 'Gagal membuat job ke provider. '.$exception->getMessage());
-            $usage->increment('failed_count');
+            if ($usage) {
+                $usage->increment('failed_count');
+            }
 
             return;
         }
@@ -173,7 +168,9 @@ class ProcessTryOnSessionJob implements ShouldQueue
             );
 
             $this->failSession($session, (string) ($payload['provider_job_id'] ?? null), 'Provider status check error. '.$exception->getMessage());
-            $usage->increment('failed_count');
+            if ($usage) {
+                $usage->increment('failed_count');
+            }
 
             return;
         }
@@ -195,7 +192,9 @@ class ProcessTryOnSessionJob implements ShouldQueue
 
                 if (($status['status'] ?? null) === 'processing') {
                     $this->failSession($session, (string) ($payload['provider_job_id'] ?? null), 'Provider timeout: status belum completed.');
-                    $usage->increment('failed_count');
+                    if ($usage) {
+                        $usage->increment('failed_count');
+                    }
 
                     return;
                 }
@@ -207,7 +206,9 @@ class ProcessTryOnSessionJob implements ShouldQueue
             $attempts = $this->currentAttempt();
             if ($attempts >= (int) config('tryon.polling.max_attempts', 30)) {
                 $this->failSession($session, (string) ($payload['provider_job_id'] ?? null), 'Provider timeout: status belum completed.');
-                $usage->increment('failed_count');
+                if ($usage) {
+                    $usage->increment('failed_count');
+                }
 
                 return;
             }
@@ -219,11 +220,12 @@ class ProcessTryOnSessionJob implements ShouldQueue
         }
 
         if (($status['status'] ?? null) === 'completed') {
-            $usage->incrementEach([
-                'token_used' => $cost,
-                'token_available' => -$cost,
-                'success_count' => 1,
-            ]);
+            if ($usage) {
+                $usage->incrementEach([
+                    'token_used' => $cost,
+                    'success_count' => 1,
+                ]);
+            }
 
             $session->update([
                 'status' => 'completed',
@@ -257,7 +259,9 @@ class ProcessTryOnSessionJob implements ShouldQueue
             return;
         }
 
-        $usage->increment('failed_count');
+        if ($usage) {
+            $usage->increment('failed_count');
+        }
 
         $this->failSession(
             $session,
