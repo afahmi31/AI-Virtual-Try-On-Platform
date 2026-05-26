@@ -1,4 +1,4 @@
-# Pivot Seller UAT Checklist
+# UAT Checklist
 
 Dokumen ini dipakai untuk validasi sebelum pilot di real server.
 Gunakan dua tahap:

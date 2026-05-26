@@ -1,147 +1,142 @@
-## What This System Does
+# Try-On Commerce Studio
 
-- Seller logs in to a private dashboard.
-- Seller manages products and product images.
-- Seller configures FASHN AI credentials and model behavior from Settings.
-- Customer opens seller public page, uploads model photo, and runs try-on.
-- System creates try-on session, processes it via FASHN, and returns result.
-- Public usage is protected by backend quota/rate-limit controls (IP + device + daily cap).
+Try-On Commerce Studio is an open-source fashion virtual try-on platform built with Laravel.
+It helps fashion brands and stores let customers try outfits online before purchase.
 
-## AI Provider Used
+## Core Capabilities
 
-Current provider integration:
+- Product catalog management from a web dashboard
+- FASHN AI integration for garment try-on generation
+- Public storefront try-on flow (`/{store_slug}/{product_ref?}`)
+- Async processing with queue workers
+- Public traffic protection (daily quota, IP/device limiter, polling throttle)
+- Provider settings management (API key, model, dummy mode)
 
-- `FASHN AI` only (`App\Domain\AI\Providers\FashnProvider`)
+## AI Provider
 
-Supported model profiles:
+Current integration:
+
+- `FASHN AI` (`App\Domain\AI\Providers\FashnProvider`)
+
+Supported models:
 
 - `tryon-max`
 - `tryon-v1.6`
 
-Supported operating modes:
+Supported modes:
 
-- Real provider mode (requires seller API key in Settings)
-- Dummy mode per seller (for local/beta cost control)
+- Live mode (real API key)
+- Dummy mode (for local/beta simulation)
 
-## Main Features Available
+## How to Buy FASHN Credits
 
-### 1) Dashboard (Web)
+Credit purchase is handled in your FASHN account, not inside this app.
 
-- Route prefix: `/dashboard`
-- Sections:
-  - Dashboard metrics (products, recent try-on, FASHN credits)
-  - Products management
-  - Settings management
-- Recent try-on table includes:
-  - Request ID
-  - Model
-  - Created time
-  - Status
-  - Product name
-  - IP (masked)
-  - Preview
-  - Details modal (input/output snapshot)
+### Purchase Steps
 
-### 2) Product Management
+1. Sign in to your FASHN dashboard.
+2. Open Billing / Credits.
+3. Purchase credits (subscription or on-demand).
+4. Copy your FASHN API key.
+5. Open app settings at `/dashboard/settings`.
+6. Paste API key, choose model, run API key test.
+7. Save and run a try-on request.
 
-- CRUD product for current seller only
-- Product image source:
-  - Uploaded file
-  - External public URL
-- AI metadata per product:
-  - Prompt
-  - Category (`auto`, `tops`, `bottoms`, `one-pieces`)
-  - Garment photo type
-  - Segmentation flag
+### Verification Checklist
 
-### 3) Seller AI Settings
+- API key test returns success.
+- Dashboard can read FASHN credits.
+- Try-on request moves `pending` -> `processing` -> `completed`.
+
+### Troubleshooting
+
+- If credits are purchased but shown as `0`, validate the API key in settings.
+- Ensure outbound server access to FASHN API endpoints.
+- Use dummy mode only for simulation, not production generation.
+
+## Feature Overview
+
+### Dashboard
+
+Route prefix: `/dashboard`
+
+Main sections:
+
+- Overview and metrics
+- Products
+- Settings
+- Recent try-on history and request details
+
+### Product Management
+
+- Create, update, delete products
+- Upload product images or use external image URLs
+- Configure AI metadata:
+  - prompt
+  - category (`auto`, `tops`, `bottoms`, `one-pieces`)
+  - garment photo type
+  - segmentation flag
+
+### AI Settings
 
 Configured from `/dashboard/settings`:
 
-- FASHN API key (stored encrypted)
-- Test API key against FASHN credits endpoint
-- Model selection (`tryon-max` or `tryon-v1.6`)
-- Model-specific generation config
-- Dummy mode + dummy result URL + dummy model image URL
-- Public generate limit per day
-- Public limiter toggle:
-  - Per IP
-  - Per Device
+- FASHN API key (encrypted)
+- API key testing
+- Model selection
+- Model-specific generation options
+- Dummy mode + dummy URLs
+- Public daily generate limit
+- Public limiter toggles (IP / Device)
 
-Rule enforced:
+### Public Try-On Flow
 
-- At least one limiter must stay enabled (IP or device).
+Public route pattern:
 
-### 4) Seller Store + Try-On
+- `/{store_slug}/{product_ref?}`
 
-Public page route pattern:
+Try-on endpoints:
 
-- `/{seller_slug}/{product_ref?}`
+- `/{store_slug}/try-on/...`
 
-`product_ref` supports:
+Customer flow:
 
-- Product slug
-- SKU (case-insensitive)
+1. Open store page
+2. Select product
+3. Upload model photo (or dummy model if enabled)
+4. Generate try-on
+5. Poll session status
+6. View result and recent history
 
-Try-on endpoints under:
+### Queue Processing
 
-- `/{seller_slug}/try-on/...`
-
-Public flow:
-
-- Customer selects product
-- Uploads photo (or uses dummy model toggle if configured)
-- Generates try-on
-- Polls session status
-- Sees result and recent history
-
-### 5) Public Credit Protection
-
-Backend protections implemented:
-
-- Daily quota per seller public page
-- Per IP limiter
-- Per device limiter (`X-Tryon-Device-Id`)
-- Polling throttle for status endpoint
-- Generation is rejected at backend when limit is exhausted
-
-Public quality mode behavior:
-
-- Locked to cheapest mode on public flow (`standard` -> balanced/1k mapping).
-
-### 6) Queue Processing
-
-Try-on processing job:
+Job:
 
 - `App\Jobs\ProcessTryOnSessionJob`
 
 Behavior:
 
-- Creates provider job
-- Polls status
-- Updates session status
-- Stores audit logs for provider request/response
+- Create provider job
+- Poll provider status
+- Update session lifecycle
+- Store provider audit logs
 
-Queue mode notes:
+Queue notes:
 
-- Recommended: Redis queue worker in server/staging.
-- Local fallback: if `QUEUE_CONNECTION=sync`, polling runs in-request (blocking behavior).
+- Recommended: Redis queue worker in staging/production
+- Local fallback: `QUEUE_CONNECTION=sync` (blocking request)
 
-### 7) Media Retention
+### Media Retention
 
-Current behavior:
+- Sessions store `expires_at` using `TRYON_RETENTION_MINUTES`
+- Cleanup policy can be handled via external scheduler/job
 
-- Each try-on session stores `expires_at` based on `TRYON_RETENTION_MINUTES`.
-- Expiration timestamp is available for downstream cleanup policy (cron/job external).
-
-Note:
-
-- No built-in cleanup scheduler/job is registered in this repository.
-
-## Active Route Summary
+## Route Summary
 
 ### Web Routes
 
+- `GET /setup`
+- `POST /setup`
 - `GET /login`
 - `POST /login`
 - `POST /logout`
@@ -155,11 +150,11 @@ Note:
 - `POST /dashboard/settings`
 - `POST /dashboard/settings/test-api-key`
 - `POST /dashboard/model`
-- `POST /{seller_slug}/try-on/sessions`
-- `GET /{seller_slug}/try-on/quota`
-- `GET /{seller_slug}/try-on/sessions/{sessionId}`
-- `GET /{seller_slug}/try-on/sessions`
-- `GET /{seller_slug}/{product_ref?}`
+- `POST /{store_slug}/try-on/sessions`
+- `GET /{store_slug}/try-on/quota`
+- `GET /{store_slug}/try-on/sessions/{sessionId}`
+- `GET /{store_slug}/try-on/sessions`
+- `GET /{store_slug}/{product_ref?}`
 
 ### API Routes (Sanctum)
 
@@ -178,11 +173,6 @@ Note:
 - `POST /api/tryon/sessions`
 - `GET /api/tryon/sessions/{id}`
 
-## Roles and Access
-
-- Active dashboard role: `seller`
-- Role middleware: `role:seller`
-
 ## Tech Stack
 
 - PHP `^8.2`
@@ -190,12 +180,12 @@ Note:
 - PostgreSQL
 - Redis (recommended for queue/cache)
 - Laravel Sanctum
-- Blade views + vanilla JS
-- Vite build pipeline
+- Blade + vanilla JavaScript
+- Vite
 
 ## Local Setup
 
-From `project` directory:
+From `core-app` directory:
 
 ```bash
 composer install
@@ -213,57 +203,53 @@ php artisan serve
 npm run dev
 ```
 
-Run queue worker (recommended):
+Run queue worker:
 
 ```bash
 php artisan queue:work
 ```
 
-Or use combined dev script:
+Or run combined dev command:
 
 ```bash
 composer dev
 ```
 
-## Seeded Demo Account
+## Demo Seed Account
 
 Created by `DatabaseSeeder`:
 
 - Email: `seller@tryon.test`
 - Password: `password`
-- Seller slug: `ceriakid`
+- Store slug: `ceriakid`
 
-## Configuration Model (Important)
+## Configuration
 
-### A) Server-Level (`.env`)
-
-Still controlled from env:
+### Environment (`.env`)
 
 - Provider transport URL and status template
 - Timeout and retry policy
-- Queue/cache/db runtime behavior
+- Queue/cache/database runtime config
 - Retention and polling config
 
-See `.env.example` for active keys.
+See `.env.example` for current keys.
 
-### B) Seller-Level (Database via Settings UI)
+### Database Settings UI
 
-Controlled from dashboard settings:
+Managed from dashboard settings:
 
-- API key
+- FASHN API key
 - Model selection and model config
 - Dummy mode and dummy URLs
-- Public generate limit and limiter toggles
+- Public quota and limiter options
 
 ## Testing
-
-Run tests:
 
 ```bash
 php artisan test
 ```
 
-Current tests in repository focus on:
+Current test focus:
 
 - Basic application response
-- Seller API profile/product/image ownership flow
+- Profile/product/image ownership flow

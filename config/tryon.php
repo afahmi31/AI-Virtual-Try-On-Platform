@@ -20,7 +20,6 @@ return [
         'polling_per_minute' => (int) env('TRYON_PUBLIC_POLLING_PER_MINUTE', 120),
     ],
     'reserved_seller_slugs' => [
-        'admin',
         'dashboard',
         'api',
         'login',

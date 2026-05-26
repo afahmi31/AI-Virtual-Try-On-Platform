@@ -1,11 +1,11 @@
-# VPS Deployment Notes (Seller-Owned Pivot)
+# VPS Deployment Notes
 
 ## Prinsip Konfigurasi
 
-Setelah pivot seller-owned, konfigurasi dibagi menjadi dua:
+Konfigurasi dibagi menjadi dua:
 
 - **Server-level (.env)**: transport, timeout, retry, queue, cache, retention.
-- **Seller-level (Dashboard Settings / DB)**: API key, model, dummy mode, dummy URL, dummy model URL, dan daily public limit.
+- **App-level (Dashboard Settings / DB)**: API key, model, dummy mode, dummy URL, dummy model URL, dan daily public limit.
 
 Artinya, `FASHN_MODEL`, `FASHN_DUMMY_ENABLED`, `FASHN_DUMMY_RESULT_URL`, dan `TRYON_DUMMY_MODEL_IMAGE_URL` **tidak dipakai lagi dari env**.
 
@@ -19,7 +19,7 @@ Artinya, `FASHN_MODEL`, `FASHN_DUMMY_ENABLED`, `FASHN_DUMMY_RESULT_URL`, dan `TR
    - `FASHN_TIMEOUT_SECONDS=60` (sesuaikan kebutuhan)
    - `FASHN_RETRY_TIMES=2` (sesuaikan kebutuhan)
    - `FASHN_RETRY_SLEEP_MS=300` (sesuaikan kebutuhan)
-2. Pastikan setting seller di Dashboard terisi:
+2. Pastikan setting di Dashboard terisi:
    - FASHN API Key
    - Model
    - Dummy mode (on/off sesuai kebutuhan)
@@ -38,7 +38,7 @@ php artisan config:cache
 ## Catatan Operasional
 
 - Credit FASHN tetap aman karena limit generate public diproteksi di backend.
-- Jika dummy mode seller aktif, request tidak akan menembak proses real FASHN.
+- Jika dummy mode aktif, request tidak akan menembak proses real FASHN.
 - Mode quality public tetap dikunci ke mode termurah dari backend.
 - URL produk support dua format:
   - slug (contoh: `/ceriakid/gamis-anak-perempuan-fadia`)
