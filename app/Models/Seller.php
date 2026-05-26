@@ -30,11 +30,6 @@ class Seller extends Model
         return $this->hasMany(Product::class);
     }
 
-    public function usageBalance(): HasOne
-    {
-        return $this->hasOne(SellerUsageBalance::class);
-    }
-
     public function aiSetting(): HasOne
     {
         return $this->hasOne(SellerAiSetting::class);

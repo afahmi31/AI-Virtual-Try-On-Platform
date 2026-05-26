@@ -18,7 +18,6 @@ Route::middleware(['auth:sanctum', 'role:seller'])->prefix('seller')->group(func
     Route::get('/me', [SellerController::class, 'profile']);
     Route::get('/profile', [SellerController::class, 'profile']);
     Route::patch('/profile', [SellerController::class, 'updateProfile']);
-    Route::get('/usage', [SellerController::class, 'usage']);
     Route::get('/products', [SellerController::class, 'products']);
     Route::post('/products', [SellerController::class, 'storeProduct']);
     Route::get('/products/{id}', [SellerController::class, 'showProduct']);

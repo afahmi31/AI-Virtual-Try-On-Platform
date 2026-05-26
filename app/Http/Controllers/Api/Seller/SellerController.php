@@ -53,13 +53,6 @@ class SellerController extends Controller
         );
     }
 
-    public function usage(Request $request): JsonResponse
-    {
-        $seller = $this->currentSellerResolver->resolveForUser($request->user());
-
-        return response()->json($seller->usageBalance);
-    }
-
     public function products(Request $request): JsonResponse
     {
         $seller = $this->currentSellerResolver->resolveForUser($request->user());

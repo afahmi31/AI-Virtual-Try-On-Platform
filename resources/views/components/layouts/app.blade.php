@@ -1,5 +1,5 @@
 @props([
-    'title' => 'AI Try-On',
+    'title' => 'Try-On Commerce Studio',
     'hideHeader' => false,
 ])
 

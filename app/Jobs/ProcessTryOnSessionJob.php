@@ -32,9 +32,6 @@ class ProcessTryOnSessionJob implements ShouldQueue
             return;
         }
 
-        $session->loadMissing('seller.usageBalance');
-        $usage = $session->seller?->usageBalance;
-
         $provider = $providerRouter->resolve($session->provider_name);
         $session->loadMissing('product.images', 'seller.aiSetting');
         $providerConfig = $this->resolveProviderConfig($session);
@@ -43,9 +40,6 @@ class ProcessTryOnSessionJob implements ShouldQueue
 
         if ($productImageUrl === null || $modelImageUrl === null) {
             $this->failSession($session, null, 'Gambar produk atau foto customer tidak valid untuk dikirim ke provider.');
-            if ($usage) {
-                $usage->increment('failed_count');
-            }
 
             return;
         }
@@ -107,9 +101,6 @@ class ProcessTryOnSessionJob implements ShouldQueue
             );
 
             $this->failSession($session, null, 'Gagal membuat job ke provider. '.$exception->getMessage());
-            if ($usage) {
-                $usage->increment('failed_count');
-            }
 
             return;
         }
@@ -168,9 +159,6 @@ class ProcessTryOnSessionJob implements ShouldQueue
             );
 
             $this->failSession($session, (string) ($payload['provider_job_id'] ?? null), 'Provider status check error. '.$exception->getMessage());
-            if ($usage) {
-                $usage->increment('failed_count');
-            }
 
             return;
         }
@@ -192,9 +180,6 @@ class ProcessTryOnSessionJob implements ShouldQueue
 
                 if (($status['status'] ?? null) === 'processing') {
                     $this->failSession($session, (string) ($payload['provider_job_id'] ?? null), 'Provider timeout: status belum completed.');
-                    if ($usage) {
-                        $usage->increment('failed_count');
-                    }
 
                     return;
                 }
@@ -206,9 +191,6 @@ class ProcessTryOnSessionJob implements ShouldQueue
             $attempts = $this->currentAttempt();
             if ($attempts >= (int) config('tryon.polling.max_attempts', 30)) {
                 $this->failSession($session, (string) ($payload['provider_job_id'] ?? null), 'Provider timeout: status belum completed.');
-                if ($usage) {
-                    $usage->increment('failed_count');
-                }
 
                 return;
             }
@@ -220,13 +202,6 @@ class ProcessTryOnSessionJob implements ShouldQueue
         }
 
         if (($status['status'] ?? null) === 'completed') {
-            if ($usage) {
-                $usage->incrementEach([
-                    'token_used' => $cost,
-                    'success_count' => 1,
-                ]);
-            }
-
             $session->update([
                 'status' => 'completed',
                 'provider_job_id' => $payload['provider_job_id'] ?? null,
@@ -257,10 +232,6 @@ class ProcessTryOnSessionJob implements ShouldQueue
             ]);
 
             return;
-        }
-
-        if ($usage) {
-            $usage->increment('failed_count');
         }
 
         $this->failSession(

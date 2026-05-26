@@ -5,7 +5,6 @@ namespace Tests\Feature;
 use App\Models\Product;
 use App\Models\ProductImage;
 use App\Models\Seller;
-use App\Models\SellerUsageBalance;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
@@ -28,15 +27,6 @@ class SellerApiTest extends TestCase
             'store_name' => 'Seller One',
             'slug' => 'seller-one',
             'status' => 'active',
-        ]);
-
-        SellerUsageBalance::query()->create([
-            'seller_id' => $seller->id,
-            'token_balance' => 10,
-            'token_used' => 0,
-            'token_available' => 10,
-            'success_count' => 0,
-            'failed_count' => 0,
         ]);
 
         return [$user, $seller];

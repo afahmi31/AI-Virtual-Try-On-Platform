@@ -19,13 +19,9 @@ class SellerDashboardController extends Controller
     public function index()
     {
         $seller = $this->currentSellerResolver->resolveForUser(auth()->user());
-        $usage = $seller->usageBalance;
         $seller->loadMissing('aiSetting');
 
-        $tokenUsed = (int) ($usage->token_used ?? 0);
-        $tokenAvailable = (int) ($usage->token_available ?? 0);
-        $tokenBalance = (int) ($usage->token_balance ?? 0);
-        [$fashnCredits, $fashnCreditsSource] = $this->resolveFashnCredits($seller->aiSetting?->fashn_api_key, $tokenAvailable);
+        [$fashnCredits, $fashnCreditsSource] = $this->resolveFashnCredits($seller->aiSetting?->fashn_api_key);
         $activeModel = (string) ($seller->aiSetting?->fashn_model ?: 'tryon-max');
         $activeModelLabel = $activeModel === 'tryon-v1.6'
             ? 'FASHN Virtual Try-On v1.6'
@@ -41,7 +37,6 @@ class SellerDashboardController extends Controller
 
         $stats = [
             'total_products' => $seller->products()->count(),
-            'token_available' => $tokenAvailable,
             'fashn_credits' => $fashnCredits,
             'fashn_credits_source' => $fashnCreditsSource,
             'fashn_model' => $activeModel,
@@ -50,10 +45,6 @@ class SellerDashboardController extends Controller
             'dummy_enabled' => $dummyEnabled,
             'dummy_result_url' => $dummyResultUrl,
             'dummy_model_image_url' => $dummyModelImageUrl,
-            'token_used' => $tokenUsed,
-            'token_balance' => $tokenBalance,
-            'success_count' => (int) ($usage->success_count ?? 0),
-            'failed_count' => (int) ($usage->failed_count ?? 0),
             'recent_tryon' => TryOnSession::query()
                 ->with(['product:id,name', 'product.images:id,product_id,path,source_type,is_primary'])
                 ->where('seller_id', $seller->id)
@@ -92,12 +83,12 @@ class SellerDashboardController extends Controller
         ]);
     }
 
-    private function resolveFashnCredits(?string $apiKey, int $fallback): array
+    private function resolveFashnCredits(?string $apiKey): array
     {
         $fallbackCredits = [
-            'total' => $fallback,
+            'total' => 0,
             'subscription' => 0,
-            'on_demand' => $fallback,
+            'on_demand' => 0,
         ];
 
         $key = trim((string) $apiKey);

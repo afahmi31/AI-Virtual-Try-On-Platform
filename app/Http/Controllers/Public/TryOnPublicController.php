@@ -214,16 +214,6 @@ class TryOnPublicController extends Controller
                     'provider_config' => $this->resolveProviderConfig($session->seller),
                 ]);
 
-                if ((int) $session->token_cost === 0) {
-                    $usage = $session->seller?->usageBalance;
-                    if ($usage) {
-                        $usage->incrementEach([
-                            'token_used' => $cost,
-                            'success_count' => 1,
-                        ]);
-                    }
-                }
-
                 $session->update([
                     'status' => 'completed',
                     'result_path' => $status['result_path'] ?? $status['result_url'] ?? $session->result_path,

@@ -30,11 +30,11 @@ Supported operating modes:
 
 ## Main Features Available
 
-### 1) Seller Dashboard (Web)
+### 1) Dashboard (Web)
 
 - Route prefix: `/dashboard`
 - Sections:
-  - Dashboard metrics (products, token usage, recent try-on, FASHN credits)
+  - Dashboard metrics (products, recent try-on, FASHN credits)
   - Products management
   - Settings management
 - Recent try-on table includes:
@@ -77,7 +77,7 @@ Rule enforced:
 
 - At least one limiter must stay enabled (IP or device).
 
-### 4) Public Seller Page + Try-On
+### 4) Seller Store + Try-On
 
 Public page route pattern:
 
@@ -124,7 +124,7 @@ Behavior:
 
 - Creates provider job
 - Polls status
-- Updates token usage and session status
+- Updates session status
 - Stores audit logs for provider request/response
 
 Queue mode notes:
@@ -174,7 +174,6 @@ Note:
 - `GET /api/seller/me`
 - `GET /api/seller/profile`
 - `PATCH /api/seller/profile`
-- `GET /api/seller/usage`
 - `GET /api/seller/products`
 - `POST /api/seller/products`
 - `GET /api/seller/products/{id}`
@@ -274,9 +273,3 @@ Current tests in repository focus on:
 
 - Basic application response
 - Seller API profile/product/image ownership flow
-
-## Current Scope Boundaries
-
-- This system is currently seller-owned oriented.
-- No active feature in this codebase for old SaaS admin management panel.
-- README intentionally documents only what exists in runtime code now.

@@ -5,7 +5,6 @@ namespace App\Http\Controllers\Auth;
 use App\Http\Controllers\Controller;
 use App\Models\Seller;
 use App\Models\SellerAiSetting;
-use App\Models\SellerUsageBalance;
 use App\Models\User;
 use App\Support\InitialSetup;
 use Illuminate\Http\RedirectResponse;
@@ -65,15 +64,6 @@ class SetupController extends Controller
                 'status' => 'active',
             ]);
 
-            SellerUsageBalance::query()->create([
-                'seller_id' => $seller->id,
-                'token_balance' => 0,
-                'token_used' => 0,
-                'token_available' => 0,
-                'success_count' => 0,
-                'failed_count' => 0,
-            ]);
-
             SellerAiSetting::query()->create([
                 'seller_id' => $seller->id,
                 'provider_name' => 'fashn',
@@ -94,4 +84,3 @@ class SetupController extends Controller
             ->with('success', 'Initial setup selesai. Silakan lanjutkan konfigurasi toko dan API key.');
     }
 }
-
