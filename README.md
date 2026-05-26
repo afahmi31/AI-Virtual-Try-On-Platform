@@ -182,7 +182,6 @@ Note:
 
 - Active dashboard role: `seller`
 - Role middleware: `role:seller`
-- Legacy multi-admin SaaS module is not part of active `core-app` flow.
 
 ## Tech Stack
 
