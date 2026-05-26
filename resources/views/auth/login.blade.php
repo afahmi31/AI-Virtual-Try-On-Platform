@@ -61,12 +61,6 @@
         .login-btn:hover {
             background: linear-gradient(135deg, #0f766e, #075985);
         }
-        .login-credential-note {
-            margin: 16px 0 0;
-            font-size: 13px;
-            text-align: center;
-            color: #475569;
-        }
         @media (max-width: 640px) {
             .login-wrap {
                 min-height: auto;
@@ -95,8 +89,6 @@
             <input type="password" name="password" required>
             <button type="submit" class="login-btn">Login</button>
             </form>
-
-            <p class="login-credential-note">Default owner: seller@tryon.test / password</p>
         </div>
     </div>
 </x-layouts.app>

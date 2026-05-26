@@ -1,16 +1,26 @@
 <?php
 
 use App\Http\Controllers\Auth\WebAuthController;
+use App\Http\Controllers\Auth\SetupController;
 use App\Http\Controllers\Public\SellerPublicController;
 use App\Http\Controllers\Public\TryOnPublicController;
 use App\Http\Controllers\Seller\SellerDashboardController;
 use App\Http\Controllers\Seller\SellerProductController;
 use App\Http\Controllers\Seller\SellerSettingsController;
+use App\Support\InitialSetup;
 use Illuminate\Support\Facades\Route;
 
-Route::redirect('/', '/login');
+Route::get('/', function () {
+    if (InitialSetup::isCompleted()) {
+        return redirect()->route('login');
+    }
+
+    return redirect()->route('setup');
+});
 
 Route::middleware('guest')->group(function (): void {
+    Route::get('/setup', [SetupController::class, 'show'])->name('setup');
+    Route::post('/setup', [SetupController::class, 'store'])->name('setup.store');
     Route::get('/login', [WebAuthController::class, 'showLogin'])->name('login');
     Route::post('/login', [WebAuthController::class, 'login'])->name('login.submit');
 });
@@ -45,7 +55,9 @@ Route::prefix('{seller_slug}/try-on')->middleware('seller.locale')->group(functi
         ->name('public.tryon.sessions.history');
 });
 
+$reservedSellerSlugPattern = implode('|', array_map(static fn (string $slug): string => preg_quote($slug, '/'), config('tryon.reserved_seller_slugs', [])));
+
 Route::get('/{seller_slug}/{product_ref?}', [SellerPublicController::class, 'index'])->middleware('seller.locale')
-    ->where('seller_slug', '^(?!admin$|dashboard$|api$|login$|logout$)[A-Za-z0-9\-]+$')
+    ->where('seller_slug', '^(?!('.$reservedSellerSlugPattern.')$)[A-Za-z0-9\-]+$')
     ->where('product_ref', '[A-Za-z0-9\-]+')
     ->name('public.seller.page');

@@ -25,5 +25,6 @@ return [
         'api',
         'login',
         'logout',
+        'setup',
     ],
 ];
