@@ -1,8 +1,3 @@
-# Try-On Commerce Studio (Seller-Owned)
-
-Laravel-based virtual try-on system focused on a single seller operation model.  
-This repository reflects the active implementation in `core-app` (not development plans).
-
 ## What This System Does
 
 - Seller logs in to a private dashboard.
@@ -201,7 +196,7 @@ Note:
 
 ## Local Setup
 
-From `core-app` directory:
+From `project` directory:
 
 ```bash
 composer install
