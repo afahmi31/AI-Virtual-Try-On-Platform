@@ -443,6 +443,31 @@
             width: auto;
             max-width: none;
         }
+        .marketplace-links {
+            margin: 6px 0 10px;
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+        .marketplace-link-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            height: 34px;
+            padding: 0 12px;
+            border-radius: 999px;
+            border: 1px solid #b8cde2;
+            background: #eef6ff;
+            color: #1f4f78;
+            text-decoration: none;
+            font-family: Inter, "Segoe UI", sans-serif;
+            font-size: 12px;
+            font-weight: 700;
+        }
+        .marketplace-link-btn:hover {
+            background: #e3f1ff;
+            border-color: #8cb1d3;
+        }
 
         .field {
             border-radius: var(--radius-md);
@@ -1036,6 +1061,7 @@
                 data-product-sku="{{ $product->sku }}"
                 data-product-category="{{ $product->category }}"
                 data-product-image="{{ $image?->image_url ?? '' }}"
+                data-product-link-url="{{ $product->product_link_url ?? '' }}"
                 onclick="openTryOnModal(this)">
                 <div class="thumb-wrap">
                     @if($image)
@@ -1100,7 +1126,8 @@
                 data-product-slug="{{ $selectedProduct->slug }}"
                 data-product-sku="{{ $selectedProduct->sku }}"
                 data-product-category="{{ $selectedProduct->category }}"
-                data-product-image="{{ $selectedProductImage?->image_url ?? '' }}">
+                data-product-image="{{ $selectedProductImage?->image_url ?? '' }}"
+                data-product-link-url="{{ $selectedProduct->product_link_url ?? '' }}">
             </button>
         @endif
         <button id="floatingHistoryBtn" type="button" class="floating-history-btn" aria-label="{{ __('ui.store.history_button_aria') }}">
@@ -1136,6 +1163,7 @@
                     {{ __('ui.store.quota_today_remaining') }}: <strong id="remainingQuotaText">-</strong>
                 </div>
             </div>
+            <div id="marketplaceLinks" class="marketplace-links"></div>
 
             <input class="input-file" id="customerPhoto" type="file" accept="image/*">
 
@@ -1241,7 +1269,9 @@
             selectedProductId = Number(el.getAttribute('data-product-id')) || null;
             const productSlug = el.getAttribute('data-product-slug');
             const productSku = el.getAttribute('data-product-sku');
+            const productLinkUrl = el.getAttribute('data-product-link-url') || '';
             document.getElementById('selectedProductName').textContent = productName;
+            renderMarketplaceLinks(productLinkUrl);
             const selectedProductPreview = document.getElementById('selectedProductPreview');
             const selectedProductPreviewFallback = document.getElementById('selectedProductPreviewFallback');
             if (selectedProductPreview && selectedProductPreviewFallback) {
@@ -1261,6 +1291,22 @@
                 const newUrl = `/${@json($seller->slug)}/${productRef}`;
                 window.history.replaceState({}, '', newUrl);
             }
+        }
+
+        function renderMarketplaceLinks(productLinkUrl) {
+            const wrap = document.getElementById('marketplaceLinks');
+            if (!wrap) return;
+            wrap.innerHTML = '';
+            const link = (productLinkUrl || '').trim();
+            if (!link) return;
+
+            const a = document.createElement('a');
+            a.className = 'marketplace-link-btn';
+            a.href = link;
+            a.target = '_blank';
+            a.rel = 'noopener noreferrer';
+            a.textContent = 'Link Produk';
+            wrap.appendChild(a);
         }
 
         function openTryOnModal(el) {

@@ -18,6 +18,7 @@ class Product extends Model
         'ai_category',
         'ai_garment_photo_type',
         'ai_segmentation_free',
+        'product_link_url',
         'status',
     ];
 

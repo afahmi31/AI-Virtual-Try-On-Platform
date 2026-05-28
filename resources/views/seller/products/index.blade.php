@@ -180,7 +180,7 @@
                             </td>
                             <td data-label="Actions">
                                 <div class="actions">
-                                    <button class="btn btn-ghost" type="button" onclick="openEditModal({{ $product->id }}, '{{ addslashes($product->name) }}', '{{ addslashes($product->sku ?? '') }}', '{{ addslashes($product->category ?? '') }}', '{{ $product->status }}', '{{ addslashes($primaryImage?->image_url ?? '') }}', '{{ addslashes($product->ai_prompt ?? '') }}', '{{ addslashes($product->ai_category ?? 'auto') }}', '{{ addslashes($product->ai_garment_photo_type ?? 'auto') }}', '{{ (int) ($product->ai_segmentation_free ?? true) }}')">Edit</button>
+                                    <button class="btn btn-ghost" type="button" onclick="openEditModal({{ $product->id }}, '{{ addslashes($product->name) }}', '{{ addslashes($product->sku ?? '') }}', '{{ addslashes($product->category ?? '') }}', '{{ $product->status }}', '{{ addslashes($primaryImage?->image_url ?? '') }}', '{{ addslashes($product->ai_prompt ?? '') }}', '{{ addslashes($product->ai_category ?? 'auto') }}', '{{ addslashes($product->ai_garment_photo_type ?? 'auto') }}', '{{ (int) ($product->ai_segmentation_free ?? true) }}', '{{ addslashes($product->product_link_url ?? '') }}')">Edit</button>
                                     <form method="POST" action="{{ route('seller.products.destroy', $product->id) }}" onsubmit="return openDeleteConfirm(event, this);" style="display:inline;">
                                         @csrf
                                         @method('DELETE')
@@ -241,6 +241,7 @@
                         <div class="field"><label>{{ __('ui.products_page.product_name') }}</label><input id="createName" name="name" required></div>
                         <div class="field"><label>SKU</label><input name="sku"></div>
                         <div class="field"><label>{{ __('ui.products_page.category') }}</label><input id="createCategory" name="category" placeholder="{{ __('ui.products_page.category_placeholder') }}"></div>
+                        <div class="field"><label>Link Produk</label><input type="url" name="product_link_url" placeholder="https://..."></div>
                     </section>
                     <section class="form-section ai-config-section" id="createAiConfigSection">
                         <div class="form-section-head">
@@ -341,6 +342,7 @@
                         <div class="field"><label>{{ __('ui.products_page.product_name') }}</label><input id="editName" name="name" required></div>
                         <div class="field"><label>SKU</label><input id="editSku" name="sku"></div>
                         <div class="field"><label>{{ __('ui.products_page.category') }}</label><input id="editCategory" name="category"></div>
+                        <div class="field"><label>Link Produk</label><input id="editProductLinkUrl" type="url" name="product_link_url" placeholder="https://..."></div>
                     </section>
                     <section class="form-section ai-config-section" id="editAiConfigSection">
                         <div class="form-section-head">
@@ -441,13 +443,14 @@
         openModal('createModal');
     }
 
-    function openEditModal(id, name, sku, category, status, imageUrl, aiPrompt, aiCategory, aiGarmentPhotoType, aiSegmentationFree) {
+    function openEditModal(id, name, sku, category, status, imageUrl, aiPrompt, aiCategory, aiGarmentPhotoType, aiSegmentationFree, productLinkUrl) {
         const form = document.getElementById('editForm');
         form.action = `/dashboard/products/${id}`;
         document.getElementById('editProductId').value = id;
         document.getElementById('editName').value = name;
         document.getElementById('editSku').value = sku;
         document.getElementById('editCategory').value = category;
+        document.getElementById('editProductLinkUrl').value = productLinkUrl || '';
         document.getElementById('editAiPrompt').value = aiPrompt || '';
         setAiOption('edit', 'category', aiCategory || 'auto');
         setAiOption('edit', 'photoType', aiGarmentPhotoType || 'auto');
@@ -690,7 +693,8 @@
             @json(old('ai_prompt', '')),
             @json(old('ai_category', 'auto')),
             @json(old('ai_garment_photo_type', 'auto')),
-            @json((int) old('ai_segmentation_free', 1))
+            @json((int) old('ai_segmentation_free', 1)),
+            @json(old('product_link_url', ''))
         );
     @endif
 </script>
