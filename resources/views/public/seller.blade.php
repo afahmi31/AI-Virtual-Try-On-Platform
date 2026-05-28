@@ -1260,7 +1260,7 @@
         const TRYON_DUMMY = @json($tryOnDummy ?? ['enabled' => false, 'model_image_url' => '', 'result_url' => '']);
         const TRYON_HISTORY_URL = @json(route('public.tryon.sessions.history', ['seller_slug' => $seller->slug]));
         let remainingDailyQuota = null;
-        let useDummyModelForRealGenerate = Boolean(TRYON_DUMMY.model_image_url);
+        let useDummyModelForRealGenerate = false;
 
         function resolveTryOnDeviceId() {
             try {
@@ -1943,7 +1943,8 @@
 
             const toggle = document.getElementById('useDummyModelToggle');
             if (toggle) {
-                toggle.checked = Boolean(TRYON_DUMMY.model_image_url);
+                // Default OFF when seller dummy mode is disabled, even if dummy URL exists.
+                toggle.checked = false;
                 toggle.addEventListener('change', function() {
                     useDummyModelForRealGenerate = this.checked;
                     applyDummyModelSelectionUI();
