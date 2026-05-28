@@ -443,30 +443,49 @@
             width: auto;
             max-width: none;
         }
-        .marketplace-links {
-            margin: 6px 0 10px;
+        .tryon-action-row {
+            margin-top: 12px;
             display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .marketplace-links {
+            display: none;
+            align-items: center;
             gap: 8px;
-            flex-wrap: wrap;
+            flex: 0 0 auto;
+        }
+        .marketplace-links.has-link {
+            display: inline-flex;
         }
         .marketplace-link-btn {
             display: inline-flex;
             align-items: center;
             gap: 6px;
-            height: 34px;
-            padding: 0 12px;
-            border-radius: 999px;
+            height: 44px;
+            padding: 0 14px;
+            border-radius: 14px;
             border: 1px solid #b8cde2;
             background: #eef6ff;
             color: #1f4f78;
             text-decoration: none;
             font-family: Inter, "Segoe UI", sans-serif;
-            font-size: 12px;
+            font-size: 13px;
             font-weight: 700;
+            white-space: nowrap;
         }
         .marketplace-link-btn:hover {
             background: #e3f1ff;
             border-color: #8cb1d3;
+        }
+        .marketplace-link-btn svg {
+            width: 16px;
+            height: 16px;
+            stroke: currentColor;
+            fill: none;
+            stroke-width: 2;
+            stroke-linecap: round;
+            stroke-linejoin: round;
         }
 
         .field {
@@ -798,6 +817,7 @@
             font-size: 16px;
             font-weight: 800;
             cursor: pointer;
+            flex: 1 1 auto;
         }
 
         .generate-btn:disabled {
@@ -1163,8 +1183,6 @@
                     {{ __('ui.store.quota_today_remaining') }}: <strong id="remainingQuotaText">-</strong>
                 </div>
             </div>
-            <div id="marketplaceLinks" class="marketplace-links"></div>
-
             <input class="input-file" id="customerPhoto" type="file" accept="image/*">
 
             <div class="tryon-main-grid">
@@ -1212,7 +1230,10 @@
                 </div>
             </div>
 
-            <button id="generateBtn" class="generate-btn" type="button" onclick="submitTryOn()">{{ __('ui.store.tryon_action') }}</button>
+            <div class="tryon-action-row">
+                <div id="marketplaceLinks" class="marketplace-links"></div>
+                <button id="generateBtn" class="generate-btn" type="button" onclick="submitTryOn()">{{ __('ui.store.tryon_action') }}</button>
+            </div>
         </div>
     </div>
 
@@ -1297,6 +1318,7 @@
             const wrap = document.getElementById('marketplaceLinks');
             if (!wrap) return;
             wrap.innerHTML = '';
+            wrap.classList.remove('has-link');
             const link = (productLinkUrl || '').trim();
             if (!link) return;
 
@@ -1305,8 +1327,16 @@
             a.href = link;
             a.target = '_blank';
             a.rel = 'noopener noreferrer';
-            a.textContent = 'Link Produk';
+            a.innerHTML = `
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                    <circle cx="9" cy="20" r="1.5"></circle>
+                    <circle cx="18" cy="20" r="1.5"></circle>
+                    <path d="M3 4h2l2.2 10.2a2 2 0 0 0 2 1.6h7.9a2 2 0 0 0 2-1.6L21 8H7"></path>
+                </svg>
+                <span>Beli Produk</span>
+            `;
             wrap.appendChild(a);
+            wrap.classList.add('has-link');
         }
 
         function openTryOnModal(el) {
