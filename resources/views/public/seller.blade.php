@@ -701,7 +701,6 @@
         }
 
         .preview-box-product {
-            height: 180px;
             aspect-ratio: auto;
         }
 
@@ -1166,6 +1165,37 @@
             box-shadow: 0 20px 42px rgba(0, 0, 0, 0.4);
         }
 
+        .history-preview-buy {
+            position: fixed;
+            left: 50%;
+            bottom: 26px;
+            transform: translateX(-50%);
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            min-height: 44px;
+            padding: 0 18px;
+            border-radius: 999px;
+            border: 1px solid rgba(255, 255, 255, 0.42);
+            background: rgba(20, 56, 84, 0.82);
+            color: #ffffff;
+            font-size: 14px;
+            font-weight: 800;
+            text-decoration: none;
+            box-shadow: 0 10px 24px rgba(0, 0, 0, 0.3);
+            z-index: 1502;
+        }
+
+        .history-preview-buy svg {
+            width: 16px;
+            height: 16px;
+            stroke: currentColor;
+            fill: none;
+            stroke-width: 2;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+        }
+
         .history-wrap {
             margin: 4px 0 10px;
             border: 1px solid #d7e3ef;
@@ -1264,10 +1294,6 @@
             .tryon-main-grid {
                 grid-template-columns: 1fr;
                 height: auto;
-            }
-
-            .preview-box-product {
-                height: 180px;
             }
 
             .preview-box-result {
@@ -1435,6 +1461,14 @@
             <div class="history-preview-modal" role="dialog" aria-modal="true" aria-labelledby="historyPreviewTitle">
                 <p id="historyPreviewTitle" style="position:absolute;left:-9999px;">Hasil Generated</p>
                 <button id="historyPreviewClose" type="button" class="history-preview-close" aria-label="{{ __('ui.common.close') }}">&times;</button>
+                <a id="historyPreviewBuy" class="history-preview-buy" href="#" target="_blank" rel="noopener noreferrer" style="display:none;">
+                    <svg viewBox="0 0 24 24" aria-hidden="true">
+                        <circle cx="9" cy="20" r="1.5"></circle>
+                        <circle cx="18" cy="20" r="1.5"></circle>
+                        <path d="M3 4h2l2.2 10.2a2 2 0 0 0 2 1.6h7.9a2 2 0 0 0 2-1.6L21 8H7"></path>
+                    </svg>
+                    <span>Beli Produk</span>
+                </a>
                 <div class="history-preview-body">
                     <img id="historyPreviewImage" class="history-preview-image" alt="History generated result">
                 </div>
@@ -1550,6 +1584,7 @@
         const TRYON_HISTORY_URL = @json(route('public.tryon.sessions.history', ['seller_slug' => $seller->slug]));
         let remainingDailyQuota = null;
         let useDummyModelForRealGenerate = false;
+        let selectedProductLinkUrl = '';
 
         function resolveTryOnDeviceId() {
             try {
@@ -1641,6 +1676,7 @@
             const productSlug = el.getAttribute('data-product-slug');
             const productSku = el.getAttribute('data-product-sku');
             const productLinkUrl = el.getAttribute('data-product-link-url') || '';
+            selectedProductLinkUrl = productLinkUrl;
             document.getElementById('selectedProductName').textContent = productName;
             renderMarketplaceLinks(productLinkUrl);
             const selectedProductPreview = document.getElementById('selectedProductPreview');
@@ -1916,8 +1952,10 @@
                 btn.appendChild(time);
                 btn.addEventListener('click', () => {
                     const historyLink = item.result_url || '';
+                    const currentCard = document.querySelector('#productGrid .card.selected') || document.querySelector('#productGrid .card');
+                    const productLink = currentCard ? (currentCard.getAttribute('data-product-link-url') || '') : '';
                     if (historyLink) {
-                        openHistoryPreviewModal(historyLink);
+                        openHistoryPreviewModal(historyLink, productLink);
                     }
                     closeFloatingHistoryPanel();
                 });
@@ -1944,18 +1982,29 @@
             panel.setAttribute('aria-hidden', 'true');
         }
 
-        function openHistoryPreviewModal(url) {
+        function openHistoryPreviewModal(url, productLinkUrl = '') {
             if (!url) {
                 return;
             }
 
             const overlay = document.getElementById('historyPreviewOverlay');
             const image = document.getElementById('historyPreviewImage');
+            const buyBtn = document.getElementById('historyPreviewBuy');
             if (!overlay || !image) {
                 return;
             }
 
             image.src = url;
+            const link = (productLinkUrl || selectedProductLinkUrl || '').trim();
+            if (buyBtn) {
+                if (link) {
+                    buyBtn.href = link;
+                    buyBtn.style.display = 'inline-flex';
+                } else {
+                    buyBtn.removeAttribute('href');
+                    buyBtn.style.display = 'none';
+                }
+            }
             overlay.classList.add('active');
             overlay.setAttribute('aria-hidden', 'false');
             document.body.style.overflow = 'hidden';
@@ -1964,6 +2013,7 @@
         function closeHistoryPreviewModal() {
             const overlay = document.getElementById('historyPreviewOverlay');
             const image = document.getElementById('historyPreviewImage');
+            const buyBtn = document.getElementById('historyPreviewBuy');
             if (!overlay || !image) {
                 return;
             }
@@ -1971,6 +2021,10 @@
             overlay.classList.remove('active');
             overlay.setAttribute('aria-hidden', 'true');
             image.removeAttribute('src');
+            if (buyBtn) {
+                buyBtn.removeAttribute('href');
+                buyBtn.style.display = 'none';
+            }
             document.body.style.overflow = '';
         }
 
