@@ -905,6 +905,22 @@
             gap: 8px;
         }
 
+        .compare-frame.is-history-full .compare-before,
+        .compare-frame.is-history-full .compare-divider,
+        .compare-frame.is-history-full .compare-slider,
+        .compare-frame.is-history-full .compare-labels,
+        .compare-frame.is-history-full .compare-model-stage {
+            display: none !important;
+        }
+
+        .compare-frame.is-history-full .compare-after-wrap {
+            display: block !important;
+            inset: 0;
+            clip-path: inset(0 0 0 0);
+            border-left: none;
+            width: 100%;
+        }
+
         .selected-product-thumb {
             width: 100%;
             border-radius: 10px;
@@ -1085,6 +1101,69 @@
             font-size: 20px;
             line-height: 1;
             cursor: pointer;
+        }
+
+        .history-preview-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(8, 18, 28, 0.84);
+            backdrop-filter: blur(3px);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1500;
+            padding: 24px;
+        }
+
+        .history-preview-overlay.active {
+            display: flex;
+        }
+
+        .history-preview-modal {
+            position: relative;
+            width: auto;
+            max-width: min(94vw, 1100px);
+            max-height: 92vh;
+            background: transparent;
+            border: none;
+            box-shadow: none;
+            display: grid;
+            place-items: center;
+        }
+
+        .history-preview-close {
+            position: fixed;
+            top: 24px;
+            right: 24px;
+            width: 34px;
+            height: 34px;
+            border: 1px solid rgba(255, 255, 255, 0.32);
+            border-radius: 999px;
+            background: rgba(16, 36, 54, 0.55);
+            color: #f5fbff;
+            font-size: 22px;
+            line-height: 1;
+            cursor: pointer;
+            z-index: 1502;
+        }
+
+        .history-preview-body {
+            padding: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 0;
+            background: transparent;
+        }
+
+        .history-preview-image {
+            max-width: min(94vw, 1100px);
+            max-height: 90vh;
+            object-fit: contain;
+            border-radius: 8px;
+            background: transparent;
+            border: none;
+            box-shadow: 0 20px 42px rgba(0, 0, 0, 0.4);
         }
 
         .history-wrap {
@@ -1352,6 +1431,15 @@
             <div id="floatingHistoryList" class="history-list"></div>
             <p id="floatingHistoryEmpty" class="history-empty">{{ __('ui.store.no_history') }}</p>
         </div>
+        <div id="historyPreviewOverlay" class="history-preview-overlay" aria-hidden="true">
+            <div class="history-preview-modal" role="dialog" aria-modal="true" aria-labelledby="historyPreviewTitle">
+                <p id="historyPreviewTitle" style="position:absolute;left:-9999px;">Hasil Generated</p>
+                <button id="historyPreviewClose" type="button" class="history-preview-close" aria-label="{{ __('ui.common.close') }}">&times;</button>
+                <div class="history-preview-body">
+                    <img id="historyPreviewImage" class="history-preview-image" alt="History generated result">
+                </div>
+            </div>
+        </div>
     </main>
 
     <div class="modal-overlay" id="tryOnModal" aria-hidden="true">
@@ -1500,13 +1588,28 @@
             }
 
             if (hasResult) {
+                frame.classList.remove('is-history-full');
                 frame.classList.add('is-comparison');
                 resultPlaceholder.style.display = 'none';
                 return;
             }
 
             frame.classList.remove('is-comparison');
+            frame.classList.remove('is-history-full');
             resultPlaceholder.style.display = 'none';
+        }
+
+        function setHistoryPreviewMode(active) {
+            const frame = document.getElementById('compareFrame');
+            if (!frame) {
+                return;
+            }
+            if (active) {
+                frame.classList.remove('is-comparison');
+                frame.classList.add('is-history-full');
+                return;
+            }
+            frame.classList.remove('is-history-full');
         }
 
         function syncComparisonBeforeImage() {
@@ -1611,6 +1714,7 @@
 
         document.addEventListener('keydown', function(event) {
             if (event.key === 'Escape') {
+                closeHistoryPreviewModal();
                 closeTryOnModal();
             }
         });
@@ -1728,7 +1832,7 @@
             resultPreview.src = url;
             resultPreview.style.display = 'block';
             resultPlaceholder.style.display = 'none';
-            updateCompareMode(true);
+            setHistoryPreviewMode(true);
             setComparisonPosition(50);
             setStatus(I18N.historyResultShown, 'success');
         }
@@ -1811,11 +1915,10 @@
                 btn.appendChild(img);
                 btn.appendChild(time);
                 btn.addEventListener('click', () => {
-                    const currentCard = document.querySelector('#productGrid .card.selected') || document.querySelector('#productGrid .card');
-                    if (currentCard) {
-                        openTryOnModal(currentCard);
+                    const historyLink = item.result_url || '';
+                    if (historyLink) {
+                        openHistoryPreviewModal(historyLink);
                     }
-                    showHistoryResult(item.result_url);
                     closeFloatingHistoryPanel();
                 });
                 listEl.appendChild(btn);
@@ -1839,6 +1942,36 @@
             }
             panel.classList.remove('active');
             panel.setAttribute('aria-hidden', 'true');
+        }
+
+        function openHistoryPreviewModal(url) {
+            if (!url) {
+                return;
+            }
+
+            const overlay = document.getElementById('historyPreviewOverlay');
+            const image = document.getElementById('historyPreviewImage');
+            if (!overlay || !image) {
+                return;
+            }
+
+            image.src = url;
+            overlay.classList.add('active');
+            overlay.setAttribute('aria-hidden', 'false');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeHistoryPreviewModal() {
+            const overlay = document.getElementById('historyPreviewOverlay');
+            const image = document.getElementById('historyPreviewImage');
+            if (!overlay || !image) {
+                return;
+            }
+
+            overlay.classList.remove('active');
+            overlay.setAttribute('aria-hidden', 'true');
+            image.removeAttribute('src');
+            document.body.style.overflow = '';
         }
 
         async function refreshHistory() {
@@ -2029,6 +2162,7 @@
                 resultPreview.src = TRYON_DUMMY.result_url;
                 resultPreview.style.display = 'block';
                 resultPlaceholder.style.display = 'none';
+                setHistoryPreviewMode(false);
                 updateCompareMode(true);
                 setComparisonPosition(50);
                 consumeDummyQuotaUI();
@@ -2133,6 +2267,7 @@
                             resultPreview.src = payload.result_url;
                             resultPreview.style.display = 'block';
                             resultPlaceholder.style.display = 'none';
+                            setHistoryPreviewMode(false);
                             updateCompareMode(true);
                             setComparisonPosition(50);
                         }
@@ -2201,6 +2336,18 @@
                         return;
                     }
                     closeFloatingHistoryPanel();
+                });
+            }
+            const historyPreviewOverlay = document.getElementById('historyPreviewOverlay');
+            const historyPreviewClose = document.getElementById('historyPreviewClose');
+            if (historyPreviewClose) {
+                historyPreviewClose.addEventListener('click', closeHistoryPreviewModal);
+            }
+            if (historyPreviewOverlay) {
+                historyPreviewOverlay.addEventListener('click', function(event) {
+                    if (event.target === historyPreviewOverlay) {
+                        closeHistoryPreviewModal();
+                    }
                 });
             }
 
