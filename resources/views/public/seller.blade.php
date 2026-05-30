@@ -638,7 +638,7 @@
 
         .tryon-main-grid {
             display: grid;
-            grid-template-columns: 250px minmax(0, 1fr);
+            grid-template-columns: 300px minmax(0, 1fr);
             gap: 10px;
             margin-bottom: 10px;
             width: 100%;
@@ -646,12 +646,7 @@
             height: auto;
         }
 
-        .tryon-left-rail {
-            display: grid;
-            grid-template-rows: auto auto;
-            gap: 10px;
-            min-width: 0;
-        }
+        .tryon-left-rail { min-width: 0; }
 
         .tryon-main-grid > .field {
             min-width: 0;
@@ -710,15 +705,204 @@
             aspect-ratio: auto;
         }
 
-        .preview-box-model {
-            height: 180px;
+        .preview-box-result {
+            width: 100%;
+            height: 420px;
             aspect-ratio: auto;
         }
 
-        .preview-box-result {
+        .compare-frame {
+            position: relative;
             width: 100%;
-            height: 340px;
-            aspect-ratio: auto;
+            height: 100%;
+            border-radius: 12px;
+            overflow: hidden;
+            background: #f1f6fb;
+            border: 1px solid #d7e3ef;
+        }
+
+        .compare-frame img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            object-position: center center;
+            display: block;
+            user-select: none;
+            -webkit-user-drag: none;
+        }
+
+        .compare-before {
+            position: absolute;
+            inset: 0;
+            background: #f7fbff;
+            display: none;
+        }
+
+        .compare-after-wrap {
+            position: absolute;
+            inset: 0;
+            background: #fff;
+            display: none;
+            clip-path: inset(0 0 0 50%);
+        }
+
+        .compare-after-wrap img { width: 100%; }
+
+        .compare-divider {
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            left: 50%;
+            width: 2px;
+            margin-left: -1px;
+            background: #ffffff;
+            box-shadow: 0 0 0 1px rgba(33, 117, 155, 0.18);
+            pointer-events: none;
+            display: none;
+        }
+
+        .compare-divider::after {
+            content: '<>';
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            width: 30px;
+            height: 30px;
+            border-radius: 999px;
+            background: #ffffff;
+            border: 1px solid #c9dff1;
+            color: #2f628c;
+            font-size: 11px;
+            font-weight: 800;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            letter-spacing: -0.02em;
+        }
+
+        .compare-slider {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            appearance: none;
+            background: transparent;
+            cursor: ew-resize;
+            z-index: 4;
+            display: none;
+        }
+
+        .compare-slider::-webkit-slider-thumb {
+            appearance: none;
+            width: 34px;
+            height: 34px;
+            border-radius: 999px;
+            background: transparent;
+            border: none;
+            box-shadow: none;
+        }
+
+        .compare-slider::-moz-range-thumb {
+            width: 34px;
+            height: 34px;
+            border-radius: 999px;
+            background: transparent;
+            border: none;
+            box-shadow: none;
+        }
+
+        .compare-labels {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            right: 10px;
+            display: flex;
+            justify-content: space-between;
+            gap: 8px;
+            z-index: 5;
+            pointer-events: none;
+            display: none;
+        }
+
+        .compare-chip {
+            display: inline-flex;
+            align-items: center;
+            min-height: 24px;
+            padding: 0 10px;
+            border-radius: 999px;
+            border: 1px solid #c9dff1;
+            background: rgba(255, 255, 255, 0.92);
+            color: #29577d;
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: .02em;
+            text-transform: uppercase;
+        }
+
+        .compare-model-stage {
+            position: absolute;
+            inset: 0;
+            z-index: 3;
+            display: grid;
+            place-items: center;
+            padding: 0;
+            background: #f7fbff;
+        }
+
+        .compare-model-media {
+            width: 100%;
+            height: 100%;
+            border-radius: 0;
+            background: transparent;
+            border: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .compare-model-media img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            display: none;
+        }
+
+        #customerPreview {
+            object-fit: cover;
+            object-position: center center;
+        }
+
+        .compare-model-placeholder {
+            text-align: center;
+            color: #55708c;
+        }
+
+        .compare-model-placeholder p {
+            margin: 0 0 8px;
+        }
+
+        .compare-frame.is-comparison .compare-before,
+        .compare-frame.is-comparison .compare-after-wrap,
+        .compare-frame.is-comparison .compare-divider,
+        .compare-frame.is-comparison .compare-slider {
+            display: block;
+        }
+
+        .compare-frame.is-comparison .compare-model-stage {
+            display: none;
+        }
+
+        .compare-frame.is-comparison .compare-labels {
+            display: flex;
+        }
+
+        .tryon-header-toggle {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
         }
 
         .selected-product-thumb {
@@ -753,6 +937,17 @@
             padding: 14px;
             font-size: 14px;
             line-height: 1.35;
+        }
+
+        .compare-frame > .preview-placeholder {
+            position: absolute;
+            inset: 0;
+            z-index: 6;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            background: rgba(247, 251, 255, 0.82);
+            padding: 16px;
         }
 
         .preview-remove {
@@ -996,10 +1191,6 @@
                 height: 180px;
             }
 
-            .preview-box-model {
-                height: 240px;
-            }
-
             .preview-box-result {
                 height: 320px;
             }
@@ -1196,35 +1387,45 @@
                             <span id="selectedProductPreviewFallback" class="selected-product-thumb-fallback">{{ __('ui.store.no_image') }}</span>
                         </div>
                     </div>
+                </div>
 
-                    <div class="field">
-                        <div class="model-footer-row">
-                            <label class="label">{{ __('ui.store.model_photo') }}</label>
+                <div class="field tryon-generated-field">
+                    <div class="tryon-panel-head">
+                        <label class="label">{{ __('ui.store.tryon_generated') }}</label>
+                        <div class="tryon-header-toggle">
                             <label class="dummy-toggle" id="dummyModelToggleWrap" style="display:none;">
                                 <input type="checkbox" id="useDummyModelToggle">
                                 <span class="dummy-toggle-switch" aria-hidden="true"></span>
                                 <span class="dummy-toggle-text">{{ __('ui.store.use_dummy') }}</span>
                             </label>
                         </div>
-                        <div class="preview-box preview-box-model">
-                            <img id="customerPreview" alt="Customer preview">
-                            <button id="removePhotoBtn" class="preview-remove" type="button" aria-label="{{ __('ui.store.remove_photo_aria') }}">&times;</button>
-                            <div id="customerPlaceholder" class="preview-placeholder">
-                                <p>{{ __('ui.store.upload_photo') }}</p>
-                                <button type="button" class="upload-trigger" onclick="document.getElementById('customerPhoto').click()">{{ __('ui.store.choose_file') }}</button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="field tryon-generated-field">
-                    <div class="tryon-panel-head">
-                        <label class="label">{{ __('ui.store.tryon_generated') }}</label>
-                        <span class="ready-badge">{{ __('ui.store.ready') }}</span>
                     </div>
                     <div class="preview-box preview-box-result">
-                        <img id="resultPreview" alt="Try-on result">
-                        <div id="resultPlaceholder" class="preview-placeholder"></div>
+                        <div class="compare-frame" id="compareFrame">
+                            <div class="compare-labels">
+                                <span class="compare-chip">Before</span>
+                                <span class="compare-chip">After</span>
+                            </div>
+                            <div class="compare-model-stage" id="compareModelStage">
+                                <div class="compare-model-media">
+                                    <img id="customerPreview" alt="Customer preview">
+                                    <button id="removePhotoBtn" class="preview-remove" type="button" aria-label="{{ __('ui.store.remove_photo_aria') }}">&times;</button>
+                                    <div id="customerPlaceholder" class="compare-model-placeholder">
+                                        <p>{{ __('ui.store.upload_photo') }}</p>
+                                        <button type="button" class="upload-trigger" onclick="document.getElementById('customerPhoto').click()">{{ __('ui.store.choose_file') }}</button>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="compare-before">
+                                <img id="compareBeforePreview" alt="Model preview">
+                            </div>
+                            <div class="compare-after-wrap" id="compareAfterWrap">
+                                <img id="resultPreview" alt="Try-on result">
+                            </div>
+                            <div id="resultPlaceholder" class="preview-placeholder"></div>
+                            <div class="compare-divider" id="compareDivider"></div>
+                            <input id="compareSlider" class="compare-slider" type="range" min="0" max="100" value="50" aria-label="Compare before and after">
+                        </div>
                     </div>
                     <div id="statusNote" class="status-note" role="status" aria-live="polite"></div>
                 </div>
@@ -1278,6 +1479,52 @@
             } catch (error) {
                 return `dev-fallback-${Date.now()}`;
             }
+        }
+
+        function setComparisonPosition(value) {
+            const slider = document.getElementById('compareSlider');
+            const afterWrap = document.getElementById('compareAfterWrap');
+            const divider = document.getElementById('compareDivider');
+
+            const normalized = Math.max(0, Math.min(100, Number(value) || 50));
+            if (slider) slider.value = String(normalized);
+            if (afterWrap) afterWrap.style.clipPath = `inset(0 0 0 ${normalized}%)`;
+            if (divider) divider.style.left = `${normalized}%`;
+        }
+
+        function updateCompareMode(hasResult) {
+            const frame = document.getElementById('compareFrame');
+            const resultPlaceholder = document.getElementById('resultPlaceholder');
+            if (!frame || !resultPlaceholder) {
+                return;
+            }
+
+            if (hasResult) {
+                frame.classList.add('is-comparison');
+                resultPlaceholder.style.display = 'none';
+                return;
+            }
+
+            frame.classList.remove('is-comparison');
+            resultPlaceholder.style.display = 'none';
+        }
+
+        function syncComparisonBeforeImage() {
+            const customerPreview = document.getElementById('customerPreview');
+            const compareBeforePreview = document.getElementById('compareBeforePreview');
+            if (!customerPreview || !compareBeforePreview) {
+                return;
+            }
+
+            const modelSrc = customerPreview.getAttribute('src') || '';
+            if (modelSrc) {
+                compareBeforePreview.src = modelSrc;
+                compareBeforePreview.style.display = 'block';
+                return;
+            }
+
+            compareBeforePreview.removeAttribute('src');
+            compareBeforePreview.style.display = 'none';
         }
 
         function selectProduct(el) {
@@ -1379,6 +1626,7 @@
                 preview.style.display = 'none';
                 placeholder.style.display = 'block';
                 removeBtn.style.display = 'none';
+                syncComparisonBeforeImage();
                 return;
             }
 
@@ -1388,6 +1636,7 @@
                 preview.style.display = 'block';
                 placeholder.style.display = 'none';
                 removeBtn.style.display = 'inline-flex';
+                syncComparisonBeforeImage();
             };
             reader.readAsDataURL(file);
         });
@@ -1404,6 +1653,7 @@
             placeholder.style.display = 'block';
             removeBtn.style.display = 'none';
             setStatus('', '');
+            syncComparisonBeforeImage();
         });
 
         function setStatus(message, type) {
@@ -1429,6 +1679,7 @@
                 resultPlaceholder.innerHTML = loading
                     ? '<div class="loading-dots" aria-label="Loading"><span></span><span></span><span></span></div>'
                     : '';
+                resultPlaceholder.style.display = loading ? 'flex' : 'none';
             }
         }
 
@@ -1441,7 +1692,8 @@
 
             resultPreview.removeAttribute('src');
             resultPreview.style.display = 'none';
-            resultPlaceholder.style.display = 'block';
+            updateCompareMode(false);
+            resultPlaceholder.style.display = 'flex';
             resultPlaceholder.textContent = message || '';
             resultPlaceholder.classList.remove('status-error', 'status-success');
             if (type === 'error') resultPlaceholder.classList.add('status-error');
@@ -1476,6 +1728,8 @@
             resultPreview.src = url;
             resultPreview.style.display = 'block';
             resultPlaceholder.style.display = 'none';
+            updateCompareMode(true);
+            setComparisonPosition(50);
             setStatus(I18N.historyResultShown, 'success');
         }
 
@@ -1675,6 +1929,7 @@
                     customerPreview.style.display = 'none';
                     customerPlaceholder.style.display = 'block';
                 }
+                syncComparisonBeforeImage();
                 return;
             }
 
@@ -1696,6 +1951,7 @@
                 customerPreview.src = TRYON_DUMMY.model_image_url;
                 customerPreview.style.display = 'block';
                 customerPlaceholder.style.display = 'none';
+                syncComparisonBeforeImage();
                 return;
             }
 
@@ -1706,6 +1962,7 @@
                 customerPlaceholder.style.display = 'block';
                 removePhotoBtn.style.display = 'none';
             }
+            syncComparisonBeforeImage();
         }
 
         async function refreshQuota() {
@@ -1762,15 +2019,18 @@
 
                 setLoading(true);
                 setStatus('', '');
+                updateCompareMode(false);
                 resultPreview.removeAttribute('src');
                 resultPreview.style.display = 'none';
-                resultPlaceholder.style.display = 'block';
+                resultPlaceholder.style.display = 'flex';
 
                 await new Promise((resolve) => window.setTimeout(resolve, 1800));
 
                 resultPreview.src = TRYON_DUMMY.result_url;
                 resultPreview.style.display = 'block';
                 resultPlaceholder.style.display = 'none';
+                updateCompareMode(true);
+                setComparisonPosition(50);
                 consumeDummyQuotaUI();
                 setStatus(I18N.generateDone, 'success');
                 setLoading(false);
@@ -1795,9 +2055,10 @@
 
             setLoading(true);
             setStatus('', '');
+            updateCompareMode(false);
             resultPreview.removeAttribute('src');
             resultPreview.style.display = 'none';
-            resultPlaceholder.style.display = 'block';
+            resultPlaceholder.style.display = 'flex';
 
             try {
                 const formData = new FormData();
@@ -1872,6 +2133,8 @@
                             resultPreview.src = payload.result_url;
                             resultPreview.style.display = 'block';
                             resultPlaceholder.style.display = 'none';
+                            updateCompareMode(true);
+                            setComparisonPosition(50);
                         }
 
                         setStatus(I18N.generateDone, 'success');
@@ -1950,6 +2213,18 @@
                     applyDummyModelSelectionUI();
                 });
             }
+            const compareSlider = document.getElementById('compareSlider');
+            if (compareSlider) {
+                compareSlider.addEventListener('input', function() {
+                    setComparisonPosition(this.value);
+                });
+            }
+            const resultPreview = document.getElementById('resultPreview');
+            if (resultPreview) {
+                resultPreview.style.display = 'none';
+            }
+            updateCompareMode(false);
+            setComparisonPosition(50);
             applyDummyModelSelectionUI();
             refreshQuota();
             refreshHistory();
