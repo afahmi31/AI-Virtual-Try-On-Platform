@@ -364,20 +364,21 @@ class ProcessTryOnSessionJob implements ShouldQueue
 
     private function resolveModelImageUrl(?string $customerPhotoPath, array $providerConfig = []): ?string
     {
+        $resolvedPath = is_string($customerPhotoPath) ? trim($customerPhotoPath) : '';
+        if ($resolvedPath !== '') {
+            if (str_starts_with($resolvedPath, 'http://') || str_starts_with($resolvedPath, 'https://')) {
+                return $resolvedPath;
+            }
+
+            return url(Storage::disk('public')->url($resolvedPath));
+        }
+
         $sellerDummyUrl = trim((string) ($providerConfig['dummy_model_image_url'] ?? ''));
         if ($sellerDummyUrl !== '') {
             return $sellerDummyUrl;
         }
 
-        if (! is_string($customerPhotoPath) || $customerPhotoPath === '') {
-            return null;
-        }
-
-        if (str_starts_with($customerPhotoPath, 'http://') || str_starts_with($customerPhotoPath, 'https://')) {
-            return $customerPhotoPath;
-        }
-
-        return url(Storage::disk('public')->url($customerPhotoPath));
+        return null;
     }
 
     private function resolveProductImageUrl(TryOnSession $session): ?string
