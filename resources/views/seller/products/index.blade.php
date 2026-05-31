@@ -688,6 +688,10 @@
         });
     });
 
+    @if(!$errors->any() && request()->query('create') === '1')
+        openCreateModal();
+    @endif
+
     @if($errors->any() && old('edit_product_id'))
         openEditModal(
             {{ (int) old('edit_product_id') }},
@@ -702,6 +706,8 @@
             @json((int) old('ai_segmentation_free', 1)),
             @json(old('product_link_url', ''))
         );
+    @elseif($errors->any())
+        openCreateModal();
     @endif
 </script>
 </body>

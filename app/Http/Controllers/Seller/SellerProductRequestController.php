@@ -4,7 +4,6 @@ namespace App\Http\Controllers\Seller;
 
 use App\Http\Controllers\Controller;
 use App\Models\AuditLog;
-use App\Models\Product;
 use App\Models\ProductRequest;
 use App\Models\Seller;
 use App\Support\CurrentSellerResolver;
@@ -48,13 +47,7 @@ class SellerProductRequestController extends Controller
             ->paginate(20)
             ->withQueryString();
 
-        $catalogProducts = Product::query()
-            ->where('seller_id', $seller->id)
-            ->where('status', 'active')
-            ->orderBy('name')
-            ->get(['id', 'name', 'slug']);
-
-        return view('seller.product-requests.index', compact('seller', 'requests', 'catalogProducts', 'status'));
+        return view('seller.product-requests.index', compact('seller', 'requests', 'status'));
     }
 
     public function updateStatus(Request $request, int $requestId): RedirectResponse
@@ -79,12 +72,6 @@ class SellerProductRequestController extends Controller
         $linkedProductId = isset($payload['linked_product_id']) && is_numeric($payload['linked_product_id'])
             ? (int) $payload['linked_product_id']
             : null;
-
-        if ($nextStatus === 'added' && $linkedProductId === null) {
-            return back()
-                ->withErrors(['linked_product_id' => (string) __('ui.product_requests_page.status_requires_product')])
-                ->withInput();
-        }
 
         $productRequest->update([
             'status' => $nextStatus,

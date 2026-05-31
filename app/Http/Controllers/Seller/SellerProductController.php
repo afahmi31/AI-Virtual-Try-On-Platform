@@ -67,6 +67,7 @@ class SellerProductController extends Controller
     public function store(Request $request): RedirectResponse
     {
         $seller = $this->seller();
+        $fromProductRequests = $request->boolean('from_product_requests');
 
         $payload = $request->validate([
             'name' => ['required', 'string', 'max:255'],
@@ -122,6 +123,12 @@ class SellerProductController extends Controller
 
             return $product;
         });
+
+        if ($fromProductRequests) {
+            return redirect()
+                ->route('seller.product-requests.index')
+                ->with('success', 'Produk berhasil dibuat: '.$product->name);
+        }
 
         return redirect()->route('seller.products.index')->with('success', 'Produk berhasil dibuat: '.$product->name);
     }

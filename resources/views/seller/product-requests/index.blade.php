@@ -105,7 +105,9 @@
                                 $normalizedStatus = in_array($rawStatus, ['new', 'not_added', 'added'], true) ? $rawStatus : 'new';
                                 $isOldRow = (int) old('request_id', 0) === (int) $requestItem->id;
                                 $selectedStatus = $isOldRow ? old('status', $normalizedStatus) : $normalizedStatus;
-                                $selectedProductId = $isOldRow ? old('linked_product_id', $requestItem->linked_product_id) : $requestItem->linked_product_id;
+                                $currentLinkedProductId = $isOldRow
+                                    ? old('linked_product_id', $requestItem->linked_product_id)
+                                    : $requestItem->linked_product_id;
                                 $statusBadgeClass = match ($normalizedStatus) {
                                     'added' => 'requests-status-added',
                                     'not_added' => 'requests-status-not-added',
@@ -155,20 +157,15 @@
                                         @csrf
                                         @method('PATCH')
                                         <input type="hidden" name="request_id" value="{{ $requestItem->id }}">
-                                        <select name="status" class="requests-status-select" data-linked-select-id="linkedProduct{{ $requestItem->id }}">
+                                        <input type="hidden" name="linked_product_id" value="{{ (string) $currentLinkedProductId }}">
+                                        <select name="status" class="requests-status-select" onchange="submitStatusForm(this.form)">
                                             <option value="new" {{ $selectedStatus === 'new' ? 'selected' : '' }}>{{ __('ui.product_requests_page.status_new') }}</option>
                                             <option value="not_added" {{ $selectedStatus === 'not_added' ? 'selected' : '' }}>{{ __('ui.product_requests_page.status_not_added') }}</option>
                                             <option value="added" {{ $selectedStatus === 'added' ? 'selected' : '' }}>{{ __('ui.product_requests_page.status_added') }}</option>
                                         </select>
-                                        <select id="linkedProduct{{ $requestItem->id }}" name="linked_product_id" class="requests-linked-select">
-                                            <option value="">{{ __('ui.product_requests_page.linked_product_placeholder') }}</option>
-                                            @foreach($catalogProducts as $catalogProduct)
-                                                <option value="{{ $catalogProduct->id }}" {{ (string) $selectedProductId === (string) $catalogProduct->id ? 'selected' : '' }}>
-                                                    {{ $catalogProduct->name }}
-                                                </option>
-                                            @endforeach
-                                        </select>
-                                        <button type="submit" class="btn btn-primary">{{ __('ui.product_requests_page.update_button') }}</button>
+                                        <button type="button" class="btn btn-secondary requests-add-product-btn" onclick="openCreateModal()">
+                                            + {{ __('ui.product_requests_page.add_product_button') }}
+                                        </button>
                                     </form>
                                 </td>
                             </tr>
@@ -190,28 +187,304 @@
     </main>
 </div>
 
+<div id="createModal" class="modal" onclick="closeOnBackdrop(event, 'createModal')">
+    <div class="modal-card">
+        <div class="modal-head">
+            <h3 class="modal-title">{{ __('ui.products_page.create_title') }}</h3>
+            <div class="modal-head-right">
+                <label class="status-toggle">
+                    <span>{{ __('ui.products_page.status') }}</span>
+                    <input id="createStatusToggle" type="checkbox" {{ old('status', 'active') === 'active' ? 'checked' : '' }}>
+                    <span class="status-toggle-switch"></span>
+                    <span id="createStatusLabel" class="status-toggle-label">{{ old('status', 'active') === 'active' ? __('ui.common.active') : __('ui.common.inactive') }}</span>
+                </label>
+                <button class="close-btn" type="button" onclick="closeModal('createModal')">{{ __('ui.common.close') }}</button>
+            </div>
+        </div>
+        <form method="POST" action="{{ route('seller.products.store') }}" enctype="multipart/form-data">
+            @csrf
+            <input type="hidden" name="from_product_requests" value="1">
+            <input id="createStatus" type="hidden" name="status" value="{{ old('status', 'active') }}">
+            <div class="product-form-grid">
+                <div class="product-left-col">
+                    <div class="preview-wrap">
+                        <img id="createImagePreview" class="preview-img" alt="Create preview">
+                        <button class="preview-change-overlay" type="button" onclick="document.getElementById('createImageFile').click()">{{ __('ui.products_page.change_image') }}</button>
+                    </div>
+                    <input id="createImageFile" type="file" name="image" accept="image/*" style="display:none;">
+                    <div class="url-label">{{ __('ui.products_page.replace_public_url') }}</div>
+                    <input id="createImageUrl" type="url" name="image_url" placeholder="https://..." value="{{ old('image_url') }}">
+                </div>
+                <div class="product-right-col">
+                    <section class="form-section product-info-section">
+                        <div class="form-section-head">
+                            <h4>{{ __('ui.products_page.product_info_title') }}</h4>
+                            <p>{{ __('ui.products_page.product_info_create_help') }}</p>
+                        </div>
+                        <div class="field"><label>{{ __('ui.products_page.product_name') }}</label><input id="createName" name="name" value="{{ old('name') }}" required></div>
+                        <div class="field"><label>SKU</label><input name="sku" value="{{ old('sku') }}"></div>
+                        <div class="field"><label>{{ __('ui.products_page.category') }}</label><input id="createCategory" name="category" placeholder="{{ __('ui.products_page.category_placeholder') }}" value="{{ old('category') }}"></div>
+                        <div class="field"><label>Link Produk</label><input type="url" name="product_link_url" placeholder="https://..." value="{{ old('product_link_url') }}"></div>
+                    </section>
+                    <section class="form-section ai-config-section" id="createAiConfigSection">
+                        <div class="form-section-head">
+                            <div class="section-head-row">
+                                <h4>{{ __('ui.products_page.ai_config_title') }}</h4>
+                                <button type="button" class="section-toggle-btn" onclick="toggleAiSection('createAiConfigSection', this)">{{ __('ui.common.collapse') }}</button>
+                            </div>
+                            <p>{{ __('ui.products_page.ai_config_create_help') }}</p>
+                            <div class="ai-summary" id="createAiSummary">
+                                <span id="createSummaryCategory" class="summary-chip">AI Category: auto</span>
+                                <span id="createSummaryPhotoType" class="summary-chip">Garment Photo Type: auto</span>
+                                <span id="createSummarySegmentation" class="summary-chip">Segmentation: enabled</span>
+                            </div>
+                        </div>
+                        <div class="field">
+                            <label>AI Prompt <span class="preview-hint">(Try-On Max)</span></label>
+                            <input name="ai_prompt" placeholder="{{ __('ui.products_page.ai_prompt_placeholder') }}" value="{{ old('ai_prompt') }}">
+                        </div>
+                        <div class="field">
+                            <label>AI Category <span class="preview-hint">(Try-On v1.6)</span></label>
+                            <input id="createAiCategory" type="hidden" name="ai_category" value="{{ old('ai_category', 'auto') }}">
+                            <div class="pill-group" role="radiogroup" aria-label="AI Category">
+                                <button type="button" class="pill-option" data-value="auto" onclick="setAiOption('create', 'category', 'auto')">auto</button>
+                                <button type="button" class="pill-option" data-value="tops" onclick="setAiOption('create', 'category', 'tops')">tops</button>
+                                <button type="button" class="pill-option" data-value="bottoms" onclick="setAiOption('create', 'category', 'bottoms')">bottoms</button>
+                                <button type="button" class="pill-option" data-value="one-pieces" onclick="setAiOption('create', 'category', 'one-pieces')">one-pieces</button>
+                            </div>
+                            <div class="preview-hint">{{ __('ui.products_page.ai_category_hint') }}</div>
+                        </div>
+                        <div class="field">
+                            <label>Garment Photo Type <span class="preview-hint">(Try-On v1.6)</span></label>
+                            <input id="createAiGarmentPhotoType" type="hidden" name="ai_garment_photo_type" value="{{ old('ai_garment_photo_type', 'auto') }}">
+                            <div class="pill-group" role="radiogroup" aria-label="Photo Type">
+                                <button type="button" class="pill-option" data-value="auto" onclick="setAiOption('create', 'photoType', 'auto')">auto</button>
+                                <button type="button" class="pill-option" data-value="flat-lay" onclick="setAiOption('create', 'photoType', 'flat-lay')">flat-lay</button>
+                                <button type="button" class="pill-option" data-value="model" onclick="setAiOption('create', 'photoType', 'model')">model</button>
+                            </div>
+                            <div class="preview-hint">{{ __('ui.products_page.photo_type_hint') }}</div>
+                        </div>
+                        <div class="field">
+                            <input type="hidden" name="ai_segmentation_free" value="0">
+                            <label class="status-toggle" style="justify-content:flex-start;">
+                                <span>Segmentation Free <span class="preview-hint">(Try-On v1.6)</span></span>
+                                <input id="createAiSegmentationFree" type="checkbox" name="ai_segmentation_free" value="1" {{ old('ai_segmentation_free', 1) ? 'checked' : '' }}>
+                                <span class="status-toggle-switch"></span>
+                                <span id="createAiSegmentationFreeLabel" class="status-toggle-label">{{ old('ai_segmentation_free', 1) ? __('ui.common.enabled') : __('ui.common.disabled') }}</span>
+                            </label>
+                            <div class="preview-hint">{{ __('ui.products_page.segmentation_hint') }}</div>
+                        </div>
+                    </section>
+                </div>
+            </div>
+            <div class="modal-bottom-row">
+                <div class="modal-actions" style="margin-top:0; margin-left:auto;">
+                    <button class="btn btn-cancel" type="button" onclick="closeModal('createModal')">{{ __('ui.common.cancel') }}</button>
+                    <button class="btn btn-primary" type="submit">{{ __('ui.products_page.create_action') }}</button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
 <script>
-    function syncLinkedProductSelect(select) {
-        if (!select) {
+    const I18N_PRODUCTS = {
+        active: @json(__('ui.common.active')),
+        inactive: @json(__('ui.common.inactive')),
+        collapse: @json(__('ui.common.collapse')),
+        expand: @json(__('ui.common.expand')),
+        enabled: @json(__('ui.common.enabled')),
+        disabled: @json(__('ui.common.disabled')),
+        summaryAiCategory: @json(__('ui.products_page.summary_ai_category')),
+        summaryPhotoType: @json(__('ui.products_page.summary_photo_type')),
+        summarySegmentation: @json(__('ui.products_page.summary_segmentation')),
+    };
+
+    function submitStatusForm(form) {
+        if (!form) {
             return;
         }
 
-        const linkedSelectId = select.getAttribute('data-linked-select-id');
-        const linkedSelect = linkedSelectId ? document.getElementById(linkedSelectId) : null;
-        if (!linkedSelect) {
+        if (typeof form.requestSubmit === 'function') {
+            form.requestSubmit();
             return;
         }
 
-        const mustLinkProduct = select.value === 'added';
-        linkedSelect.disabled = !mustLinkProduct;
-        linkedSelect.required = mustLinkProduct;
-        linkedSelect.classList.toggle('is-disabled', !mustLinkProduct);
+        form.submit();
     }
 
-    document.querySelectorAll('.requests-status-select').forEach((select) => {
-        syncLinkedProductSelect(select);
-        select.addEventListener('change', () => syncLinkedProductSelect(select));
-    });
+    function openModal(id) { document.getElementById(id).classList.add('active'); }
+    function closeModal(id) { document.getElementById(id).classList.remove('active'); }
+    function closeOnBackdrop(event, id) { if (event.target.id === id) closeModal(id); }
+
+    function openCreateModal() {
+        resetPreview('createImageFile', 'createImageUrl', 'createImagePreview');
+        const statusInput = document.getElementById('createStatus');
+        setCreateStatus(statusInput ? statusInput.value : 'active');
+        expandAiSection('createAiConfigSection');
+        updateAiSummary('create');
+        openModal('createModal');
+    }
+
+    function setCreateStatus(status) {
+        const normalizedStatus = String(status || 'active').toLowerCase() === 'inactive' ? 'inactive' : 'active';
+        const statusInput = document.getElementById('createStatus');
+        const statusToggle = document.getElementById('createStatusToggle');
+        const statusLabel = document.getElementById('createStatusLabel');
+        if (!statusInput) {
+            return;
+        }
+
+        statusInput.value = normalizedStatus;
+        if (statusToggle) statusToggle.checked = normalizedStatus === 'active';
+        if (statusLabel) statusLabel.textContent = normalizedStatus === 'active' ? I18N_PRODUCTS.active : I18N_PRODUCTS.inactive;
+    }
+
+    function resetPreview(fileInputId, urlInputId, previewId) {
+        const fileInput = document.getElementById(fileInputId);
+        const urlInput = document.getElementById(urlInputId);
+        const preview = document.getElementById(previewId);
+        if (fileInput) fileInput.value = '';
+        if (urlInput && !urlInput.value) urlInput.value = '';
+        if (preview && (!urlInput || !urlInput.value)) {
+            preview.removeAttribute('src');
+            preview.style.display = 'none';
+        }
+    }
+
+    function bindImagePreview(fileInputId, urlInputId, previewId) {
+        const fileInput = document.getElementById(fileInputId);
+        const urlInput = document.getElementById(urlInputId);
+        const preview = document.getElementById(previewId);
+        if (!fileInput || !urlInput || !preview) return;
+
+        fileInput.addEventListener('change', function () {
+            const file = this.files && this.files[0] ? this.files[0] : null;
+            if (!file) {
+                preview.removeAttribute('src');
+                preview.style.display = 'none';
+                return;
+            }
+            urlInput.value = '';
+            const reader = new FileReader();
+            reader.onload = function (event) {
+                preview.src = event.target.result;
+                preview.style.display = 'block';
+            };
+            reader.readAsDataURL(file);
+        });
+
+        urlInput.addEventListener('input', function () {
+            const value = this.value.trim();
+            if (!value) {
+                preview.removeAttribute('src');
+                preview.style.display = 'none';
+                return;
+            }
+            fileInput.value = '';
+            setPreviewFromUrl(previewId, value);
+        });
+    }
+
+    function setPreviewFromUrl(previewId, value) {
+        const preview = document.getElementById(previewId);
+        if (!preview) return;
+
+        const url = (value || '').trim();
+        if (!url) {
+            preview.removeAttribute('src');
+            preview.style.display = 'none';
+            return;
+        }
+
+        preview.src = url;
+        preview.style.display = 'block';
+    }
+
+    function toggleAiSection(sectionId, triggerBtn) {
+        const section = document.getElementById(sectionId);
+        if (!section) return;
+        section.classList.toggle('collapsed');
+        if (triggerBtn) {
+            triggerBtn.textContent = section.classList.contains('collapsed') ? I18N_PRODUCTS.expand : I18N_PRODUCTS.collapse;
+        }
+    }
+
+    function expandAiSection(sectionId) {
+        const section = document.getElementById(sectionId);
+        if (!section) return;
+        section.classList.remove('collapsed');
+        const btn = section.querySelector('.section-toggle-btn');
+        if (btn) btn.textContent = I18N_PRODUCTS.collapse;
+    }
+
+    function updateAiSummary(prefix) {
+        const aiCategory = document.getElementById(prefix === 'create' ? 'createAiCategory' : 'editAiCategory');
+        const photoType = document.getElementById(prefix === 'create' ? 'createAiGarmentPhotoType' : 'editAiGarmentPhotoType');
+        const segmentation = document.getElementById(prefix === 'create' ? 'createAiSegmentationFree' : 'editAiSegmentationFree');
+        const summaryCategory = document.getElementById(prefix === 'create' ? 'createSummaryCategory' : 'editSummaryCategory');
+        const summaryPhotoType = document.getElementById(prefix === 'create' ? 'createSummaryPhotoType' : 'editSummaryPhotoType');
+        const summarySegmentation = document.getElementById(prefix === 'create' ? 'createSummarySegmentation' : 'editSummarySegmentation');
+
+        if (summaryCategory && aiCategory) summaryCategory.textContent = `${I18N_PRODUCTS.summaryAiCategory}: ${aiCategory.value || 'auto'}`;
+        if (summaryPhotoType && photoType) summaryPhotoType.textContent = `${I18N_PRODUCTS.summaryPhotoType}: ${photoType.value || 'auto'}`;
+        if (summarySegmentation && segmentation) summarySegmentation.textContent = `${I18N_PRODUCTS.summarySegmentation}: ${segmentation.checked ? I18N_PRODUCTS.enabled : I18N_PRODUCTS.disabled}`;
+    }
+
+    function setAiOption(prefix, field, value) {
+        const isCategory = field === 'category';
+        const inputId = prefix === 'create'
+            ? (isCategory ? 'createAiCategory' : 'createAiGarmentPhotoType')
+            : (isCategory ? 'editAiCategory' : 'editAiGarmentPhotoType');
+        const input = document.getElementById(inputId);
+        if (!input) return;
+
+        input.value = value;
+
+        const fieldWrap = input.closest('.field');
+        if (fieldWrap) {
+            fieldWrap.querySelectorAll('.pill-option').forEach(function (btn) {
+                const active = btn.getAttribute('data-value') === value;
+                btn.classList.toggle('active', active);
+                btn.setAttribute('aria-pressed', active ? 'true' : 'false');
+            });
+        }
+
+        updateAiSummary(prefix);
+    }
+
+    bindImagePreview('createImageFile', 'createImageUrl', 'createImagePreview');
+
+    const createAiCategory = document.getElementById('createAiCategory');
+    const createAiGarmentPhotoType = document.getElementById('createAiGarmentPhotoType');
+    const createAiSegmentationFree = document.getElementById('createAiSegmentationFree');
+    const createAiSegmentationFreeLabel = document.getElementById('createAiSegmentationFreeLabel');
+    setAiOption('create', 'category', createAiCategory ? createAiCategory.value : 'auto');
+    setAiOption('create', 'photoType', createAiGarmentPhotoType ? createAiGarmentPhotoType.value : 'auto');
+
+    if (createAiSegmentationFree && createAiSegmentationFreeLabel) {
+        createAiSegmentationFree.addEventListener('change', function () {
+            createAiSegmentationFreeLabel.textContent = this.checked ? I18N_PRODUCTS.enabled : I18N_PRODUCTS.disabled;
+            updateAiSummary('create');
+        });
+    }
+
+    const createStatusToggle = document.getElementById('createStatusToggle');
+    if (createStatusToggle) {
+        createStatusToggle.addEventListener('change', function () {
+            setCreateStatus(this.checked ? 'active' : 'inactive');
+        });
+    }
+
+    const initialStatusInput = document.getElementById('createStatus');
+    const initialImageUrlInput = document.getElementById('createImageUrl');
+    setCreateStatus(initialStatusInput ? initialStatusInput.value : 'active');
+    setPreviewFromUrl('createImagePreview', initialImageUrlInput ? initialImageUrlInput.value : '');
+
+    @if($errors->any() && old('from_product_requests'))
+        openCreateModal();
+    @endif
 </script>
+
 </body>
 </html>
