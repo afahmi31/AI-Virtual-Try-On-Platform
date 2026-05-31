@@ -159,6 +159,70 @@ class TryOnPublicController extends Controller
         return response()->json($this->sessionResponse($session));
     }
 
+    public function feedback(Request $request, string $seller_slug, int $sessionId): JsonResponse
+    {
+        if (! $this->hasFeedbackColumns()) {
+            return response()->json([
+                'message' => 'Fitur feedback belum tersedia. Silakan jalankan migrasi terbaru.',
+            ], 503);
+        }
+
+        $seller = Seller::query()
+            ->where('slug', $seller_slug)
+            ->where('status', 'active')
+            ->firstOrFail();
+
+        $session = TryOnSession::query()
+            ->where('seller_id', $seller->id)
+            ->where('id', $sessionId)
+            ->where('source_channel', 'seller_subpage')
+            ->where('status', 'completed')
+            ->whereNotNull('result_path')
+            ->firstOrFail();
+
+        if (! $this->canAccessPublicSession($request, $session)) {
+            return response()->json([
+                'message' => 'Anda tidak memiliki akses untuk memberi feedback pada sesi ini.',
+            ], 403);
+        }
+
+        $payload = $request->validate([
+            'rating' => ['required', 'integer', 'between:1,5'],
+            'comment' => ['nullable', 'string', 'max:1000'],
+        ]);
+
+        $comment = trim((string) ($payload['comment'] ?? ''));
+        $comment = $comment === '' ? null : $comment;
+
+        $session->update([
+            'feedback_rating' => (int) $payload['rating'],
+            'feedback_comment' => $comment,
+            'feedback_submitted_at' => Carbon::now(),
+        ]);
+
+        AuditLog::query()->create([
+            'actor_user_id' => null,
+            'action' => 'tryon_feedback_submitted_public',
+            'entity_type' => TryOnSession::class,
+            'entity_id' => $session->id,
+            'payload_json' => [
+                'seller_id' => $seller->id,
+                'session_id' => $session->id,
+                'rating' => (int) $payload['rating'],
+                'comment_length' => mb_strlen((string) ($comment ?? '')),
+            ],
+        ]);
+
+        return response()->json([
+            'message' => 'Feedback berhasil disimpan.',
+            'feedback' => [
+                'rating' => (int) $session->feedback_rating,
+                'comment' => $session->feedback_comment,
+                'submitted_at' => optional($session->feedback_submitted_at)?->toISOString(),
+            ],
+        ]);
+    }
+
     public function history(Request $request, string $seller_slug): JsonResponse
     {
         $seller = Seller::query()
@@ -249,6 +313,9 @@ class TryOnPublicController extends Controller
             'token_cost' => $session->token_cost,
             'result_url' => $this->toPublicUrl($session->result_path),
             'customer_photo_url' => $this->toPublicUrl($session->customer_photo_path),
+            'feedback_rating' => $session->feedback_rating,
+            'feedback_comment' => $session->feedback_comment,
+            'feedback_submitted_at' => optional($session->feedback_submitted_at)?->toISOString(),
             'created_at' => optional($session->created_at)?->toISOString(),
             'updated_at' => optional($session->updated_at)?->toISOString(),
         ];
@@ -456,6 +523,33 @@ class TryOnPublicController extends Controller
         }
 
         return isset($providerConfig['api_key']) && trim((string) $providerConfig['api_key']) !== '';
+    }
+
+    private function canAccessPublicSession(Request $request, TryOnSession $session): bool
+    {
+        if ($this->hasTryOnDeviceIdColumn()) {
+            $sessionDeviceId = strtolower(trim((string) $session->device_id));
+            if ($sessionDeviceId !== '') {
+                return hash_equals($sessionDeviceId, $this->resolveTryOnDeviceId($request));
+            }
+        }
+
+        return (string) $session->ip_address === (string) $request->ip()
+            && (string) $session->user_agent === (string) $request->userAgent();
+    }
+
+    private function hasFeedbackColumns(): bool
+    {
+        static $hasColumns = null;
+        if ($hasColumns !== null) {
+            return $hasColumns;
+        }
+
+        $hasColumns = Schema::hasColumn('tryon_sessions', 'feedback_rating')
+            && Schema::hasColumn('tryon_sessions', 'feedback_comment')
+            && Schema::hasColumn('tryon_sessions', 'feedback_submitted_at');
+
+        return $hasColumns;
     }
 
     private function hasTryOnDeviceIdColumn(): bool

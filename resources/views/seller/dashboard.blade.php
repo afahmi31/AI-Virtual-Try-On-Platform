@@ -225,6 +225,72 @@
                 </table>
                 </div>
             </div>
+
+            <div class="panel dashboard-panel dashboard-feedback-panel" id="feedbackListPanel">
+                <div class="panel-head dashboard-feedback-head">
+                    <h2>{{ __('ui.dashboard.feedback_list') }}</h2>
+                    <form method="GET" action="{{ route('seller.dashboard') }}" class="dashboard-feedback-filter-form">
+                        <label for="feedbackRatingFilter">{{ __('ui.dashboard.filter_rating') }}</label>
+                        <select id="feedbackRatingFilter" name="feedback_rating">
+                            <option value="">{{ __('ui.dashboard.all_ratings') }}</option>
+                            @for($ratingOption = 5; $ratingOption >= 1; $ratingOption--)
+                                <option value="{{ $ratingOption }}" {{ $feedbackRatingFilter === $ratingOption ? 'selected' : '' }}>
+                                    {{ $ratingOption }} ★
+                                </option>
+                            @endfor
+                        </select>
+                        <button type="submit" class="btn btn-primary">{{ __('ui.dashboard.filter_apply') }}</button>
+                    </form>
+                </div>
+                <div class="table-wrap">
+                    <table class="dashboard-table dashboard-feedback-table">
+                        <thead>
+                            <tr>
+                                <th>{{ __('ui.dashboard.feedback_col_request') }}</th>
+                                <th>{{ __('ui.dashboard.feedback_col_product') }}</th>
+                                <th>{{ __('ui.dashboard.feedback_col_rating') }}</th>
+                                <th>{{ __('ui.dashboard.feedback_col_comment') }}</th>
+                                <th>{{ __('ui.dashboard.feedback_col_submitted_at') }}</th>
+                                <th>{{ __('ui.dashboard.feedback_col_generated_at') }}</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @forelse($feedbackList as $feedback)
+                                @php
+                                    $feedbackRequestId = $feedback->provider_job_id ?: ('local-'.$feedback->id);
+                                    $feedbackComment = trim((string) ($feedback->feedback_comment ?? ''));
+                                    $feedbackRating = (int) ($feedback->feedback_rating ?? 0);
+                                @endphp
+                                <tr>
+                                    <td class="req-id">{{ $feedbackRequestId }}</td>
+                                    <td>{{ $feedback->product?->name ?? '-' }}</td>
+                                    <td>
+                                        <span class="dashboard-feedback-rating" aria-label="{{ $feedbackRating }} stars">
+                                            @for($star = 1; $star <= 5; $star++)
+                                                <span class="{{ $star <= $feedbackRating ? 'is-active' : '' }}">★</span>
+                                            @endfor
+                                        </span>
+                                    </td>
+                                    <td class="dashboard-feedback-comment" title="{{ $feedbackComment }}">
+                                        {{ $feedbackComment !== '' ? \Illuminate\Support\Str::limit($feedbackComment, 120) : __('ui.dashboard.feedback_no_comment') }}
+                                    </td>
+                                    <td>{{ optional($feedback->feedback_submitted_at)->format('Y-m-d H:i:s') ?? '-' }}</td>
+                                    <td>{{ optional($feedback->created_at)->format('Y-m-d H:i:s') ?? '-' }}</td>
+                                </tr>
+                            @empty
+                                <tr><td colspan="6">{{ __('ui.dashboard.feedback_no_data') }}</td></tr>
+                            @endforelse
+                        </tbody>
+                    </table>
+                </div>
+                @if($feedbackList->hasPages())
+                    <div class="dashboard-feedback-footer-row">
+                        <div class="pagination-wrap">
+                            {{ $feedbackList->onEachSide(1)->links() }}
+                        </div>
+                    </div>
+                @endif
+            </div>
         </section>
     </main>
 </div>

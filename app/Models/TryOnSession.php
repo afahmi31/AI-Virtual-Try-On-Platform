@@ -25,12 +25,17 @@ class TryOnSession extends Model
         'result_path',
         'error_message',
         'token_cost',
+        'feedback_rating',
+        'feedback_comment',
+        'feedback_submitted_at',
         'expires_at',
     ];
 
     protected function casts(): array
     {
         return [
+            'feedback_rating' => 'integer',
+            'feedback_submitted_at' => 'datetime',
             'expires_at' => 'datetime',
         ];
     }

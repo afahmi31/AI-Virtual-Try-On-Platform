@@ -16,7 +16,7 @@ class SellerDashboardController extends Controller
     {
     }
 
-    public function index()
+    public function index(Request $request)
     {
         $seller = $this->currentSellerResolver->resolveForUser(auth()->user());
         $seller->loadMissing('aiSetting');
@@ -34,6 +34,7 @@ class SellerDashboardController extends Controller
         $dummyModelImageUrl = is_string($seller->aiSetting?->fashn_dummy_model_image_url)
             ? trim($seller->aiSetting->fashn_dummy_model_image_url)
             : '';
+        $feedbackRatingFilter = $this->resolveFeedbackRatingFilter($request);
 
         $stats = [
             'total_products' => $seller->products()->count(),
@@ -53,7 +54,26 @@ class SellerDashboardController extends Controller
                 ->get(),
         ];
 
-        return view('seller.dashboard', compact('seller', 'stats'));
+        $feedbackListQuery = TryOnSession::query()
+            ->with(['product:id,name'])
+            ->where('seller_id', $seller->id)
+            ->whereNotNull('feedback_rating')
+            ->latest('feedback_submitted_at')
+            ->latest('id');
+
+        if ($feedbackRatingFilter !== null) {
+            $feedbackListQuery->where('feedback_rating', $feedbackRatingFilter);
+        }
+
+        $feedbackList = $feedbackListQuery
+            ->paginate(10, ['*'], 'feedback_page')
+            ->fragment('feedbackListPanel');
+
+        if ($feedbackRatingFilter !== null) {
+            $feedbackList->appends(['feedback_rating' => $feedbackRatingFilter]);
+        }
+
+        return view('seller.dashboard', compact('seller', 'stats', 'feedbackList', 'feedbackRatingFilter'));
     }
 
     public function updateModel(Request $request): JsonResponse
@@ -173,5 +193,20 @@ class SellerDashboardController extends Controller
             'resolution' => (string) ($aiSetting?->fashn_tryon_max_resolution ?: '1k'),
             'format' => (string) ($aiSetting?->fashn_tryon_max_output_format ?: 'png'),
         ];
+    }
+
+    private function resolveFeedbackRatingFilter(Request $request): ?int
+    {
+        $raw = $request->query('feedback_rating');
+        if (! is_numeric($raw)) {
+            return null;
+        }
+
+        $value = (int) $raw;
+        if ($value < 1 || $value > 5) {
+            return null;
+        }
+
+        return $value;
     }
 }

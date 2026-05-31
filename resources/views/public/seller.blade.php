@@ -632,6 +632,102 @@
             color: #0e7a61;
         }
 
+        .feedback-wrap {
+            margin-top: 10px;
+            padding: 10px;
+            border-radius: 10px;
+            border: 1px solid #d6e3ef;
+            background: #f8fcff;
+            display: none;
+        }
+
+        .feedback-wrap-under-product {
+            margin-top: 12px;
+        }
+
+        .feedback-title {
+            margin: 0;
+            font-size: 13px;
+            font-weight: 700;
+            color: #2d4f6b;
+        }
+
+        .feedback-hint {
+            margin: 4px 0 8px;
+            font-size: 12px;
+            color: #597792;
+        }
+
+        .feedback-stars {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            margin-bottom: 8px;
+        }
+
+        .feedback-star {
+            width: 30px;
+            height: 30px;
+            border: 1px solid #c8daea;
+            border-radius: 8px;
+            background: #fff;
+            color: #9cb5c9;
+            font-size: 18px;
+            line-height: 1;
+            cursor: pointer;
+            transition: .15s ease;
+        }
+
+        .feedback-star.is-active {
+            border-color: #f0ba57;
+            background: #fff6de;
+            color: #f0ba57;
+        }
+
+        .feedback-comment {
+            width: 100%;
+            min-height: 72px;
+            border-radius: 10px;
+            border: 1px solid #c8daea;
+            background: #fff;
+            padding: 8px 10px;
+            font: inherit;
+            font-size: 13px;
+            resize: vertical;
+        }
+
+        .feedback-actions {
+            margin-top: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .feedback-status {
+            min-height: 18px;
+            font-size: 12px;
+            color: #597792;
+            flex: 1 1 auto;
+        }
+
+        .feedback-submit-btn {
+            border: none;
+            border-radius: 8px;
+            background: #2a8ab4;
+            color: #fff;
+            font-size: 12px;
+            font-weight: 700;
+            padding: 8px 12px;
+            cursor: pointer;
+            white-space: nowrap;
+        }
+
+        .feedback-submit-btn:disabled {
+            cursor: not-allowed;
+            opacity: .65;
+        }
+
         .modal-preview-grid {
             display: none;
         }
@@ -1508,6 +1604,22 @@
                             <img id="selectedProductPreview" alt="{{ __('ui.store.selected_product_alt') }}" style="display:none;">
                             <span id="selectedProductPreviewFallback" class="selected-product-thumb-fallback">{{ __('ui.store.no_image') }}</span>
                         </div>
+                        <div id="feedbackWrap" class="feedback-wrap feedback-wrap-under-product">
+                            <p class="feedback-title">{{ __('ui.store.feedback_title') }}</p>
+                            <p class="feedback-hint">{{ __('ui.store.feedback_hint') }}</p>
+                            <div id="feedbackStars" class="feedback-stars" role="radiogroup" aria-label="{{ __('ui.store.feedback_stars_aria') }}">
+                                <button type="button" class="feedback-star" data-rating="1" aria-label="1 star">★</button>
+                                <button type="button" class="feedback-star" data-rating="2" aria-label="2 stars">★</button>
+                                <button type="button" class="feedback-star" data-rating="3" aria-label="3 stars">★</button>
+                                <button type="button" class="feedback-star" data-rating="4" aria-label="4 stars">★</button>
+                                <button type="button" class="feedback-star" data-rating="5" aria-label="5 stars">★</button>
+                            </div>
+                            <textarea id="feedbackComment" class="feedback-comment" maxlength="1000" placeholder="{{ __('ui.store.feedback_comment_placeholder') }}"></textarea>
+                            <div class="feedback-actions">
+                                <div id="feedbackStatus" class="feedback-status" role="status" aria-live="polite"></div>
+                                <button id="feedbackSubmitBtn" class="feedback-submit-btn" type="button">{{ __('ui.store.feedback_submit') }}</button>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
@@ -1575,6 +1687,12 @@
             dummyModelUrlMissing: @json(__('ui.store.dummy_model_url_missing')),
             dummyResultUrlMissing: @json(__('ui.store.dummy_result_url_missing')),
             processingRetryLater: @json(__('ui.store.processing_retry_later')),
+            feedbackSubmit: @json(__('ui.store.feedback_submit')),
+            feedbackUpdate: @json(__('ui.store.feedback_update')),
+            feedbackSaved: @json(__('ui.store.feedback_saved')),
+            feedbackAlreadySent: @json(__('ui.store.feedback_already_sent')),
+            feedbackRatingRequired: @json(__('ui.store.feedback_rating_required')),
+            feedbackSubmitFailed: @json(__('ui.store.feedback_submit_failed')),
         };
 
         let selectedProductId = @json(optional($selectedProduct)->id);
@@ -1582,9 +1700,13 @@
         const TRYON_DEVICE_KEY = 'tryon_device_id_v1';
         const TRYON_DUMMY = @json($tryOnDummy ?? ['enabled' => false, 'model_image_url' => '', 'result_url' => '']);
         const TRYON_HISTORY_URL = @json(route('public.tryon.sessions.history', ['seller_slug' => $seller->slug]));
+        const TRYON_PUBLIC_BASE_URL = @json(url('/'.$seller->slug.'/try-on'));
         let remainingDailyQuota = null;
         let useDummyModelForRealGenerate = false;
         let selectedProductLinkUrl = '';
+        let activeFeedbackSessionId = null;
+        let selectedFeedbackRating = 0;
+        let isSubmittingFeedback = false;
 
         function resolveTryOnDeviceId() {
             try {
@@ -1725,17 +1847,75 @@
             wrap.classList.add('has-link');
         }
 
+        function resetTryOnModalState() {
+            if (pollTimer) {
+                clearInterval(pollTimer);
+                pollTimer = null;
+            }
+
+            const customerPhotoInput = document.getElementById('customerPhoto');
+            const customerPreview = document.getElementById('customerPreview');
+            const customerPlaceholder = document.getElementById('customerPlaceholder');
+            const removePhotoBtn = document.getElementById('removePhotoBtn');
+            const resultPreview = document.getElementById('resultPreview');
+            const resultPlaceholder = document.getElementById('resultPlaceholder');
+            const toggle = document.getElementById('useDummyModelToggle');
+
+            useDummyModelForRealGenerate = false;
+            if (toggle && !TRYON_DUMMY.enabled) {
+                toggle.checked = false;
+            }
+
+            if (customerPhotoInput) {
+                customerPhotoInput.value = '';
+            }
+
+            if (customerPreview) {
+                customerPreview.removeAttribute('src');
+                customerPreview.style.display = 'none';
+            }
+
+            if (customerPlaceholder) {
+                customerPlaceholder.style.display = 'block';
+            }
+
+            if (removePhotoBtn) {
+                removePhotoBtn.style.display = 'none';
+            }
+
+            if (resultPreview) {
+                resultPreview.removeAttribute('src');
+                resultPreview.style.display = 'none';
+            }
+
+            if (resultPlaceholder) {
+                resultPlaceholder.textContent = '';
+                resultPlaceholder.classList.remove('status-error', 'status-success');
+                resultPlaceholder.style.display = 'none';
+            }
+
+            resetFeedbackForm();
+            setStatus('', '');
+            setHistoryPreviewMode(false);
+            updateCompareMode(false);
+            setComparisonPosition(50);
+            setLoading(false);
+            applyDummyModelSelectionUI();
+            syncComparisonBeforeImage();
+        }
+
         function openTryOnModal(el) {
             selectProduct(el);
+            resetTryOnModalState();
             const modal = document.getElementById('tryOnModal');
             modal.classList.add('active');
             modal.setAttribute('aria-hidden', 'false');
             document.body.style.overflow = 'hidden';
-            applyDummyModelSelectionUI();
             refreshHistory();
         }
 
         function closeTryOnModal() {
+            resetTryOnModalState();
             const modal = document.getElementById('tryOnModal');
             modal.classList.remove('active');
             modal.setAttribute('aria-hidden', 'true');
@@ -1807,6 +1987,145 @@
             if (type === 'success') note.classList.add('status-success');
         }
 
+        function buildFeedbackSubmitUrl(sessionId) {
+            return `${TRYON_PUBLIC_BASE_URL}/sessions/${sessionId}/feedback`;
+        }
+
+        function setFeedbackStatus(message, type = '') {
+            const feedbackStatus = document.getElementById('feedbackStatus');
+            if (!feedbackStatus) {
+                return;
+            }
+
+            feedbackStatus.textContent = message || '';
+            feedbackStatus.classList.remove('status-error', 'status-success');
+            if (type === 'error') feedbackStatus.classList.add('status-error');
+            if (type === 'success') feedbackStatus.classList.add('status-success');
+        }
+
+        function renderFeedbackStars() {
+            const stars = document.querySelectorAll('#feedbackStars .feedback-star');
+            stars.forEach((star) => {
+                const starRating = Number(star.getAttribute('data-rating') || 0);
+                star.classList.toggle('is-active', starRating <= selectedFeedbackRating && selectedFeedbackRating > 0);
+            });
+        }
+
+        function resetFeedbackForm() {
+            activeFeedbackSessionId = null;
+            selectedFeedbackRating = 0;
+            isSubmittingFeedback = false;
+
+            const feedbackWrap = document.getElementById('feedbackWrap');
+            const feedbackComment = document.getElementById('feedbackComment');
+            const feedbackSubmitBtn = document.getElementById('feedbackSubmitBtn');
+
+            if (feedbackWrap) {
+                feedbackWrap.style.display = 'none';
+            }
+
+            if (feedbackComment) {
+                feedbackComment.value = '';
+            }
+
+            if (feedbackSubmitBtn) {
+                feedbackSubmitBtn.disabled = false;
+                feedbackSubmitBtn.textContent = I18N.feedbackSubmit;
+            }
+
+            setFeedbackStatus('', '');
+            renderFeedbackStars();
+        }
+
+        function showFeedbackForm(sessionPayload) {
+            const feedbackWrap = document.getElementById('feedbackWrap');
+            const feedbackComment = document.getElementById('feedbackComment');
+            const feedbackSubmitBtn = document.getElementById('feedbackSubmitBtn');
+            const sessionId = Number((sessionPayload && sessionPayload.id) ? sessionPayload.id : 0);
+
+            if (!feedbackWrap || !feedbackComment || !feedbackSubmitBtn || !sessionId) {
+                resetFeedbackForm();
+                return;
+            }
+
+            activeFeedbackSessionId = sessionId;
+            selectedFeedbackRating = Number(sessionPayload.feedback_rating || 0);
+            feedbackComment.value = sessionPayload.feedback_comment || '';
+            feedbackWrap.style.display = 'block';
+            feedbackSubmitBtn.disabled = false;
+            feedbackSubmitBtn.textContent = selectedFeedbackRating > 0 ? I18N.feedbackUpdate : I18N.feedbackSubmit;
+
+            if (sessionPayload.feedback_submitted_at) {
+                setFeedbackStatus(I18N.feedbackAlreadySent, 'success');
+            } else {
+                setFeedbackStatus('', '');
+            }
+
+            renderFeedbackStars();
+            if (typeof feedbackWrap.scrollIntoView === 'function') {
+                feedbackWrap.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            }
+        }
+
+        async function submitTryOnFeedback() {
+            if (isSubmittingFeedback) {
+                return;
+            }
+
+            if (!activeFeedbackSessionId) {
+                setFeedbackStatus(I18N.feedbackSubmitFailed, 'error');
+                return;
+            }
+
+            if (selectedFeedbackRating < 1 || selectedFeedbackRating > 5) {
+                setFeedbackStatus(I18N.feedbackRatingRequired, 'error');
+                return;
+            }
+
+            const feedbackComment = document.getElementById('feedbackComment');
+            const feedbackSubmitBtn = document.getElementById('feedbackSubmitBtn');
+            const csrf = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+
+            isSubmittingFeedback = true;
+            if (feedbackSubmitBtn) {
+                feedbackSubmitBtn.disabled = true;
+            }
+            setFeedbackStatus('', '');
+
+            try {
+                const response = await fetch(buildFeedbackSubmitUrl(activeFeedbackSessionId), {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRF-TOKEN': csrf,
+                        'X-Tryon-Device-Id': resolveTryOnDeviceId(),
+                        'Accept': 'application/json',
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        rating: selectedFeedbackRating,
+                        comment: feedbackComment ? feedbackComment.value : '',
+                    }),
+                });
+
+                const payload = await response.json();
+                if (!response.ok) {
+                    throw new Error(payload.message || I18N.feedbackSubmitFailed);
+                }
+
+                setFeedbackStatus(I18N.feedbackSaved, 'success');
+                if (feedbackSubmitBtn) {
+                    feedbackSubmitBtn.textContent = I18N.feedbackUpdate;
+                }
+            } catch (error) {
+                setFeedbackStatus(error.message || I18N.feedbackSubmitFailed, 'error');
+            } finally {
+                isSubmittingFeedback = false;
+                if (feedbackSubmitBtn) {
+                    feedbackSubmitBtn.disabled = false;
+                }
+            }
+        }
+
         function setLoading(loading) {
             const btn = document.getElementById('generateBtn');
             const resultPlaceholder = document.getElementById('resultPlaceholder');
@@ -1858,7 +2177,8 @@
             }).format(dt);
         }
 
-        function showHistoryResult(url) {
+        function showHistoryResult(sessionItem) {
+            const url = (sessionItem && sessionItem.result_url) ? sessionItem.result_url : '';
             if (!url) {
                 return;
             }
@@ -1871,6 +2191,7 @@
             setHistoryPreviewMode(true);
             setComparisonPosition(50);
             setStatus(I18N.historyResultShown, 'success');
+            showFeedbackForm(sessionItem);
         }
 
         function renderHistory(items) {
@@ -1908,7 +2229,7 @@
 
                 btn.appendChild(img);
                 btn.appendChild(time);
-                btn.addEventListener('click', () => showHistoryResult(item.result_url));
+                btn.addEventListener('click', () => showHistoryResult(item));
                 listEl.appendChild(btn);
             });
         }
@@ -2184,49 +2505,24 @@
                 return;
             }
 
-            if (TRYON_DUMMY.enabled) {
-                if (!TRYON_DUMMY.model_image_url) {
-                    setStatus(I18N.dummyModelUrlMissing, 'error');
-                    showResultPlaceholderMessage(I18N.dummyModelUrlMissing, 'error');
-                    return;
-                }
+            resetFeedbackForm();
 
-                if (!TRYON_DUMMY.result_url) {
-                    setStatus(I18N.dummyResultUrlMissing, 'error');
-                    showResultPlaceholderMessage(I18N.dummyResultUrlMissing, 'error');
-                    return;
-                }
-
-                if (remainingDailyQuota !== null && remainingDailyQuota <= 0) {
-                    setStatus(I18N.dailyLimitReached, 'error');
-                    showResultPlaceholderMessage(I18N.dailyLimitReached, 'error');
-                    setLoading(false);
-                    return;
-                }
-
-                setLoading(true);
-                setStatus('', '');
-                updateCompareMode(false);
-                resultPreview.removeAttribute('src');
-                resultPreview.style.display = 'none';
-                resultPlaceholder.style.display = 'flex';
-
-                await new Promise((resolve) => window.setTimeout(resolve, 1800));
-
-                resultPreview.src = TRYON_DUMMY.result_url;
-                resultPreview.style.display = 'block';
-                resultPlaceholder.style.display = 'none';
-                setHistoryPreviewMode(false);
-                updateCompareMode(true);
-                setComparisonPosition(50);
-                consumeDummyQuotaUI();
-                setStatus(I18N.generateDone, 'success');
-                setLoading(false);
-                refreshHistory();
+            const forceSellerDummy = Boolean(TRYON_DUMMY.enabled);
+            if (forceSellerDummy && !TRYON_DUMMY.model_image_url) {
+                setStatus(I18N.dummyModelUrlMissing, 'error');
+                showResultPlaceholderMessage(I18N.dummyModelUrlMissing, 'error');
                 return;
             }
 
-            const useDummyModelImage = Boolean(TRYON_DUMMY.model_image_url) && useDummyModelForRealGenerate;
+            if (forceSellerDummy && !TRYON_DUMMY.result_url) {
+                setStatus(I18N.dummyResultUrlMissing, 'error');
+                showResultPlaceholderMessage(I18N.dummyResultUrlMissing, 'error');
+                return;
+            }
+
+            const useDummyModelImage = forceSellerDummy
+                ? Boolean(TRYON_DUMMY.model_image_url)
+                : (Boolean(TRYON_DUMMY.model_image_url) && useDummyModelForRealGenerate);
             const file = customerPhotoInput.files && customerPhotoInput.files[0] ? customerPhotoInput.files[0] : null;
             if (!useDummyModelImage && (!file || !customerPreview.getAttribute('src'))) {
                 setStatus(I18N.uploadModelFirst, 'error');
@@ -2326,6 +2622,7 @@
                             setComparisonPosition(50);
                         }
 
+                        showFeedbackForm(payload);
                         setStatus(I18N.generateDone, 'success');
                         setLoading(false);
                         refreshHistory();
@@ -2405,6 +2702,20 @@
                 });
             }
 
+            const feedbackStars = document.querySelectorAll('#feedbackStars .feedback-star');
+            feedbackStars.forEach((starBtn) => {
+                starBtn.addEventListener('click', function() {
+                    selectedFeedbackRating = Number(this.getAttribute('data-rating') || 0);
+                    renderFeedbackStars();
+                    setFeedbackStatus('', '');
+                });
+            });
+
+            const feedbackSubmitBtn = document.getElementById('feedbackSubmitBtn');
+            if (feedbackSubmitBtn) {
+                feedbackSubmitBtn.addEventListener('click', submitTryOnFeedback);
+            }
+
             const toggle = document.getElementById('useDummyModelToggle');
             if (toggle) {
                 // Default OFF when seller dummy mode is disabled, even if dummy URL exists.
@@ -2424,6 +2735,7 @@
             if (resultPreview) {
                 resultPreview.style.display = 'none';
             }
+            resetFeedbackForm();
             updateCompareMode(false);
             setComparisonPosition(50);
             applyDummyModelSelectionUI();

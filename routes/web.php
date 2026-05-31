@@ -51,6 +51,9 @@ Route::prefix('{seller_slug}/try-on')->middleware('seller.locale')->group(functi
         ->middleware('throttle:tryon-public-polling')
         ->name('public.tryon.sessions.show');
 
+    Route::post('/sessions/{sessionId}/feedback', [TryOnPublicController::class, 'feedback'])
+        ->name('public.tryon.sessions.feedback');
+
     Route::get('/sessions', [TryOnPublicController::class, 'history'])
         ->name('public.tryon.sessions.history');
 });
