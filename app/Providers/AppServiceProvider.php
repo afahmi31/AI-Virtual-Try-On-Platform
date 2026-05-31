@@ -2,9 +2,14 @@
 
 namespace App\Providers;
 
+use App\Models\ProductRequest;
+use App\Models\User;
+use App\Support\CurrentSellerResolver;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\RateLimiter;
+use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -42,6 +47,30 @@ class AppServiceProvider extends ServiceProvider
             $pollingPerMinute = max((int) config('tryon.public_limits.polling_per_minute', 120), 1);
 
             return Limit::perMinute($pollingPerMinute)->by('poll|'.$sellerSlug.'|'.$ip);
+        });
+
+        View::composer('seller.*', function ($view): void {
+            $newProductRequestCount = 0;
+            $user = Auth::user();
+
+            if ($user instanceof User) {
+                try {
+                    $seller = app(CurrentSellerResolver::class)->resolveForUser($user);
+
+                    $newProductRequestCount = ProductRequest::query()
+                        ->where('seller_id', $seller->id)
+                        ->where(function ($query): void {
+                            $query->whereIn('status', ['new', 'pending'])
+                                ->orWhereNull('status')
+                                ->orWhere('status', '');
+                        })
+                        ->count();
+                } catch (\Throwable) {
+                    $newProductRequestCount = 0;
+                }
+            }
+
+            $view->with('newProductRequestCount', $newProductRequestCount);
         });
     }
 

@@ -55,6 +55,12 @@
     <aside class="sidebar">
         <a class="menu-item active" href="{{ route('seller.dashboard') }}"><span>{{ __('ui.common.dashboard') }}</span></a>
         <a class="menu-item" href="{{ route('seller.products.index') }}"><span>{{ __('ui.common.products') }}</span></a>
+        <a class="menu-item" href="{{ route('seller.product-requests.index') }}">
+            <span>{{ __('ui.common.product_requests') }}</span>
+            @if(($newProductRequestCount ?? 0) > 0)
+                <span class="menu-badge">{{ $newProductRequestCount }}</span>
+            @endif
+        </a>
         <a class="menu-item" href="{{ route('seller.settings.index') }}"><span>{{ __('ui.common.settings') }}</span></a>
     </aside>
 

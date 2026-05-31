@@ -7,6 +7,7 @@ use App\Http\Controllers\Public\SellerPublicController;
 use App\Http\Controllers\Public\TryOnPublicController;
 use App\Http\Controllers\Seller\SellerDashboardController;
 use App\Http\Controllers\Seller\SellerProductController;
+use App\Http\Controllers\Seller\SellerProductRequestController;
 use App\Http\Controllers\Seller\SellerSettingsController;
 use App\Support\InitialSetup;
 use Illuminate\Support\Facades\Route;
@@ -32,6 +33,7 @@ Route::prefix('dashboard')->middleware(['auth', 'seller.locale', 'role:seller'])
     Route::get('/', [SellerDashboardController::class, 'index'])->name('seller.dashboard');
     Route::post('/model', [SellerDashboardController::class, 'updateModel'])->name('seller.dashboard.model.update');
     Route::get('/products', [SellerProductController::class, 'index'])->name('seller.products.index');
+    Route::get('/product-requests', [SellerProductRequestController::class, 'index'])->name('seller.product-requests.index');
     Route::get('/settings', [SellerSettingsController::class, 'index'])->name('seller.settings.index');
     Route::post('/settings', [SellerSettingsController::class, 'update'])->name('seller.settings.update');
     Route::post('/settings/test-api-key', [SellerSettingsController::class, 'testApiKey'])->name('seller.settings.test-api-key');
@@ -39,6 +41,8 @@ Route::prefix('dashboard')->middleware(['auth', 'seller.locale', 'role:seller'])
     Route::patch('/products/{productId}', [SellerProductController::class, 'update'])->name('seller.products.update');
     Route::delete('/products/{productId}', [SellerProductController::class, 'destroy'])->name('seller.products.destroy');
     Route::post('/products/{productId}/images', [SellerProductController::class, 'addImage'])->name('seller.products.images.store');
+    Route::patch('/product-requests/{requestId}/status', [SellerProductRequestController::class, 'updateStatus'])
+        ->name('seller.product-requests.update-status');
 });
 
 Route::prefix('{seller_slug}/try-on')->middleware('seller.locale')->group(function (): void {

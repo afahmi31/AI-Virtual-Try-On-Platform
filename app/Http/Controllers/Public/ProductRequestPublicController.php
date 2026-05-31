@@ -38,7 +38,7 @@ class ProductRequestPublicController extends Controller
         $requestRecord = ProductRequest::query()->create([
             'seller_id' => $seller->id,
             'shopee_product_url' => trim((string) $payload['shopee_product_url']),
-            'status' => 'pending',
+            'status' => 'new',
             'source_channel' => 'store_page',
             'ip_address' => $request->ip(),
             'user_agent' => (string) $request->userAgent(),
