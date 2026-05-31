@@ -1058,6 +1058,16 @@
             position: relative;
         }
 
+        .compare-model-media.is-adjust-ready {
+            cursor: grab;
+            touch-action: none;
+            user-select: none;
+        }
+
+        .compare-model-media.is-adjust-ready.is-dragging {
+            cursor: grabbing;
+        }
+
         .compare-model-media img {
             width: 100%;
             height: 100%;
@@ -1174,6 +1184,65 @@
             font-size: 20px;
             cursor: pointer;
             display: none;
+        }
+
+        .model-adjust-panel {
+            margin-top: 10px;
+            padding: 10px;
+            border: 1px solid #d7e3ef;
+            border-radius: 10px;
+            background: #f8fbff;
+        }
+
+        .model-adjust-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 8px;
+            margin-bottom: 8px;
+        }
+
+        .model-adjust-title {
+            margin: 0;
+            font-size: 13px;
+            font-weight: 700;
+            color: #2f4d6c;
+        }
+
+        .model-adjust-reset {
+            border: 1px solid #bfd2e4;
+            background: #ffffff;
+            color: #2f628c;
+            height: 28px;
+            border-radius: 8px;
+            padding: 0 10px;
+            font-size: 12px;
+            font-weight: 700;
+            cursor: pointer;
+        }
+
+        .model-adjust-controls {
+            display: grid;
+            gap: 10px;
+        }
+
+        .model-adjust-row {
+            display: grid;
+            gap: 6px;
+        }
+
+        .model-adjust-row-head {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            font-size: 12px;
+            color: #335978;
+            font-weight: 600;
+        }
+
+        .model-adjust-row input[type="range"] {
+            width: 100%;
         }
 
         .loading-dots {
@@ -1527,6 +1596,10 @@
                 right: 16px;
                 bottom: 164px;
             }
+
+            .model-adjust-controls {
+                display: none;
+            }
         }
     </style>
 </head>
@@ -1789,7 +1862,7 @@
                                 <span class="compare-chip">After</span>
                             </div>
                             <div class="compare-model-stage" id="compareModelStage">
-                                <div class="compare-model-media">
+                                <div id="modelAdjustSurface" class="compare-model-media">
                                     <img id="customerPreview" alt="Customer preview">
                                     <button id="removePhotoBtn" class="preview-remove" type="button" aria-label="{{ __('ui.store.remove_photo_aria') }}">&times;</button>
                                     <div id="customerPlaceholder" class="compare-model-placeholder">
@@ -1807,6 +1880,35 @@
                             <div id="resultPlaceholder" class="preview-placeholder"></div>
                             <div class="compare-divider" id="compareDivider"></div>
                             <input id="compareSlider" class="compare-slider" type="range" min="0" max="100" value="50" aria-label="Compare before and after">
+                        </div>
+                    </div>
+                    <div id="modelAdjustPanel" class="model-adjust-panel" style="display:none;">
+                        <div class="model-adjust-header">
+                            <p class="model-adjust-title">{{ __('ui.store.model_adjust_title') }}</p>
+                            <button id="modelAdjustResetBtn" class="model-adjust-reset" type="button">{{ __('ui.store.model_adjust_reset') }}</button>
+                        </div>
+                        <div class="model-adjust-controls">
+                            <div class="model-adjust-row">
+                                <div class="model-adjust-row-head">
+                                    <span>{{ __('ui.store.model_adjust_zoom') }}</span>
+                                    <strong id="modelAdjustZoomValue">100%</strong>
+                                </div>
+                                <input id="modelAdjustZoom" type="range" min="100" max="250" step="1" value="100" aria-label="{{ __('ui.store.model_adjust_zoom') }}">
+                            </div>
+                            <div class="model-adjust-row">
+                                <div class="model-adjust-row-head">
+                                    <span>{{ __('ui.store.model_adjust_horizontal') }}</span>
+                                    <strong id="modelAdjustOffsetXValue">0%</strong>
+                                </div>
+                                <input id="modelAdjustOffsetX" type="range" min="-100" max="100" step="1" value="0" aria-label="{{ __('ui.store.model_adjust_horizontal') }}">
+                            </div>
+                            <div class="model-adjust-row">
+                                <div class="model-adjust-row-head">
+                                    <span>{{ __('ui.store.model_adjust_vertical') }}</span>
+                                    <strong id="modelAdjustOffsetYValue">0%</strong>
+                                </div>
+                                <input id="modelAdjustOffsetY" type="range" min="-100" max="100" step="1" value="0" aria-label="{{ __('ui.store.model_adjust_vertical') }}">
+                            </div>
                         </div>
                     </div>
                     <div id="statusNote" class="status-note" role="status" aria-live="polite"></div>
@@ -1841,6 +1943,8 @@
             feedbackAlreadySent: @json(__('ui.store.feedback_already_sent')),
             feedbackRatingRequired: @json(__('ui.store.feedback_rating_required')),
             feedbackSubmitFailed: @json(__('ui.store.feedback_submit_failed')),
+            modelAdjustInvalidFile: @json(__('ui.store.model_adjust_invalid_file')),
+            modelAdjustFileTooLarge: @json(__('ui.store.model_adjust_file_too_large')),
         };
 
         let selectedProductId = @json(optional($selectedProduct)->id);
@@ -1855,6 +1959,36 @@
         let activeFeedbackSessionId = null;
         let selectedFeedbackRating = 0;
         let isSubmittingFeedback = false;
+        const MODEL_ADJUST_ZOOM_MIN = 1;
+        const MODEL_ADJUST_ZOOM_MAX = 2.5;
+        const modelAdjustState = {
+            originalFile: null,
+            image: null,
+            sourceDataUrl: '',
+            width: 0,
+            height: 0,
+            zoom: MODEL_ADJUST_ZOOM_MIN,
+            offsetX: 0,
+            offsetY: 0,
+            previewDataUrl: '',
+        };
+        const modelAdjustInteraction = {
+            mouseActive: false,
+            mouseMoved: false,
+            mouseLastX: 0,
+            mouseLastY: 0,
+            touchMode: 'none',
+            touchLastX: 0,
+            touchLastY: 0,
+            pinchDistance: 0,
+            pinchCenterX: 0,
+            pinchCenterY: 0,
+            pinchStartZoom: MODEL_ADJUST_ZOOM_MIN,
+            pinchAnchorWorldX: 0,
+            pinchAnchorWorldY: 0,
+            renderQueued: false,
+            lastTouchAt: 0,
+        };
 
         function resolveTryOnDeviceId() {
             try {
@@ -1928,11 +2062,707 @@
             if (modelSrc) {
                 compareBeforePreview.src = modelSrc;
                 compareBeforePreview.style.display = 'block';
+                compareBeforePreview.style.transformOrigin = customerPreview.style.transformOrigin || 'center center';
+                compareBeforePreview.style.transform = customerPreview.style.transform || '';
                 return;
             }
 
             compareBeforePreview.removeAttribute('src');
             compareBeforePreview.style.display = 'none';
+            compareBeforePreview.style.transform = '';
+        }
+
+        function resetModelAdjustState() {
+            modelAdjustState.originalFile = null;
+            modelAdjustState.image = null;
+            modelAdjustState.sourceDataUrl = '';
+            modelAdjustState.width = 0;
+            modelAdjustState.height = 0;
+            modelAdjustState.zoom = MODEL_ADJUST_ZOOM_MIN;
+            modelAdjustState.offsetX = 0;
+            modelAdjustState.offsetY = 0;
+            modelAdjustState.previewDataUrl = '';
+            modelAdjustInteraction.mouseActive = false;
+            modelAdjustInteraction.mouseMoved = false;
+            modelAdjustInteraction.mouseLastX = 0;
+            modelAdjustInteraction.mouseLastY = 0;
+            modelAdjustInteraction.touchMode = 'none';
+            modelAdjustInteraction.touchLastX = 0;
+            modelAdjustInteraction.touchLastY = 0;
+            modelAdjustInteraction.pinchDistance = 0;
+            modelAdjustInteraction.pinchCenterX = 0;
+            modelAdjustInteraction.pinchCenterY = 0;
+            modelAdjustInteraction.pinchStartZoom = MODEL_ADJUST_ZOOM_MIN;
+            modelAdjustInteraction.pinchAnchorWorldX = 0;
+            modelAdjustInteraction.pinchAnchorWorldY = 0;
+            modelAdjustInteraction.renderQueued = false;
+            setModelAdjustDraggingState(false);
+            const preview = document.getElementById('customerPreview');
+            const compareBeforePreview = document.getElementById('compareBeforePreview');
+            if (preview) {
+                preview.style.transform = '';
+                preview.style.transformOrigin = '';
+            }
+            if (compareBeforePreview) {
+                compareBeforePreview.style.transform = '';
+                compareBeforePreview.style.transformOrigin = '';
+            }
+            applyModelAdjustStateToControls();
+            toggleModelAdjustPanel(false);
+            syncModelAdjustSurfaceState();
+        }
+
+        function toggleModelAdjustPanel(visible) {
+            const panel = document.getElementById('modelAdjustPanel');
+            if (!panel) {
+                return;
+            }
+
+            // Gesture interaction is now the primary control, so keep the slider panel hidden.
+            panel.style.display = 'none';
+        }
+
+        function clampModelAdjustNumber(value, min, max) {
+            const numeric = Number(value);
+            if (Number.isNaN(numeric)) {
+                return min;
+            }
+
+            return Math.max(min, Math.min(max, numeric));
+        }
+
+        function isModelAdjustInteractive() {
+            if (!modelAdjustState.image || !modelAdjustState.originalFile) {
+                return false;
+            }
+
+            if (TRYON_DUMMY.enabled) {
+                return false;
+            }
+
+            if (Boolean(TRYON_DUMMY.model_image_url) && useDummyModelForRealGenerate) {
+                return false;
+            }
+
+            return true;
+        }
+
+        function setModelAdjustDraggingState(isDragging) {
+            const surface = document.getElementById('modelAdjustSurface');
+            if (!surface) {
+                return;
+            }
+
+            if (isDragging) {
+                surface.classList.add('is-dragging');
+                return;
+            }
+
+            surface.classList.remove('is-dragging');
+        }
+
+        function syncModelAdjustSurfaceState() {
+            const surface = document.getElementById('modelAdjustSurface');
+            if (!surface) {
+                return;
+            }
+
+            if (isModelAdjustInteractive()) {
+                surface.classList.add('is-adjust-ready');
+                return;
+            }
+
+            surface.classList.remove('is-adjust-ready', 'is-dragging');
+        }
+
+        function getModelAdjustStageRect() {
+            const surface = document.getElementById('modelAdjustSurface');
+            if (!surface) {
+                return null;
+            }
+
+            const rect = surface.getBoundingClientRect();
+            if (rect.width <= 0 || rect.height <= 0) {
+                return null;
+            }
+
+            return rect;
+        }
+
+        function getModelAdjustTranslatePx(
+            stageRect,
+            zoom = modelAdjustState.zoom,
+            offsetX = modelAdjustState.offsetX,
+            offsetY = modelAdjustState.offsetY
+        ) {
+            const safeZoom = clampModelAdjustNumber(zoom, MODEL_ADJUST_ZOOM_MIN, MODEL_ADJUST_ZOOM_MAX);
+            const safeOffsetX = clampModelAdjustNumber(offsetX, -100, 100);
+            const safeOffsetY = clampModelAdjustNumber(offsetY, -100, 100);
+            const maxTranslateX = Math.max((stageRect.width * (safeZoom - 1)) / 2, 0);
+            const maxTranslateY = Math.max((stageRect.height * (safeZoom - 1)) / 2, 0);
+
+            return {
+                zoom: safeZoom,
+                translateX: maxTranslateX > 0 ? maxTranslateX * (safeOffsetX / 100) : 0,
+                translateY: maxTranslateY > 0 ? maxTranslateY * (safeOffsetY / 100) : 0,
+                maxTranslateX,
+                maxTranslateY,
+            };
+        }
+
+        function setModelAdjustFromTranslatePx(stageRect, zoom, translateX, translateY) {
+            const safeZoom = clampModelAdjustNumber(zoom, MODEL_ADJUST_ZOOM_MIN, MODEL_ADJUST_ZOOM_MAX);
+            const maxTranslateX = Math.max((stageRect.width * (safeZoom - 1)) / 2, 0);
+            const maxTranslateY = Math.max((stageRect.height * (safeZoom - 1)) / 2, 0);
+
+            modelAdjustState.zoom = safeZoom;
+            modelAdjustState.offsetX = maxTranslateX > 0
+                ? clampModelAdjustNumber((translateX / maxTranslateX) * 100, -100, 100)
+                : 0;
+            modelAdjustState.offsetY = maxTranslateY > 0
+                ? clampModelAdjustNumber((translateY / maxTranslateY) * 100, -100, 100)
+                : 0;
+        }
+
+        function queueModelAdjustPreviewRender() {
+            if (modelAdjustInteraction.renderQueued) {
+                return;
+            }
+
+            modelAdjustInteraction.renderQueued = true;
+            window.requestAnimationFrame(() => {
+                modelAdjustInteraction.renderQueued = false;
+                renderAdjustedModelPreview();
+            });
+        }
+
+        function applyModelAdjustTransforms() {
+            const preview = document.getElementById('customerPreview');
+            const compareBeforePreview = document.getElementById('compareBeforePreview');
+            if (!preview && !compareBeforePreview) {
+                return;
+            }
+
+            const stageRect = getModelAdjustStageRect();
+            if (!stageRect) {
+                return;
+            }
+
+            const { zoom, translateX, translateY } = getModelAdjustTranslatePx(stageRect);
+            const transform = `translate(${translateX}px, ${translateY}px) scale(${zoom})`;
+
+            [preview, compareBeforePreview].forEach((element) => {
+                if (!element) {
+                    return;
+                }
+
+                element.style.transformOrigin = 'center center';
+                element.style.transform = transform;
+            });
+        }
+
+        function adjustOffsetsFromPanDelta(deltaX, deltaY) {
+            if (!isModelAdjustInteractive()) {
+                return;
+            }
+
+            const stageRect = getModelAdjustStageRect();
+            if (!stageRect) {
+                return;
+            }
+
+            const current = getModelAdjustTranslatePx(stageRect);
+            const targetTranslateX = current.translateX + deltaX;
+            const targetTranslateY = current.translateY + deltaY;
+
+            setModelAdjustFromTranslatePx(stageRect, current.zoom, targetTranslateX, targetTranslateY);
+            applyModelAdjustStateToControls();
+            queueModelAdjustPreviewRender();
+        }
+
+        function zoomModelAtClientPoint(targetZoom, clientX, clientY) {
+            if (!isModelAdjustInteractive()) {
+                return;
+            }
+
+            const stageRect = getModelAdjustStageRect();
+            if (!stageRect) {
+                return;
+            }
+
+            const oldState = getModelAdjustTranslatePx(stageRect);
+            const newZoom = clampModelAdjustNumber(targetZoom, MODEL_ADJUST_ZOOM_MIN, MODEL_ADJUST_ZOOM_MAX);
+            if (Math.abs(newZoom - oldState.zoom) < 0.0001) {
+                return;
+            }
+
+            const pointX = clientX - stageRect.left - (stageRect.width / 2);
+            const pointY = clientY - stageRect.top - (stageRect.height / 2);
+            const ratio = newZoom / oldState.zoom;
+            const newTranslateX = pointX - ((pointX - oldState.translateX) * ratio);
+            const newTranslateY = pointY - ((pointY - oldState.translateY) * ratio);
+
+            setModelAdjustFromTranslatePx(stageRect, newZoom, newTranslateX, newTranslateY);
+            applyModelAdjustStateToControls();
+            queueModelAdjustPreviewRender();
+        }
+
+        function beginPinchInteraction(touches) {
+            const stageRect = getModelAdjustStageRect();
+            if (!stageRect || touches.length < 2) {
+                return;
+            }
+
+            const first = touches[0];
+            const second = touches[1];
+            const centerX = (first.clientX + second.clientX) / 2;
+            const centerY = (first.clientY + second.clientY) / 2;
+            const distance = Math.hypot(second.clientX - first.clientX, second.clientY - first.clientY);
+            const pointX = centerX - stageRect.left - (stageRect.width / 2);
+            const pointY = centerY - stageRect.top - (stageRect.height / 2);
+            const current = getModelAdjustTranslatePx(stageRect);
+
+            modelAdjustInteraction.touchMode = 'pinch';
+            modelAdjustInteraction.pinchDistance = distance;
+            modelAdjustInteraction.pinchCenterX = centerX;
+            modelAdjustInteraction.pinchCenterY = centerY;
+            modelAdjustInteraction.pinchStartZoom = current.zoom;
+            modelAdjustInteraction.pinchAnchorWorldX = (pointX - current.translateX) / current.zoom;
+            modelAdjustInteraction.pinchAnchorWorldY = (pointY - current.translateY) / current.zoom;
+        }
+
+        function applyPinchInteraction(touches) {
+            const stageRect = getModelAdjustStageRect();
+            if (!stageRect || touches.length < 2 || modelAdjustInteraction.pinchDistance <= 0) {
+                return;
+            }
+
+            const first = touches[0];
+            const second = touches[1];
+            const centerX = (first.clientX + second.clientX) / 2;
+            const centerY = (first.clientY + second.clientY) / 2;
+            const distance = Math.hypot(second.clientX - first.clientX, second.clientY - first.clientY);
+            const pointX = centerX - stageRect.left - (stageRect.width / 2);
+            const pointY = centerY - stageRect.top - (stageRect.height / 2);
+            const zoomRatio = distance / modelAdjustInteraction.pinchDistance;
+            const targetZoom = modelAdjustInteraction.pinchStartZoom * zoomRatio;
+            const safeZoom = clampModelAdjustNumber(targetZoom, MODEL_ADJUST_ZOOM_MIN, MODEL_ADJUST_ZOOM_MAX);
+            const translateX = pointX - (safeZoom * modelAdjustInteraction.pinchAnchorWorldX);
+            const translateY = pointY - (safeZoom * modelAdjustInteraction.pinchAnchorWorldY);
+
+            setModelAdjustFromTranslatePx(stageRect, safeZoom, translateX, translateY);
+            modelAdjustInteraction.pinchCenterX = centerX;
+            modelAdjustInteraction.pinchCenterY = centerY;
+            applyModelAdjustStateToControls();
+            queueModelAdjustPreviewRender();
+        }
+
+        function applyModelAdjustStateToControls() {
+            const zoomInput = document.getElementById('modelAdjustZoom');
+            const offsetXInput = document.getElementById('modelAdjustOffsetX');
+            const offsetYInput = document.getElementById('modelAdjustOffsetY');
+            const zoomValue = document.getElementById('modelAdjustZoomValue');
+            const offsetXValue = document.getElementById('modelAdjustOffsetXValue');
+            const offsetYValue = document.getElementById('modelAdjustOffsetYValue');
+
+            const zoomPercent = Math.round(modelAdjustState.zoom * 100);
+            if (zoomInput) {
+                zoomInput.value = String(zoomPercent);
+            }
+            if (offsetXInput) {
+                offsetXInput.value = String(Math.round(modelAdjustState.offsetX));
+            }
+            if (offsetYInput) {
+                offsetYInput.value = String(Math.round(modelAdjustState.offsetY));
+            }
+
+            if (zoomValue) {
+                zoomValue.textContent = `${zoomPercent}%`;
+            }
+            if (offsetXValue) {
+                offsetXValue.textContent = `${Math.round(modelAdjustState.offsetX)}%`;
+            }
+            if (offsetYValue) {
+                offsetYValue.textContent = `${Math.round(modelAdjustState.offsetY)}%`;
+            }
+        }
+
+        function drawAdjustedModelCanvas() {
+            if (!modelAdjustState.image || modelAdjustState.width <= 0 || modelAdjustState.height <= 0) {
+                return null;
+            }
+
+            const canvas = document.createElement('canvas');
+            canvas.width = modelAdjustState.width;
+            canvas.height = modelAdjustState.height;
+
+            const ctx = canvas.getContext('2d');
+            if (!ctx) {
+                return null;
+            }
+
+            const zoom = Math.max(MODEL_ADJUST_ZOOM_MIN, Math.min(MODEL_ADJUST_ZOOM_MAX, modelAdjustState.zoom));
+            const offsetX = Math.max(-100, Math.min(100, modelAdjustState.offsetX));
+            const offsetY = Math.max(-100, Math.min(100, modelAdjustState.offsetY));
+
+            const drawWidth = modelAdjustState.width * zoom;
+            const drawHeight = modelAdjustState.height * zoom;
+            const maxTranslateX = Math.max((drawWidth - modelAdjustState.width) / 2, 0);
+            const maxTranslateY = Math.max((drawHeight - modelAdjustState.height) / 2, 0);
+
+            const drawX = ((modelAdjustState.width - drawWidth) / 2) + (maxTranslateX * (offsetX / 100));
+            const drawY = ((modelAdjustState.height - drawHeight) / 2) + (maxTranslateY * (offsetY / 100));
+
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.imageSmoothingEnabled = true;
+            ctx.imageSmoothingQuality = 'high';
+            ctx.drawImage(modelAdjustState.image, drawX, drawY, drawWidth, drawHeight);
+
+            return canvas;
+        }
+
+        function renderAdjustedModelPreview() {
+            const preview = document.getElementById('customerPreview');
+            const placeholder = document.getElementById('customerPlaceholder');
+            const removeBtn = document.getElementById('removePhotoBtn');
+
+            if (!preview || !placeholder || !removeBtn) {
+                return;
+            }
+
+            if (!modelAdjustState.image || modelAdjustState.sourceDataUrl === '') {
+                return;
+            }
+
+            if (preview.getAttribute('src') !== modelAdjustState.sourceDataUrl) {
+                preview.src = modelAdjustState.sourceDataUrl;
+            }
+            preview.style.display = 'block';
+            placeholder.style.display = 'none';
+            removeBtn.style.display = 'inline-flex';
+            syncComparisonBeforeImage();
+            applyModelAdjustTransforms();
+            syncModelAdjustSurfaceState();
+        }
+
+        function updateModelAdjustStateFromControls() {
+            if (!modelAdjustState.image) {
+                return;
+            }
+
+            const zoomInput = document.getElementById('modelAdjustZoom');
+            const offsetXInput = document.getElementById('modelAdjustOffsetX');
+            const offsetYInput = document.getElementById('modelAdjustOffsetY');
+
+            const zoomValue = Number(zoomInput ? zoomInput.value : 100);
+            const offsetXValue = Number(offsetXInput ? offsetXInput.value : 0);
+            const offsetYValue = Number(offsetYInput ? offsetYInput.value : 0);
+
+            modelAdjustState.zoom = clampModelAdjustNumber(zoomValue / 100, MODEL_ADJUST_ZOOM_MIN, MODEL_ADJUST_ZOOM_MAX);
+            modelAdjustState.offsetX = clampModelAdjustNumber(offsetXValue, -100, 100);
+            modelAdjustState.offsetY = clampModelAdjustNumber(offsetYValue, -100, 100);
+
+            applyModelAdjustStateToControls();
+            queueModelAdjustPreviewRender();
+        }
+
+        async function loadCustomerPhotoForAdjust(file) {
+            if (!file) {
+                resetModelAdjustState();
+                return;
+            }
+
+            try {
+                const sourceDataUrl = await new Promise((resolve, reject) => {
+                    const reader = new FileReader();
+                    reader.onload = () => {
+                        if (typeof reader.result !== 'string' || reader.result === '') {
+                            reject(new Error(I18N.modelAdjustInvalidFile));
+                            return;
+                        }
+
+                        resolve(reader.result);
+                    };
+                    reader.onerror = () => reject(new Error(I18N.modelAdjustInvalidFile));
+                    reader.readAsDataURL(file);
+                });
+
+                const image = new Image();
+                await new Promise((resolve, reject) => {
+                    image.onload = () => resolve();
+                    image.onerror = () => reject(new Error(I18N.modelAdjustInvalidFile));
+                    image.src = sourceDataUrl;
+                });
+
+                modelAdjustState.originalFile = file;
+                modelAdjustState.image = image;
+                modelAdjustState.sourceDataUrl = sourceDataUrl;
+                modelAdjustState.width = Number(image.naturalWidth) || 0;
+                modelAdjustState.height = Number(image.naturalHeight) || 0;
+                modelAdjustState.zoom = MODEL_ADJUST_ZOOM_MIN;
+                modelAdjustState.offsetX = 0;
+                modelAdjustState.offsetY = 0;
+                modelAdjustState.previewDataUrl = '';
+
+                applyModelAdjustStateToControls();
+                toggleModelAdjustPanel(true);
+                renderAdjustedModelPreview();
+                syncModelAdjustSurfaceState();
+            } catch (error) {
+                resetModelAdjustState();
+                setStatus(error.message || I18N.modelAdjustInvalidFile, 'error');
+            }
+        }
+
+        function buildAdjustedModelFileName(originalName, mimeType) {
+            const safeName = (typeof originalName === 'string' && originalName.trim() !== '') ? originalName.trim() : 'model-photo';
+            const base = safeName.replace(/\.[^./\\]+$/, '');
+            const extensionMap = {
+                'image/jpeg': 'jpg',
+                'image/png': 'png',
+                'image/webp': 'webp',
+            };
+            const extension = extensionMap[mimeType] || 'jpg';
+
+            return `${base}-adjusted.${extension}`;
+        }
+
+        async function buildAdjustedModelUploadFile() {
+            if (!modelAdjustState.originalFile || !modelAdjustState.image) {
+                return null;
+            }
+
+            const canvas = drawAdjustedModelCanvas();
+            if (!canvas) {
+                return modelAdjustState.originalFile;
+            }
+
+            const candidateType = (modelAdjustState.originalFile.type || '').toLowerCase();
+            const mimeType = candidateType === 'image/webp' ? 'image/webp' : 'image/jpeg';
+            const maxBytes = 10 * 1024 * 1024;
+
+            let quality = mimeType === 'image/webp' ? 0.95 : 0.92;
+            let blob = await new Promise((resolve, reject) => {
+                canvas.toBlob((generatedBlob) => {
+                    if (!generatedBlob) {
+                        reject(new Error(I18N.modelAdjustInvalidFile));
+                        return;
+                    }
+                    resolve(generatedBlob);
+                }, mimeType, quality);
+            });
+
+            while (blob.size > maxBytes && quality > 0.62) {
+                quality = Number((quality - 0.08).toFixed(2));
+                blob = await new Promise((resolve, reject) => {
+                    canvas.toBlob((generatedBlob) => {
+                        if (!generatedBlob) {
+                            reject(new Error(I18N.modelAdjustInvalidFile));
+                            return;
+                        }
+                        resolve(generatedBlob);
+                    }, mimeType, quality);
+                });
+            }
+
+            if (blob.size > maxBytes) {
+                throw new Error(I18N.modelAdjustFileTooLarge);
+            }
+
+            return new File(
+                [blob],
+                buildAdjustedModelFileName(modelAdjustState.originalFile.name, mimeType),
+                {
+                    type: mimeType,
+                    lastModified: Date.now(),
+                }
+            );
+        }
+
+        function initModelAdjustGestures() {
+            const surface = document.getElementById('modelAdjustSurface');
+            if (!surface) {
+                return;
+            }
+
+            const shouldIgnoreTarget = (target) => {
+                if (!(target instanceof Element)) {
+                    return false;
+                }
+
+                return Boolean(target.closest('#removePhotoBtn') || target.closest('.upload-trigger'));
+            };
+
+            const canInteractFromEvent = (target) => {
+                if (!isModelAdjustInteractive()) {
+                    return false;
+                }
+
+                if (shouldIgnoreTarget(target)) {
+                    return false;
+                }
+
+                return true;
+            };
+
+            surface.addEventListener('mousedown', function(event) {
+                if (event.button !== 0 || !canInteractFromEvent(event.target)) {
+                    return;
+                }
+
+                event.preventDefault();
+                modelAdjustInteraction.mouseActive = true;
+                modelAdjustInteraction.mouseMoved = false;
+                modelAdjustInteraction.mouseLastX = event.clientX;
+                modelAdjustInteraction.mouseLastY = event.clientY;
+                setModelAdjustDraggingState(true);
+            });
+
+            window.addEventListener('mousemove', function(event) {
+                if (!modelAdjustInteraction.mouseActive) {
+                    return;
+                }
+
+                const deltaX = event.clientX - modelAdjustInteraction.mouseLastX;
+                const deltaY = event.clientY - modelAdjustInteraction.mouseLastY;
+                modelAdjustInteraction.mouseLastX = event.clientX;
+                modelAdjustInteraction.mouseLastY = event.clientY;
+
+                if (Math.abs(deltaX) > 0 || Math.abs(deltaY) > 0) {
+                    modelAdjustInteraction.mouseMoved = true;
+                    adjustOffsetsFromPanDelta(deltaX, deltaY);
+                }
+            });
+
+            window.addEventListener('mouseup', function() {
+                if (!modelAdjustInteraction.mouseActive) {
+                    return;
+                }
+
+                modelAdjustInteraction.mouseActive = false;
+                setModelAdjustDraggingState(false);
+            });
+
+            surface.addEventListener('wheel', function(event) {
+                if (!canInteractFromEvent(event.target)) {
+                    return;
+                }
+
+                event.preventDefault();
+                const zoomFactor = event.deltaY < 0 ? 1.08 : 0.92;
+                zoomModelAtClientPoint(modelAdjustState.zoom * zoomFactor, event.clientX, event.clientY);
+            }, { passive: false });
+
+            surface.addEventListener('click', function(event) {
+                if (!canInteractFromEvent(event.target)) {
+                    return;
+                }
+
+                if (Date.now() - modelAdjustInteraction.lastTouchAt < 350) {
+                    return;
+                }
+
+                if (modelAdjustInteraction.mouseMoved) {
+                    modelAdjustInteraction.mouseMoved = false;
+                    return;
+                }
+
+                zoomModelAtClientPoint(modelAdjustState.zoom + 0.15, event.clientX, event.clientY);
+            });
+
+            surface.addEventListener('contextmenu', function(event) {
+                if (!canInteractFromEvent(event.target)) {
+                    return;
+                }
+
+                event.preventDefault();
+                zoomModelAtClientPoint(modelAdjustState.zoom - 0.15, event.clientX, event.clientY);
+            });
+
+            surface.addEventListener('touchstart', function(event) {
+                if (!canInteractFromEvent(event.target)) {
+                    return;
+                }
+
+                modelAdjustInteraction.lastTouchAt = Date.now();
+                if (event.touches.length === 1) {
+                    const touch = event.touches[0];
+                    modelAdjustInteraction.touchMode = 'pan';
+                    modelAdjustInteraction.touchLastX = touch.clientX;
+                    modelAdjustInteraction.touchLastY = touch.clientY;
+                    setModelAdjustDraggingState(true);
+                    return;
+                }
+
+                if (event.touches.length >= 2) {
+                    beginPinchInteraction(event.touches);
+                    setModelAdjustDraggingState(true);
+                    event.preventDefault();
+                }
+            }, { passive: false });
+
+            surface.addEventListener('touchmove', function(event) {
+                if (!isModelAdjustInteractive()) {
+                    return;
+                }
+
+                if (event.touches.length === 1 && modelAdjustInteraction.touchMode === 'pan') {
+                    const touch = event.touches[0];
+                    const deltaX = touch.clientX - modelAdjustInteraction.touchLastX;
+                    const deltaY = touch.clientY - modelAdjustInteraction.touchLastY;
+                    modelAdjustInteraction.touchLastX = touch.clientX;
+                    modelAdjustInteraction.touchLastY = touch.clientY;
+                    adjustOffsetsFromPanDelta(deltaX, deltaY);
+                    event.preventDefault();
+                    return;
+                }
+
+                if (event.touches.length >= 2) {
+                    if (modelAdjustInteraction.touchMode !== 'pinch') {
+                        beginPinchInteraction(event.touches);
+                    } else {
+                        applyPinchInteraction(event.touches);
+                    }
+                    event.preventDefault();
+                }
+            }, { passive: false });
+
+            surface.addEventListener('touchend', function(event) {
+                modelAdjustInteraction.lastTouchAt = Date.now();
+                if (event.touches.length === 0) {
+                    modelAdjustInteraction.touchMode = 'none';
+                    modelAdjustInteraction.pinchDistance = 0;
+                    modelAdjustInteraction.pinchStartZoom = modelAdjustState.zoom;
+                    modelAdjustInteraction.pinchAnchorWorldX = 0;
+                    modelAdjustInteraction.pinchAnchorWorldY = 0;
+                    setModelAdjustDraggingState(false);
+                    return;
+                }
+
+                if (event.touches.length === 1) {
+                    modelAdjustInteraction.touchMode = 'pan';
+                    modelAdjustInteraction.pinchDistance = 0;
+                    modelAdjustInteraction.pinchCenterX = 0;
+                    modelAdjustInteraction.pinchCenterY = 0;
+                    modelAdjustInteraction.pinchStartZoom = modelAdjustState.zoom;
+                    modelAdjustInteraction.pinchAnchorWorldX = 0;
+                    modelAdjustInteraction.pinchAnchorWorldY = 0;
+                    modelAdjustInteraction.touchLastX = event.touches[0].clientX;
+                    modelAdjustInteraction.touchLastY = event.touches[0].clientY;
+                    setModelAdjustDraggingState(true);
+                }
+            });
+
+            surface.addEventListener('touchcancel', function() {
+                modelAdjustInteraction.touchMode = 'none';
+                modelAdjustInteraction.pinchDistance = 0;
+                modelAdjustInteraction.pinchCenterX = 0;
+                modelAdjustInteraction.pinchCenterY = 0;
+                modelAdjustInteraction.pinchStartZoom = modelAdjustState.zoom;
+                modelAdjustInteraction.pinchAnchorWorldX = 0;
+                modelAdjustInteraction.pinchAnchorWorldY = 0;
+                setModelAdjustDraggingState(false);
+            });
         }
 
         function selectProduct(el) {
@@ -2017,6 +2847,7 @@
             if (customerPhotoInput) {
                 customerPhotoInput.value = '';
             }
+            resetModelAdjustState();
 
             if (customerPreview) {
                 customerPreview.removeAttribute('src');
@@ -2083,13 +2914,15 @@
             }
         });
 
-        document.getElementById('customerPhoto').addEventListener('change', function() {
+        document.getElementById('customerPhoto').addEventListener('change', async function() {
             const file = this.files && this.files[0] ? this.files[0] : null;
             const preview = document.getElementById('customerPreview');
             const placeholder = document.getElementById('customerPlaceholder');
             const removeBtn = document.getElementById('removePhotoBtn');
 
+            setStatus('', '');
             if (!file) {
+                resetModelAdjustState();
                 preview.removeAttribute('src');
                 preview.style.display = 'none';
                 placeholder.style.display = 'block';
@@ -2098,15 +2931,7 @@
                 return;
             }
 
-            const reader = new FileReader();
-            reader.onload = function(event) {
-                preview.src = event.target.result;
-                preview.style.display = 'block';
-                placeholder.style.display = 'none';
-                removeBtn.style.display = 'inline-flex';
-                syncComparisonBeforeImage();
-            };
-            reader.readAsDataURL(file);
+            await loadCustomerPhotoForAdjust(file);
         });
 
         document.getElementById('removePhotoBtn').addEventListener('click', function() {
@@ -2116,6 +2941,7 @@
             const removeBtn = document.getElementById('removePhotoBtn');
 
             input.value = '';
+            resetModelAdjustState();
             preview.removeAttribute('src');
             preview.style.display = 'none';
             placeholder.style.display = 'block';
@@ -2565,6 +3391,7 @@
             const hasDummyModelUrl = Boolean(TRYON_DUMMY.model_image_url);
 
             if (!toggleWrap || !toggle) {
+                syncModelAdjustSurfaceState();
                 return;
             }
 
@@ -2575,6 +3402,7 @@
                 customerPhotoInput.value = '';
                 customerPhotoInput.disabled = true;
                 removePhotoBtn.style.display = 'none';
+                resetModelAdjustState();
 
                 if (hasDummyModelUrl) {
                     customerPreview.src = TRYON_DUMMY.model_image_url;
@@ -2586,6 +3414,7 @@
                     customerPlaceholder.style.display = 'block';
                 }
                 syncComparisonBeforeImage();
+                syncModelAdjustSurfaceState();
                 return;
             }
 
@@ -2594,6 +3423,7 @@
                 useDummyModelForRealGenerate = false;
                 toggle.checked = false;
                 customerPhotoInput.disabled = false;
+                syncModelAdjustSurfaceState();
                 return;
             }
 
@@ -2604,10 +3434,12 @@
                 customerPhotoInput.value = '';
                 customerPhotoInput.disabled = true;
                 removePhotoBtn.style.display = 'none';
+                resetModelAdjustState();
                 customerPreview.src = TRYON_DUMMY.model_image_url;
                 customerPreview.style.display = 'block';
                 customerPlaceholder.style.display = 'none';
                 syncComparisonBeforeImage();
+                syncModelAdjustSurfaceState();
                 return;
             }
 
@@ -2617,8 +3449,13 @@
                 customerPreview.style.display = 'none';
                 customerPlaceholder.style.display = 'block';
                 removePhotoBtn.style.display = 'none';
+                resetModelAdjustState();
+            } else if (modelAdjustState.image) {
+                toggleModelAdjustPanel(true);
+                applyModelAdjustStateToControls();
             }
             syncComparisonBeforeImage();
+            syncModelAdjustSurfaceState();
         }
 
         async function refreshQuota() {
@@ -2696,8 +3533,12 @@
                 const formData = new FormData();
                 formData.append('product_id', String(selectedProductId));
                 formData.append('use_dummy_model', useDummyModelImage ? '1' : '0');
-                if (!useDummyModelImage && file) {
-                    formData.append('customer_photo', file);
+                if (!useDummyModelImage) {
+                    const adjustedFile = await buildAdjustedModelUploadFile();
+                    const uploadFile = adjustedFile || file;
+                    if (uploadFile) {
+                        formData.append('customer_photo', uploadFile);
+                    }
                 }
 
                 const createResponse = await fetch(@json(route('public.tryon.sessions.store', ['seller_slug' => $seller->slug])), {
@@ -2879,6 +3720,40 @@
                     setComparisonPosition(this.value);
                 });
             }
+            initModelAdjustGestures();
+            window.addEventListener('resize', function() {
+                if (!isModelAdjustInteractive()) {
+                    return;
+                }
+
+                queueModelAdjustPreviewRender();
+            });
+            const modelAdjustZoom = document.getElementById('modelAdjustZoom');
+            const modelAdjustOffsetX = document.getElementById('modelAdjustOffsetX');
+            const modelAdjustOffsetY = document.getElementById('modelAdjustOffsetY');
+            const modelAdjustResetBtn = document.getElementById('modelAdjustResetBtn');
+
+            [modelAdjustZoom, modelAdjustOffsetX, modelAdjustOffsetY].forEach((input) => {
+                if (!input) {
+                    return;
+                }
+
+                input.addEventListener('input', updateModelAdjustStateFromControls);
+            });
+
+            if (modelAdjustResetBtn) {
+                modelAdjustResetBtn.addEventListener('click', function() {
+                    if (!modelAdjustState.image) {
+                        return;
+                    }
+
+                    modelAdjustState.zoom = MODEL_ADJUST_ZOOM_MIN;
+                    modelAdjustState.offsetX = 0;
+                    modelAdjustState.offsetY = 0;
+                    applyModelAdjustStateToControls();
+                    queueModelAdjustPreviewRender();
+                });
+            }
             const resultPreview = document.getElementById('resultPreview');
             if (resultPreview) {
                 resultPreview.style.display = 'none';
@@ -2886,6 +3761,7 @@
             resetFeedbackForm();
             updateCompareMode(false);
             setComparisonPosition(50);
+            resetModelAdjustState();
             applyDummyModelSelectionUI();
             refreshQuota();
             refreshHistory();
