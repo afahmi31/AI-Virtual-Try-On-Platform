@@ -444,14 +444,14 @@
         }
 
         .modal {
-            width: min(700px, 100%);
-            max-height: calc(100vh - 28px);
+            width: min(1024px, calc(100vw - 34px));
+            max-height: calc(100vh - 24px);
             overflow: auto;
             background: linear-gradient(180deg, #ffffff, #f7fbff);
             border-radius: var(--radius-xl);
             border: 1px solid #d2dfee;
             box-shadow: 0 22px 60px rgba(17, 40, 68, 0.26);
-            padding: 14px;
+            padding: 16px;
             transform: translateY(14px) scale(.98);
             opacity: 0;
             transition: transform .24s ease, opacity .24s ease;
@@ -742,7 +742,10 @@
         }
 
         .feedback-wrap-under-product {
-            margin-top: 12px;
+            margin-top: 0;
+            flex: 0 0 auto;
+            position: relative;
+            z-index: 1;
         }
 
         .feedback-title {
@@ -834,15 +837,22 @@
 
         .tryon-main-grid {
             display: grid;
-            grid-template-columns: 300px minmax(0, 1fr);
-            gap: 10px;
+            grid-template-columns: 450px minmax(0, 1fr);
+            gap: 16px;
             margin-bottom: 10px;
             width: 100%;
-            align-items: stretch;
+            align-items: start;
             height: auto;
         }
 
         .tryon-left-rail { min-width: 0; }
+
+        .tryon-left-rail > .field {
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+            overflow: visible;
+        }
 
         .tryon-main-grid > .field {
             min-width: 0;
@@ -897,13 +907,42 @@
         }
 
         .preview-box-product {
-            aspect-ratio: auto;
+            width: 100%;
+            aspect-ratio: 1 / 1;
+            height: auto;
+            max-height: none;
+        }
+
+        .preview-box-product img,
+        .selected-product-thumb.preview-box-product img {
+            object-fit: cover;
+            object-position: center center;
         }
 
         .preview-box-result {
             width: 100%;
-            height: 420px;
+            height: clamp(460px, 64vh, 700px);
             aspect-ratio: auto;
+        }
+
+        @media (max-width: 1300px) {
+            .modal {
+                width: min(1080px, calc(100vw - 26px));
+            }
+
+            .tryon-main-grid {
+                grid-template-columns: 348px minmax(0, 1fr);
+            }
+
+            .preview-box-product {
+                aspect-ratio: 1 / 1;
+                height: auto;
+                max-height: none;
+            }
+
+            .preview-box-result {
+                height: clamp(420px, 58vh, 620px);
+            }
         }
 
         .compare-frame {
@@ -1169,6 +1208,7 @@
             justify-content: center;
             background: rgba(247, 251, 255, 0.82);
             padding: 16px;
+            pointer-events: none;
         }
 
         .preview-remove {
@@ -1561,8 +1601,14 @@
                 height: auto;
             }
 
+            .preview-box-product {
+                aspect-ratio: 1 / 1;
+                height: auto;
+                max-height: none;
+            }
+
             .preview-box-result {
-                height: 320px;
+                height: 420px;
             }
 
             .catalog-footer-row {
@@ -2439,7 +2485,7 @@
             }
             preview.style.display = 'block';
             placeholder.style.display = 'none';
-            removeBtn.style.display = 'inline-flex';
+            removeBtn.style.display = 'inline-block';
             syncComparisonBeforeImage();
             applyModelAdjustTransforms();
             syncModelAdjustSurfaceState();
@@ -3511,7 +3557,11 @@
             const file = customerPhotoInput.files && customerPhotoInput.files[0] ? customerPhotoInput.files[0] : null;
             if (!useDummyModelImage && (!file || !customerPreview.getAttribute('src'))) {
                 setStatus(I18N.uploadModelFirst, 'error');
-                showResultPlaceholderMessage(I18N.uploadModelFirst, 'error');
+                if (resultPlaceholder) {
+                    resultPlaceholder.style.display = 'none';
+                    resultPlaceholder.textContent = '';
+                    resultPlaceholder.classList.remove('status-error', 'status-success');
+                }
                 return;
             }
 
