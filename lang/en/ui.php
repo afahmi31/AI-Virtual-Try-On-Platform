@@ -127,5 +127,13 @@ return [
         'feedback_already_sent' => 'Previous feedback is already saved. You can update it if needed.',
         'feedback_rating_required' => 'Please choose a star rating first.',
         'feedback_submit_failed' => 'Failed to submit feedback. Please try again.',
+        'product_request_kicker' => 'Can\'t find the product you want?',
+        'product_request_title' => 'Request a Shopee Product',
+        'product_request_description' => 'Send a Shopee product URL. We will review it and add it to the catalog so it can be used for try-on.',
+        'product_request_field_label' => 'Shopee Product URL',
+        'product_request_placeholder' => 'https://shopee.com/...',
+        'product_request_submit' => 'Send Product Request',
+        'product_request_success' => 'Thanks, your product request has been submitted.',
+        'product_request_invalid_shopee' => 'The URL must point to a Shopee domain.',
     ],
 ];

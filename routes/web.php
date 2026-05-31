@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Auth\WebAuthController;
 use App\Http\Controllers\Auth\SetupController;
+use App\Http\Controllers\Public\ProductRequestPublicController;
 use App\Http\Controllers\Public\SellerPublicController;
 use App\Http\Controllers\Public\TryOnPublicController;
 use App\Http\Controllers\Seller\SellerDashboardController;
@@ -59,6 +60,10 @@ Route::prefix('{seller_slug}/try-on')->middleware('seller.locale')->group(functi
 });
 
 $reservedSellerSlugPattern = implode('|', array_map(static fn (string $slug): string => preg_quote($slug, '/'), config('tryon.reserved_seller_slugs', [])));
+
+Route::post('/{seller_slug}/product-requests', [ProductRequestPublicController::class, 'store'])->middleware(['seller.locale', 'throttle:10,1'])
+    ->where('seller_slug', '^(?!('.$reservedSellerSlugPattern.')$)[A-Za-z0-9\-]+$')
+    ->name('public.seller.product-requests.store');
 
 Route::get('/{seller_slug}/{product_ref?}', [SellerPublicController::class, 'index'])->middleware('seller.locale')
     ->where('seller_slug', '^(?!('.$reservedSellerSlugPattern.')$)[A-Za-z0-9\-]+$')

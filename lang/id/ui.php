@@ -127,5 +127,13 @@ return [
         'feedback_already_sent' => 'Feedback sebelumnya sudah tersimpan. Kamu bisa update jika perlu.',
         'feedback_rating_required' => 'Pilih rating bintang terlebih dahulu.',
         'feedback_submit_failed' => 'Gagal mengirim feedback. Coba lagi.',
+        'product_request_kicker' => 'Tidak menemukan produk yang dicari?',
+        'product_request_title' => 'Request Produk Shopee',
+        'product_request_description' => 'Kirim URL produk Shopee, nanti kami akan cek dan tambahkan ke katalog agar bisa dipakai untuk try-on.',
+        'product_request_field_label' => 'URL Produk Shopee',
+        'product_request_placeholder' => 'https://shopee.co.id/...',
+        'product_request_submit' => 'Kirim Request Produk',
+        'product_request_success' => 'Terima kasih, request produk kamu sudah terkirim.',
+        'product_request_invalid_shopee' => 'URL harus mengarah ke domain Shopee.',
     ],
 ];

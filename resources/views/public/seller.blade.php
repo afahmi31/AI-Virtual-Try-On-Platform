@@ -203,6 +203,106 @@
             flex-wrap: wrap;
         }
 
+        .request-cta-panel {
+            margin-top: 22px;
+            padding: 18px;
+            border: 1px solid #cddced;
+            border-radius: var(--radius-lg);
+            background:
+                linear-gradient(180deg, #ffffff 0%, #f5faff 100%);
+            box-shadow: 0 12px 26px rgba(20, 52, 84, 0.08);
+        }
+
+        .request-cta-head {
+            margin-bottom: 14px;
+        }
+
+        .request-cta-kicker {
+            margin: 0 0 6px;
+            font-size: 12px;
+            font-weight: 700;
+            letter-spacing: .04em;
+            text-transform: uppercase;
+            color: #2b638f;
+        }
+
+        .request-cta-title {
+            margin: 0;
+            font-size: 26px;
+            line-height: 1.2;
+            color: var(--secondary);
+        }
+
+        .request-cta-description {
+            margin: 8px 0 0;
+            font-size: 14px;
+            line-height: 1.45;
+            color: var(--muted);
+            max-width: 760px;
+        }
+
+        .request-cta-form {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) auto;
+            gap: 12px;
+            align-items: end;
+        }
+
+        .request-cta-field {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .request-cta-label {
+            font-size: 13px;
+            font-weight: 700;
+            color: #1f4468;
+        }
+
+        .request-cta-input {
+            height: 46px;
+            border-radius: var(--radius-md);
+            border: 1px solid #c7d7e8;
+            background: #fff;
+            color: var(--text);
+            padding: 0 12px;
+            font: inherit;
+        }
+
+        .request-cta-input:focus {
+            outline: none;
+            border-color: #78a5cd;
+            box-shadow: 0 0 0 3px rgba(33, 117, 155, 0.15);
+        }
+
+        .request-cta-submit {
+            height: 46px;
+            white-space: nowrap;
+            padding: 0 16px;
+        }
+
+        .request-cta-error,
+        .request-cta-success {
+            margin: 0 0 12px;
+            padding: 10px 12px;
+            border-radius: var(--radius-md);
+            font-size: 13px;
+            line-height: 1.4;
+        }
+
+        .request-cta-error {
+            border: 1px solid #e5bcbc;
+            background: #fff1f1;
+            color: #9d2323;
+        }
+
+        .request-cta-success {
+            border: 1px solid #b9dbcf;
+            background: #ecfff5;
+            color: #1f6a46;
+        }
+
         .grid {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(245px, 1fr));
@@ -1406,6 +1506,18 @@
                 justify-content: flex-start;
             }
 
+            .request-cta-title {
+                font-size: 22px;
+            }
+
+            .request-cta-form {
+                grid-template-columns: 1fr;
+            }
+
+            .request-cta-submit {
+                width: 100%;
+            }
+
             .floating-history-btn {
                 right: 16px;
                 bottom: 96px;
@@ -1524,6 +1636,42 @@
             @endif
         </div>
         @endif
+
+        <section id="product-request-form" class="request-cta-panel">
+            <div class="request-cta-head">
+                <p class="request-cta-kicker">{{ __('ui.store.product_request_kicker') }}</p>
+                <h2 class="request-cta-title">{{ __('ui.store.product_request_title') }}</h2>
+                <p class="request-cta-description">{{ __('ui.store.product_request_description') }}</p>
+            </div>
+
+            @if(session('store_product_request_success'))
+                <div class="request-cta-success" role="status">
+                    {{ session('store_product_request_success') }}
+                </div>
+            @endif
+
+            <form class="request-cta-form" method="POST" action="{{ route('public.seller.product-requests.store', ['seller_slug' => $seller->slug]) }}">
+                @csrf
+                <div class="request-cta-field">
+                    <label class="request-cta-label" for="shopeeProductUrl">{{ __('ui.store.product_request_field_label') }}</label>
+                    <input
+                        id="shopeeProductUrl"
+                        class="request-cta-input"
+                        type="url"
+                        name="shopee_product_url"
+                        value="{{ old('shopee_product_url') }}"
+                        placeholder="{{ __('ui.store.product_request_placeholder') }}"
+                        maxlength="2048"
+                        autocomplete="url"
+                        required>
+                    @error('shopee_product_url')
+                        <div class="request-cta-error" role="alert">{{ $message }}</div>
+                    @enderror
+                </div>
+                <button class="catalog-btn request-cta-submit" type="submit">{{ __('ui.store.product_request_submit') }}</button>
+            </form>
+        </section>
+
         @if(!empty($selectedProduct))
             @php
                 $selectedProductImage = $selectedProduct->images->firstWhere('is_primary', true) ?? $selectedProduct->images->first();

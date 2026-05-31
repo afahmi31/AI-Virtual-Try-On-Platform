@@ -30,6 +30,11 @@ class Seller extends Model
         return $this->hasMany(Product::class);
     }
 
+    public function productRequests(): HasMany
+    {
+        return $this->hasMany(ProductRequest::class);
+    }
+
     public function aiSetting(): HasOne
     {
         return $this->hasOne(SellerAiSetting::class);
